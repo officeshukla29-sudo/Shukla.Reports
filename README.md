@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -29,6 +29,37 @@ _loadLib([
   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
   'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'
 ], function(){ return typeof XLSX !== 'undefined'; }, function(){ window._libsReady.xlsx = (typeof XLSX !== 'undefined'); if(window._onLibsReady) window._onLibsReady(); });
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, getDocs, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyDvSyhGSlurnzocYh7K1kkJZSv2gZki_8U",
+  authDomain: "applw-a314c.firebaseapp.com",
+  projectId: "applw-a314c",
+  storageBucket: "applw-a314c.firebasestorage.app",
+  messagingSenderId: "218726837478",
+  appId: "1:218726837478:web:46393bc1dc7cdc8abd9f27"
+};
+try{
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  window.__fb = { db, doc, setDoc, getDoc, getDocs, collection, onSnapshot, auth, ready:false, error:null };
+  signInAnonymously(auth).catch(function(err){
+    window.__fb.error = err.message;
+    console.warn('Firebase anonymous auth failed:', err.message);
+    if(window._onFirebaseError) window._onFirebaseError(err.message);
+  });
+  onAuthStateChanged(auth, function(user){
+    window.__fb.ready = !!user;
+    if(user && window._onFirebaseReady) window._onFirebaseReady();
+  });
+}catch(err){
+  window.__fb = { ready:false, error: err.message };
+  console.warn('Firebase init failed:', err.message);
+}
 </script>
 <style>
 :root{
@@ -109,6 +140,8 @@ tr:hover td{background:#131e36;}
 .chip-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
 .chip-row select{flex:1;min-width:100px;}
 canvas{max-width:100%;}
+.chart-box{position:relative;width:100%;height:230px;}
+.chart-box canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important;}
 .note{background:#1a2947;border-left:3px solid var(--accent);padding:10px 14px;border-radius:8px;font-size:12px;color:var(--txt2);margin-bottom:14px;}
 .editable-tbl input{width:70px;background:#0d1424;border:1px solid var(--border);color:var(--txt);padding:4px 6px;border-radius:5px;font-size:11.5px;}
 .section{display:none;}
@@ -116,6 +149,10 @@ canvas{max-width:100%;}
 .footer-note{color:var(--txt3);font-size:11px;text-align:center;margin-top:30px;}
 .flex-between{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
 .small-muted{color:var(--txt3);font-size:11px;}
+.sync-pill{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.sync-pill.sync-ok{background:#33d69f22;color:var(--green);}
+.sync-pill.sync-off{background:#ff5c7c22;color:var(--red);}
+.sync-pill.sync-busy{background:#ffb84d22;color:var(--amber);}
 </style>
 </head>
 <body>
@@ -139,7 +176,9 @@ canvas{max-width:100%;}
     <div class="chip-row" style="padding:0 8px;">
       <select id="fySelect"><option value="2083/84">FY 2083/84</option><option value="2082/83">FY 2082/83</option></select>
     </div>
-    <div class="footer-note" style="text-align:left;padding:10px 8px;">Data stored locally in this browser. Export a backup regularly from Data Import.</div>
+    <div class="nav-group-label">Cloud Sync</div>
+    <div style="padding:0 8px;"><span class="sync-pill sync-off" id="syncStatus">&#9729; Connecting...</span></div>
+    <div class="footer-note" style="text-align:left;padding:10px 8px;">Data syncs to Firebase automatically on import. Also cached locally in this browser as offline backup.</div>
   </div>
 
   <div class="main">
@@ -180,11 +219,11 @@ canvas{max-width:100%;}
       <div class="two-col">
         <div class="panel">
           <h3>Revenue Trend (Accrual, by BS month)</h3>
-          <canvas id="chart-ov-revenue" height="150"></canvas>
+          <div class="chart-box"><canvas id="chart-ov-revenue"></canvas></div>
         </div>
         <div class="panel">
           <h3>Active Customers &amp; Net Growth Trend</h3>
-          <canvas id="chart-ov-active" height="150"></canvas>
+          <div class="chart-box"><canvas id="chart-ov-active"></canvas></div>
         </div>
       </div>
 
@@ -196,13 +235,14 @@ canvas{max-width:100%;}
 
     <!-- ===================== CUSTOMER BEHAVIOUR ===================== -->
     <div class="section" id="sec-behaviour">
-      <div class="note">Winback = expiry &amp; renewal bich ko gap 30 din bhanda badi. Retention = forecast list ma vako customer le same/near month ma renew garyo. NS = New/Retention/Winback kunai ma naparne, same-month forecast sanga match nahune billing customer.</div>
+      <div class="note">Winback = expiry huneko din dekhi 30 din bhanda badi vaisakyo tara renew vaisakeko chaina, VA already renew vayo tara 30 din bhanda dhilo garyo &mdash; dubai count huncha, ra din bitepachi automatically update huncha (naya data import nagari pani). Retention = forecast list ma vako customer le renew garyo. NS = New/Retention/Winback kunai ma naparne billing customer. Pending = forecast due chha tara aile samma 30 din pugeko chaina.</div>
+      <div class="note" id="beh-asof-note"></div>
       <div class="grid kpi-grid" id="beh-kpis"></div>
 
       <div class="two-col">
         <div class="panel">
           <h3>New / Retention / Winback / NS &mdash; Split</h3>
-          <canvas id="chart-beh-split" height="220"></canvas>
+          <div class="chart-box"><canvas id="chart-beh-split"></canvas></div>
         </div>
         <div class="panel">
           <h3>OLT-wise Classification</h3>
@@ -241,7 +281,7 @@ canvas{max-width:100%;}
       <div class="two-col">
         <div class="panel">
           <h3>Month-wise Trend</h3>
-          <canvas id="chart-gr-trend" height="220"></canvas>
+          <div class="chart-box"><canvas id="chart-gr-trend"></canvas></div>
         </div>
         <div class="panel">
           <h3>MoM Comparison &mdash; selected OLT</h3>
@@ -273,11 +313,11 @@ canvas{max-width:100%;}
       <div class="two-col">
         <div class="panel">
           <h3>Revenue by OLT &mdash; selected month</h3>
-          <canvas id="chart-rev-olt" height="220"></canvas>
+          <div class="chart-box"><canvas id="chart-rev-olt"></canvas></div>
         </div>
         <div class="panel">
           <h3>Target vs Achievement (Revenue) &mdash; Month-wise</h3>
-          <canvas id="chart-rev-target" height="220"></canvas>
+          <div class="chart-box"><canvas id="chart-rev-target"></canvas></div>
         </div>
       </div>
 
@@ -300,9 +340,21 @@ canvas{max-width:100%;}
 
       <div class="panel" style="margin-top:16px;">
         <div class="flex-between">
-          <h3>Backup / Restore</h3>
+          <h3>Cloud Sync (Firebase)</h3>
+          <span class="sync-pill sync-off" id="syncStatus2">&#9729; Connecting...</span>
         </div>
-        <div class="hint">Sabai imported data (targets baahek pani) yeti JSON file ma export/restore garna milxa &mdash; naya computer/browser ma sethup garda pani useful.</div>
+        <div class="hint">Naya mahina ko data import garda automatically Firebase ma save huncha, ra arू browser/computer ma pani sync huncha (realtime). Yedi cloud sync nagareko dekhinchha bhane, internet check garnus wa "Push Full Backup Now" try garnus.</div>
+        <div class="chip-row">
+          <button class="btn" id="btn-fb-push">Push Full Backup Now (Cloud)</button>
+          <button class="btn ghost" id="btn-fb-pull">Reload Latest from Cloud</button>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:16px;">
+        <div class="flex-between">
+          <h3>Backup / Restore (Local File)</h3>
+        </div>
+        <div class="hint">Sabai imported data (targets baahek pani) yeti JSON file ma export/restore garna milxa &mdash; naya computer/browser ma sethup garda pani useful, cloud sync nachaleko avastha ma pani.</div>
         <div class="chip-row">
           <button class="btn" id="btn-export">Export full backup (JSON)</button>
           <input type="file" id="restore-file" accept=".json" style="max-width:220px;">
@@ -419,28 +471,47 @@ function classifyBehaviour(oltFilter){
   const pb = STORE.paymentBehaviour.filter(r => r.bsMonth===STATE.month && r.bsFY===STATE.fy && (oltFilter==="ALL" || r.OLT===oltFilter));
   const fc = getForecastRows(STATE.month, STATE.fy).filter(r => oltFilter==="ALL" || r.OLT===oltFilter);
   const fcSet = new Set(fc.map(r=>r.Username));
+  const renewedUsernames = new Set(pb.map(r=>r.USERNAME));
 
   let rows = [];
   let counts = {NEW:0, RET:0, WIN:0, NS:0};
+  let pendingCount = 0; // forecast customers not yet renewed, still within 30-day grace
   let maxGapByOlt = {};
+  const updateMaxGap = (olt, diff) => { if(!isNaN(diff) && (!(olt in maxGapByOlt) || diff>maxGapByOlt[olt])) maxGapByOlt[olt]=diff; };
+
   pb.forEach(r=>{
     const diff = (typeof r["ACTUAL DIFF"]==="number") ? r["ACTUAL DIFF"] : parseFloat(r["ACTUAL DIFF"]);
     const olt = r.OLT;
-    if(!isNaN(diff)){
-      if(!(olt in maxGapByOlt) || diff>maxGapByOlt[olt]) maxGapByOlt[olt]=diff;
-    }
+    updateMaxGap(olt, diff);
     let cat;
     if(r["IS NEW CUSTOMER"]==="Y"){ cat="NEW"; }
     else if(!isNaN(diff) && diff>30){ cat="WIN"; }
     else if(fcSet.has(r.USERNAME)){ cat="RET"; }
     else { cat="NS"; }
     counts[cat]++;
-    rows.push({username:r.USERNAME, olt:olt, transDate:r["TRANS DATE"], prevExpiry:r["PREVIOUS INVOICE EXPIRY DATE"], renewDate:r["RECENT INVOICE RENEW DATE"], amount:r.AMOUNT, diff:diff, category:cat});
+    rows.push({username:r.USERNAME, olt:olt, transDate:r["TRANS DATE"], prevExpiry:r["PREVIOUS INVOICE EXPIRY DATE"], renewDate:r["RECENT INVOICE RENEW DATE"], amount:r.AMOUNT, diff:diff, category:cat, pending:false});
+  });
+
+  // Forecast customers who have NOT renewed yet this month — gap keeps growing daily.
+  // Past the 30-day grace period without renewing = Winback risk, even though no billing row exists yet.
+  const today = new Date();
+  fc.forEach(r=>{
+    if(renewedUsernames.has(r.Username)) return; // already handled above via paymentBehaviour
+    const expiry = r["Expiry Date"] ? new Date(r["Expiry Date"]) : null;
+    if(!expiry || isNaN(expiry.getTime())) return;
+    const gapDays = Math.floor((today - expiry) / 86400000);
+    if(gapDays > 30){
+      counts.WIN++;
+      updateMaxGap(r.OLT, gapDays);
+      rows.push({username:r.Username, olt:r.OLT, transDate:null, prevExpiry:r["Expiry Date"], renewDate:null, amount:r["Forecasted Revenue"], diff:gapDays, category:"WIN", pending:true});
+    } else if(gapDays >= 0){
+      pendingCount++;
+    }
   });
   const total = pb.length;
   const forecastTotal = fc.length;
   const winbackPct = forecastTotal ? (counts.WIN/forecastTotal*100) : 0;
-  return {rows, counts, total, forecastTotal, winbackPct, maxGapByOlt};
+  return {rows, counts, total, forecastTotal, winbackPct, maxGapByOlt, pendingCount};
 }
 
 // ---------- SALES & GROWTH ENGINE ----------
@@ -635,15 +706,18 @@ function baseChartOpts(){
 function renderBehaviour(){
   const olt = STATE.olt;
   const beh = classifyBehaviour(olt);
+  const today = new Date();
 
   let html = "";
   html += kpiCard("Total Billed / Renewed", fmtNum(beh.total));
   html += kpiCard("New", fmtNum(beh.counts.NEW), beh.total?fmtPct(pct(beh.counts.NEW,beh.total)):undefined, true);
   html += kpiCard("Retention", fmtNum(beh.counts.RET), beh.total?fmtPct(pct(beh.counts.RET,beh.total)):undefined, true);
-  html += kpiCard("Winback (>30d)", fmtNum(beh.counts.WIN), fmtPct(beh.winbackPct)+" of forecast", beh.winbackPct<=15);
+  html += kpiCard("Winback (>30d gap)", fmtNum(beh.counts.WIN), fmtPct(beh.winbackPct)+" of forecast", beh.winbackPct<=15);
   html += kpiCard("NS (unmatched)", fmtNum(beh.counts.NS), beh.total?fmtPct(pct(beh.counts.NS,beh.total)):undefined, beh.counts.NS===0);
+  html += kpiCard("Pending (within grace)", fmtNum(beh.pendingCount), "Forecast due, not yet 30 days overdue", true);
   html += kpiCard("Forecast Due (this month)", fmtNum(beh.forecastTotal));
   document.getElementById("beh-kpis").innerHTML = html;
+  document.getElementById("beh-asof-note").textContent = "As of today (" + today.toLocaleDateString() + "): " + beh.counts.WIN + " customers are winback risk (30+ days past their expiry, renewed or not), out of " + beh.forecastTotal + " forecasted for " + STATE.month + ". This number grows automatically each day even without a new import.";
 
   renderChart('beh-split', document.getElementById('chart-beh-split'), {
     type:'doughnut',
@@ -684,7 +758,7 @@ function renderBehDetail(){
   const tagClass = {NEW:'new',RET:'ret',WIN:'win',NS:'ns'};
   const tagLabel = {NEW:'New',RET:'Retention',WIN:'Winback',NS:'NS'};
   let thead = "<tr><th>Username</th><th>OLT</th><th>Prev Expiry</th><th>Renew Date</th><th>Gap (days)</th><th>Amount</th><th>Category</th></tr>";
-  let tbody = rows.map(r=>`<tr><td>${r.username||''}</td><td><span class="badge-olt">${r.olt||''}</span></td><td>${r.prevExpiry||''}</td><td>${r.renewDate||''}</td><td>${isNaN(r.diff)?'-':r.diff}</td><td>${fmtMoney(r.amount)}</td><td><span class="tag ${tagClass[r.category]}">${tagLabel[r.category]}</span></td></tr>`).join("");
+  let tbody = rows.map(r=>`<tr><td>${r.username||''}</td><td><span class="badge-olt">${r.olt||''}</span></td><td>${r.prevExpiry||''}</td><td>${r.pending?'<span class="small-muted">not yet renewed</span>':(r.renewDate||'')}</td><td>${isNaN(r.diff)?'-':r.diff}</td><td>${fmtMoney(r.amount)}</td><td><span class="tag ${tagClass[r.category]}">${tagLabel[r.category]}${r.pending?' (pending)':''}</span></td></tr>`).join("");
   if(!rows.length) tbody = `<tr><td colspan="7" class="small-muted" style="padding:14px;">No records for this selection.</td></tr>`;
   document.getElementById("beh-detail-table").innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
 }
@@ -955,6 +1029,16 @@ function doImport(cfg, raw, month, fy){
   populateMonthSelect();
   renderImportCards();
   renderAll();
+
+  // Push this import to Firebase (fire-and-forget; UI already updated locally either way).
+  if(cfg.id==="forecast"){
+    fbSaveMeta("forecast", { data: STORE.forecast }).then(ok=> setSyncStatus(ok?"ok":"off", ok?"forecast synced":"forecast not synced"));
+  } else if(cfg.id==="accrualRevenue"){
+    fbSaveMeta("accrualRevenue", { rows: STORE.accrualRevenue }).then(ok=> setSyncStatus(ok?"ok":"off", ok?"revenue synced":"revenue not synced"));
+  } else {
+    const batchRows = STORE[cfg.store].filter(r=> r.bsMonth===month && r.bsFY===fy);
+    fbSaveBatch(cfg.id, month, fy, batchRows).then(ok=> setSyncStatus(ok?"ok":"off", ok?cfg.title+" synced":cfg.title+" not synced"));
+  }
 }
 
 function populateMonthSelect(){
@@ -1004,6 +1088,121 @@ function clearAllData(){
   populateMonthSelect(); renderImportCards(); renderAll();
 }
 
+// ---------- FIREBASE SYNC LAYER ----------
+const FB_BATCHES_COL = "sg_bed_batches";
+const FB_META_COL = "sg_bed_meta";
+
+function fbAvailable(){ return !!(window.__fb && window.__fb.ready); }
+
+function setSyncStatus(state, msg){
+  const map = { ok: ["\u2601 Synced", "sync-ok"], off: ["\u26A0 Local only", "sync-off"], busy: ["\u21BB Syncing...", "sync-busy"] };
+  const pair = map[state] || map.off;
+  ["syncStatus","syncStatus2"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.innerHTML = pair[0] + (msg ? ' <span class="small-muted">'+msg+'</span>' : '');
+    el.className = "sync-pill " + pair[1];
+  });
+}
+
+function typeToStoreKey(typeId){
+  return { installation:"installations", paidSales:"paidSales", billing:"paymentBehaviour", growthChurn:"growthChurn" }[typeId];
+}
+
+async function fbSaveBatch(typeId, month, fy, rows){
+  if(!fbAvailable()) return false;
+  try{
+    const id = typeId + "__" + (month||"na") + "__" + (fy||"na").replace("/","-");
+    const ref = window.__fb.doc(window.__fb.db, FB_BATCHES_COL, id);
+    await window.__fb.setDoc(ref, { type:typeId, month:month||null, fy:fy||null, rows: rows, updatedAt: Date.now() });
+    return true;
+  }catch(err){ console.warn("fbSaveBatch failed", err); setSyncStatus("off", err.code||err.message); return false; }
+}
+async function fbSaveMeta(id, payload){
+  if(!fbAvailable()) return false;
+  try{
+    const ref = window.__fb.doc(window.__fb.db, FB_META_COL, id);
+    await window.__fb.setDoc(ref, Object.assign({updatedAt: Date.now()}, payload));
+    return true;
+  }catch(err){ console.warn("fbSaveMeta failed", err); setSyncStatus("off", err.code||err.message); return false; }
+}
+
+async function fbLoadAll(){
+  if(!fbAvailable()) return null;
+  try{
+    setSyncStatus("busy");
+    const batchesSnap = await window.__fb.getDocs(window.__fb.collection(window.__fb.db, FB_BATCHES_COL));
+    let newStore = blankStore();
+    let sawAny = false;
+    batchesSnap.forEach(d=>{
+      const data = d.data();
+      const key = typeToStoreKey(data.type);
+      if(key){ sawAny = true; newStore[key] = newStore[key].concat(data.rows||[]); }
+    });
+    const targetsSnap = await window.__fb.getDoc(window.__fb.doc(window.__fb.db, FB_META_COL, "targets"));
+    if(targetsSnap.exists()){ TARGETS = targetsSnap.data().data; sawAny = true; }
+    const accrualSnap = await window.__fb.getDoc(window.__fb.doc(window.__fb.db, FB_META_COL, "accrualRevenue"));
+    if(accrualSnap.exists()){ newStore.accrualRevenue = accrualSnap.data().rows || []; sawAny = true; }
+    const forecastSnap = await window.__fb.getDoc(window.__fb.doc(window.__fb.db, FB_META_COL, "forecast"));
+    if(forecastSnap.exists()){ newStore.forecast = forecastSnap.data().data || {}; sawAny = true; }
+
+    if(sawAny){
+      newStore.importLog = STORE.importLog;
+      STORE = newStore;
+      saveStore(STORE); saveTargets(TARGETS);
+      setSyncStatus("ok", "loaded from cloud");
+      return true;
+    } else {
+      setSyncStatus("ok", "cloud empty \u2014 will sync on next import");
+      return false;
+    }
+  }catch(err){
+    console.warn("fbLoadAll failed", err);
+    setSyncStatus("off", err.code || err.message);
+    return null;
+  }
+}
+
+let _fbRealtimeStarted = false;
+function fbSubscribeRealtime(){
+  if(!fbAvailable() || _fbRealtimeStarted) return;
+  _fbRealtimeStarted = true;
+  try{
+    let first = true;
+    window.__fb.onSnapshot(window.__fb.collection(window.__fb.db, FB_BATCHES_COL), ()=>{
+      if(first){ first = false; return; } // skip initial fire, we already loaded via fbLoadAll
+      fbLoadAll().then(changed=>{ if(changed){ populateMonthSelect(); renderImportCards(); renderAll(); } });
+    });
+  }catch(err){ console.warn("fbSubscribeRealtime failed", err); }
+}
+
+async function fbPushEverythingNow(){
+  if(!fbAvailable()){ alert("Firebase not connected right now. Check your internet connection, or that Firestore is enabled for this project."); return; }
+  setSyncStatus("busy");
+  const groups = {};
+  const keyToType = { installations:"installation", paidSales:"paidSales", paymentBehaviour:"billing", growthChurn:"growthChurn" };
+  ["installations","paidSales","paymentBehaviour","growthChurn"].forEach(storeKey=>{
+    STORE[storeKey].forEach(r=>{
+      const typeId = keyToType[storeKey];
+      const k = typeId+"|"+r.bsMonth+"|"+r.bsFY;
+      groups[k] = groups[k] || {typeId, month:r.bsMonth, fy:r.bsFY, rows:[]};
+      groups[k].rows.push(r);
+    });
+  });
+  for(const k in groups){ await fbSaveBatch(groups[k].typeId, groups[k].month, groups[k].fy, groups[k].rows); }
+  await fbSaveMeta("accrualRevenue", { rows: STORE.accrualRevenue });
+  await fbSaveMeta("forecast", { data: STORE.forecast });
+  await fbSaveMeta("targets", { data: TARGETS });
+  setSyncStatus("ok", "full backup pushed");
+  alert("Full backup pushed to Firebase.");
+}
+
+async function fbPullNow(){
+  const changed = await fbLoadAll();
+  if(changed){ populateMonthSelect(); renderImportCards(); renderAll(); alert("Latest cloud data loaded."); }
+  else if(changed===false){ alert("Cloud has no data yet for this project. Nothing to pull."); }
+}
+
 let TGT_OLT = "SKGD01";
 function renderTargetsTable(){
   const t = TARGETS.OLTS[TGT_OLT];
@@ -1025,6 +1224,7 @@ function saveTargetsFromTable(){
   });
   saveTargets(TARGETS);
   renderAll();
+  fbSaveMeta("targets", { data: TARGETS }).then(ok=> setSyncStatus(ok?"ok":"off", ok?"targets synced":"targets not synced"));
   alert("Targets saved for "+TGT_OLT+".");
 }
 
@@ -1073,6 +1273,8 @@ function init(){
   document.getElementById("btn-export").addEventListener("click", exportBackup);
   document.getElementById("restore-file").addEventListener("change", (e)=>{ if(e.target.files.length) restoreBackup(e.target.files[0]); });
   document.getElementById("btn-clear-all").addEventListener("click", clearAllData);
+  document.getElementById("btn-fb-push").addEventListener("click", fbPushEverythingNow);
+  document.getElementById("btn-fb-pull").addEventListener("click", fbPullNow);
 
   document.getElementById("tgt-olt-select").addEventListener("change", (e)=>{ TGT_OLT = e.target.value; renderTargetsTable(); });
   document.getElementById("btn-save-targets").addEventListener("click", saveTargetsFromTable);
@@ -1083,6 +1285,20 @@ function init(){
     if(window._libsReady && window._libsReady.chart){ renderAll(); }
   };
   if(window._libsReady && window._libsReady.chart){ renderAll(); }
+
+  // Firebase: wait (briefly) for anonymous auth, then pull latest cloud data and subscribe live.
+  setSyncStatus("busy", "connecting...");
+  window._onFirebaseReady = function(){
+    fbLoadAll().then(changed=>{
+      if(changed){ populateMonthSelect(); renderImportCards(); renderAll(); }
+      fbSubscribeRealtime();
+    });
+  };
+  window._onFirebaseError = function(msg){ setSyncStatus("off", msg); };
+  if(fbAvailable()){ window._onFirebaseReady(); }
+  else {
+    setTimeout(()=>{ if(!fbAvailable()) setSyncStatus("off", "no connection yet \u2014 will retry on next import"); }, 6000);
+  }
 }
 document.addEventListener("DOMContentLoaded", init);
 
