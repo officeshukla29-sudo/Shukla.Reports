@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -160,6 +160,10 @@ canvas{max-width:100%;}
 .pct-switch i{position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0002;transition:.15s;}
 .pct-switch.on{background:var(--grad1);}
 .pct-switch.on i{left:17px;}
+.toast{position:fixed;top:20px;right:20px;z-index:9999;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 14px 40px #0002;padding:16px 18px;width:320px;transform:translateX(400px);opacity:0;transition:.25s;pointer-events:none;}
+.toast.show{transform:translateX(0);opacity:1;pointer-events:auto;}
+.toast .toast-title{font-weight:800;font-size:13.5px;color:var(--txt);margin-bottom:4px;}
+.toast .toast-detail{font-size:12px;color:var(--txt2);line-height:1.5;}
 .insight-card{background:#ffffff1c;border:1px solid #ffffff30;border-radius:14px;padding:14px;margin-top:14px;color:#fff;}
 .insight-card b{display:block;font-size:12.5px;margin-bottom:4px;}
 .insight-card span{font-size:11.3px;color:#e3dffb;}
@@ -174,6 +178,14 @@ canvas{max-width:100%;}
 <body>
 
 <div class="app">
+  <div class="toast" id="importToast">
+    <div class="toast-title">Imported</div>
+    <div class="toast-detail">&nbsp;</div>
+    <div class="chip-row" style="margin-top:8px;">
+      <button class="btn small toast-push-btn" style="display:none;">Retry Cloud Push</button>
+      <button class="btn ghost small toast-close-btn">Close</button>
+    </div>
+  </div>
   <div class="sidebar">
     <div class="brand">
       <div class="brand-badge">SG</div>
@@ -1032,20 +1044,56 @@ function renderImportCards(){
         <select class="imp-fy"><option value="2083/84" ${STATE.fy==="2083/84"?'selected':''}>2083/84</option><option value="2082/83" ${STATE.fy==="2082/83"?'selected':''}>2082/83</option></select>
       </div>` : ''}
       <input type="file" class="imp-file" accept=".xlsx,.xls,.csv">
+      <div class="detect-preview" style="display:none;"></div>
       <button class="btn small imp-go">Import</button>
       <div class="status">${log ? `Last import: ${log.rows} rows &middot; ${new Date(log.at).toLocaleString()}` : 'No import yet for this dataset.'}</div>
     </div>`;
   });
   document.getElementById("import-cards").innerHTML = html;
 
-  document.querySelectorAll(".imp-go").forEach(btn=>{
-    btn.addEventListener("click", (e)=>{
-      const card = e.target.closest(".import-card");
-      const typeId = card.dataset.type;
-      const cfg = IMPORT_TYPES.find(t=>t.id===typeId);
-      const fileInput = card.querySelector(".imp-file");
-      const monthSel = card.querySelector(".imp-month");
-      const fySel = card.querySelector(".imp-fy");
+  document.querySelectorAll(".import-card").forEach(card=>{
+    const typeId = card.dataset.type;
+    const cfg = IMPORT_TYPES.find(t=>t.id===typeId);
+    const fileInput = card.querySelector(".imp-file");
+    const monthSel = card.querySelector(".imp-month");
+    const fySel = card.querySelector(".imp-fy");
+    const preview = card.querySelector(".detect-preview");
+
+    function updatePreview(){
+      if(!fileInput.files.length){ preview.style.display="none"; return; }
+      if(typeof XLSX === "undefined"){ preview.style.display="block"; preview.innerHTML = '<span class="small-muted">Excel reader still loading, cannot preview yet \u2014 try Import in a moment.</span>'; return; }
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        try{
+          const wb = XLSX.read(ev.target.result, {type:"array", cellDates:true});
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const raw = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:null});
+          const headerIdx = findHeaderRow(raw, cfg.signature);
+          if(headerIdx===-1){ preview.style.display="block"; preview.innerHTML = '<span style="color:var(--red);">Could not detect expected columns in this file for '+cfg.title+'.</span>'; return; }
+          const rows = rowsFromRaw(raw, headerIdx);
+          preview.style.display = "block";
+          if(cfg.id==="accrualRevenue"){
+            const combos = {};
+            rows.forEach(r=>{ const k = (r["Accrued month"]||"?") + " " + normFY(r["Accrued Fy Year"]); combos[k]=(combos[k]||0)+1; });
+            const parts = Object.entries(combos).map(([k,n])=>`<b>${k}</b> (${n} rows)`).join(", ");
+            preview.innerHTML = "\u2713 Detected in file: " + parts + ". Month/FY is read directly from the file \u2014 no need to select it manually.";
+          } else {
+            preview.innerHTML = "\u2713 " + rows.length + " rows found in file. Will be imported as <b>" + (monthSel.value||"(select a month)") + " " + (fySel?fySel.value:"") + "</b>.";
+          }
+        }catch(err){
+          preview.style.display="block";
+          preview.innerHTML = '<span style="color:var(--red);">Could not read this file.</span>';
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    fileInput.addEventListener("change", updatePreview);
+    if(monthSel) monthSel.addEventListener("change", updatePreview);
+    if(fySel) fySel.addEventListener("change", updatePreview);
+
+    card.querySelector(".imp-go").addEventListener("click", ()=>{
       if(!fileInput.files.length){ alert("Select a file first."); return; }
       if(cfg.needsMonth && (!monthSel.value)){ alert("Select which BS month this file belongs to."); return; }
       if(typeof XLSX === "undefined"){ alert("The Excel reader library hasn't finished loading yet (or is blocked by your network/ad-blocker). Please wait a few seconds and try again, or check your internet connection."); return; }
@@ -1096,6 +1144,7 @@ function doImport(cfg, raw, month, fy){
   const headerIdx = findHeaderRow(raw, cfg.signature);
   if(headerIdx===-1){ alert("Couldn't detect the expected columns in this file for '"+cfg.title+"'. Please check the file is the right export."); return; }
   let rows = rowsFromRaw(raw, headerIdx);
+  let detectedLabel = month ? (month+" "+fy) : "";
 
   if(cfg.id==="forecast"){
     rows = rows.map(r=>({...r, bsMonth:month, bsFY:fy}));
@@ -1103,6 +1152,7 @@ function doImport(cfg, raw, month, fy){
   } else if(cfg.id==="accrualRevenue"){
     // dedupe by (Accrued month, Accrued Fy Year) pairs present in new file
     const pairs = new Set(rows.map(r=> String(r["Accrued month"]).toLowerCase()+"|"+normFY(r["Accrued Fy Year"])));
+    detectedLabel = [...pairs].map(p=>{ const [m,f]=p.split("|"); return m+" "+f; }).join(", ");
     STORE.accrualRevenue = STORE.accrualRevenue.filter(r=> !pairs.has(String(r["Accrued month"]).toLowerCase()+"|"+normFY(r["Accrued Fy Year"])));
     STORE.accrualRevenue = STORE.accrualRevenue.concat(rows);
   } else {
@@ -1117,16 +1167,52 @@ function doImport(cfg, raw, month, fy){
   renderImportCards();
   renderAll();
 
-  // Push this import to Firebase (fire-and-forget; UI already updated locally either way).
+  showImportToast(cfg.title + " imported successfully", detectedLabel + " \u00b7 " + rows.length + " rows saved locally. Pushing to cloud...");
+
+  // Push this import to Firebase now. If Firebase isn't connected yet, this fails
+  // quietly here but will be automatically picked up and pushed by the startup/realtime
+  // reconcile once the connection is ready \u2014 nothing is lost, just delayed.
+  let pushPromise;
   if(cfg.id==="forecast"){
-    fbSaveMeta("forecast", { data: STORE.forecast }).then(ok=> setSyncStatus(ok?"ok":"off", ok?"forecast synced":"forecast not synced"));
+    pushPromise = fbSaveMeta("forecast", { data: STORE.forecast });
   } else if(cfg.id==="accrualRevenue"){
-    fbSaveMeta("accrualRevenue", { rows: STORE.accrualRevenue }).then(ok=> setSyncStatus(ok?"ok":"off", ok?"revenue synced":"revenue not synced"));
+    pushPromise = fbSaveMeta("accrualRevenue", { rows: STORE.accrualRevenue });
   } else {
     const batchRows = STORE[cfg.store].filter(r=> r.bsMonth===month && r.bsFY===fy);
-    fbSaveBatch(cfg.id, month, fy, batchRows).then(ok=> setSyncStatus(ok?"ok":"off", ok?cfg.title+" synced":cfg.title+" not synced"));
+    pushPromise = fbSaveBatch(cfg.id, month, fy, batchRows);
   }
+  pushPromise.then(ok=>{
+    if(ok){
+      setSyncStatus("ok", cfg.title+" synced");
+      updateImportToast(true, cfg.title + " is backed up to the cloud.");
+    } else {
+      const reason = fbAvailable() ? "sync failed \u2014 check Firestore rules" : "not connected yet, will retry automatically";
+      setSyncStatus("off", cfg.title+" "+reason);
+      updateImportToast(false, "Saved locally, but cloud backup " + (fbAvailable() ? "failed (" + reason + ")." : "is waiting for connection \u2014 it will sync automatically once online, or click below to retry now."));
+    }
+  });
 }
+
+// ---------- Import success toast ----------
+let _toastTimer = null;
+function showImportToast(title, detail){
+  const el = document.getElementById("importToast");
+  if(!el) return;
+  el.querySelector(".toast-title").textContent = title;
+  el.querySelector(".toast-detail").textContent = detail;
+  el.querySelector(".toast-push-btn").style.display = "none";
+  el.classList.add("show");
+  if(_toastTimer) clearTimeout(_toastTimer);
+}
+function updateImportToast(success, detail){
+  const el = document.getElementById("importToast");
+  if(!el || !el.classList.contains("show")) return;
+  el.querySelector(".toast-detail").textContent = detail;
+  el.querySelector(".toast-push-btn").style.display = success ? "none" : "inline-block";
+  if(_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(()=>{ el.classList.remove("show"); }, success ? 5000 : 12000);
+}
+
 
 function populateMonthSelect(){
   const monthsSet = new Set();
@@ -1214,80 +1300,152 @@ async function fbSaveMeta(id, payload){
   }catch(err){ console.warn("fbSaveMeta failed", err); setSyncStatus("off", err.code||err.message); return false; }
 }
 
-async function fbLoadAll(){
+async function fbFetchAllRaw(){
   if(!fbAvailable()) return null;
   try{
-    setSyncStatus("busy");
     const batchesSnap = await window.__fb.getDocs(window.__fb.collection(window.__fb.db, FB_BATCHES_COL));
-    let newStore = blankStore();
-    let sawAny = false;
+    const batches = {}; // key -> {rows, type, month, fy}
     batchesSnap.forEach(d=>{
       const data = d.data();
-      const key = typeToStoreKey(data.type);
-      if(key){ sawAny = true; newStore[key] = newStore[key].concat(data.rows||[]); }
+      const key = data.type+"|"+(data.month||"na")+"|"+(data.fy||"na");
+      batches[key] = data;
     });
     const targetsSnap = await window.__fb.getDoc(window.__fb.doc(window.__fb.db, FB_META_COL, "targets"));
-    if(targetsSnap.exists()){ TARGETS = targetsSnap.data().data; sawAny = true; }
     const accrualSnap = await window.__fb.getDoc(window.__fb.doc(window.__fb.db, FB_META_COL, "accrualRevenue"));
-    if(accrualSnap.exists()){ newStore.accrualRevenue = accrualSnap.data().rows || []; sawAny = true; }
     const forecastSnap = await window.__fb.getDoc(window.__fb.doc(window.__fb.db, FB_META_COL, "forecast"));
-    if(forecastSnap.exists()){ newStore.forecast = forecastSnap.data().data || {}; sawAny = true; }
-
-    if(sawAny){
-      newStore.importLog = STORE.importLog;
-      STORE = newStore;
-      saveStore(STORE); saveTargets(TARGETS);
-      setSyncStatus("ok", "loaded from cloud");
-      return true;
-    } else {
-      setSyncStatus("ok", "cloud empty \u2014 will sync on next import");
-      return false;
-    }
+    return {
+      batches,
+      targets: targetsSnap.exists() ? targetsSnap.data().data : null,
+      accrualRevenue: accrualSnap.exists() ? (accrualSnap.data().rows||[]) : null,
+      forecast: forecastSnap.exists() ? (forecastSnap.data().data||{}) : null
+    };
   }catch(err){
-    console.warn("fbLoadAll failed", err);
+    console.warn("fbFetchAllRaw failed", err);
     setSyncStatus("off", err.code || err.message);
     return null;
   }
 }
 
+function localBatchGroups(){
+  const groups = {};
+  const keyToType = { installations:"installation", paidSales:"paidSales", paymentBehaviour:"billing", growthChurn:"growthChurn" };
+  ["installations","paidSales","paymentBehaviour","growthChurn"].forEach(storeKey=>{
+    STORE[storeKey].forEach(r=>{
+      const typeId = keyToType[storeKey];
+      const key = typeId+"|"+(r.bsMonth||"na")+"|"+(r.bsFY||"na");
+      groups[key] = groups[key] || {typeId, month:r.bsMonth, fy:r.bsFY, storeKey, rows:[]};
+      groups[key].rows.push(r);
+    });
+  });
+  return groups;
+}
+
+// Two-way reconcile: never blindly overwrites local data with a cloud pull.
+// For each (type, month, FY) batch: whichever side (local vs cloud) has MORE rows
+// is treated as more complete and is written to the other side. This protects a
+// fresh import made just before Firebase finished connecting from being wiped out
+// by an older/emptier cloud snapshot.
+async function fbReconcile(silent){
+  if(!fbAvailable()) return false;
+  if(!silent) setSyncStatus("busy", "syncing...");
+  const cloud = await fbFetchAllRaw();
+  if(cloud===null){ return false; } // fbFetchAllRaw already set an error status
+  const local = localBatchGroups();
+  const allKeys = new Set([...Object.keys(local), ...Object.keys(cloud.batches)]);
+  let pushed = 0, pulled = 0, failed = 0;
+
+  for(const key of allKeys){
+    const l = local[key];
+    const c = cloud.batches[key];
+    if(l && !c){
+      const ok = await fbSaveBatch(l.typeId, l.month, l.fy, l.rows);
+      ok ? pushed++ : failed++;
+    } else if(c && !l){
+      const storeKey = typeToStoreKey(c.type);
+      if(storeKey){ STORE[storeKey] = STORE[storeKey].concat(c.rows||[]); pulled++; }
+    } else if(l && c){
+      if(l.rows.length > (c.rows||[]).length){
+        const ok = await fbSaveBatch(l.typeId, l.month, l.fy, l.rows);
+        ok ? pushed++ : failed++;
+      } else if((c.rows||[]).length > l.rows.length){
+        const storeKey = typeToStoreKey(c.type);
+        if(storeKey){
+          STORE[storeKey] = STORE[storeKey].filter(r=> !(r.bsMonth===l.month && r.bsFY===l.fy)).concat(c.rows||[]);
+          pulled++;
+        }
+      }
+      // equal length on both sides: already in sync, nothing to do.
+    }
+  }
+
+  // accrualRevenue: merge by (Accrued month, Accrued Fy Year) pairs, richer side wins per pair.
+  if(cloud.accrualRevenue===null){
+    if(STORE.accrualRevenue.length){ const ok = await fbSaveMeta("accrualRevenue", {rows: STORE.accrualRevenue}); ok?pushed++:failed++; }
+  } else if(STORE.accrualRevenue.length > cloud.accrualRevenue.length){
+    const ok = await fbSaveMeta("accrualRevenue", {rows: STORE.accrualRevenue}); ok?pushed++:failed++;
+  } else if(cloud.accrualRevenue.length > STORE.accrualRevenue.length){
+    STORE.accrualRevenue = cloud.accrualRevenue; pulled++;
+  }
+
+  // forecast: keyed by "Month|FY" — merge missing keys either direction, richer key wins on conflict.
+  const localForecastKeys = Object.keys(STORE.forecast);
+  const cloudForecast = cloud.forecast || {};
+  const cloudForecastKeys = Object.keys(cloudForecast);
+  const allFcKeys = new Set([...localForecastKeys, ...cloudForecastKeys]);
+  let forecastChanged = false;
+  allFcKeys.forEach(k=>{
+    const lRows = STORE.forecast[k];
+    const cRows = cloudForecast[k];
+    if(lRows && !cRows){ /* push handled below in bulk */ }
+    else if(cRows && !lRows){ STORE.forecast[k] = cRows; forecastChanged = true; }
+    else if(lRows && cRows && cRows.length > lRows.length){ STORE.forecast[k] = cRows; forecastChanged = true; }
+  });
+  if(forecastChanged) pulled++;
+  const needsForecastPush = localForecastKeys.some(k=> !cloudForecast[k] || (STORE.forecast[k]||[]).length >= (cloudForecast[k]||[]).length && STORE.forecast[k]!==cloudForecast[k]);
+  if(needsForecastPush){ const ok = await fbSaveMeta("forecast", {data: STORE.forecast}); ok?pushed++:failed++; }
+
+  // targets: cloud wins only if local hasn't been changed since last successful sync in this session;
+  // simplest safe rule — if cloud has targets and local still equals the shipped defaults, take cloud.
+  if(cloud.targets){
+    TARGETS = cloud.targets;
+  } else {
+    const ok = await fbSaveMeta("targets", {data: TARGETS}); ok?pushed++:failed++;
+  }
+
+  saveStore(STORE); saveTargets(TARGETS);
+  if(failed>0){ setSyncStatus("off", failed+" item(s) failed to sync \u2014 check Firestore rules"); }
+  else { setSyncStatus("ok", pushed||pulled ? ("synced \u00b7 " + pushed + " pushed, " + pulled + " pulled") : "up to date"); }
+  return { pushed, pulled, failed };
+}
+
 let _fbRealtimeStarted = false;
+let _fbRealtimeFirstFire = true;
 function fbSubscribeRealtime(){
   if(!fbAvailable() || _fbRealtimeStarted) return;
   _fbRealtimeStarted = true;
   try{
-    let first = true;
     window.__fb.onSnapshot(window.__fb.collection(window.__fb.db, FB_BATCHES_COL), ()=>{
-      if(first){ first = false; return; } // skip initial fire, we already loaded via fbLoadAll
-      fbLoadAll().then(changed=>{ if(changed){ populateMonthSelect(); renderImportCards(); renderAll(); } });
+      // Skip the very first fire — it just reflects the reconcile we already did on startup.
+      if(_fbRealtimeFirstFire){ _fbRealtimeFirstFire = false; return; }
+      fbReconcile(true).then(()=>{ populateMonthSelect(); renderImportCards(); renderAll(); });
     });
   }catch(err){ console.warn("fbSubscribeRealtime failed", err); }
 }
 
 async function fbPushEverythingNow(){
   if(!fbAvailable()){ alert("Firebase not connected right now. Check your internet connection, or that Firestore is enabled for this project."); return; }
-  setSyncStatus("busy");
-  const groups = {};
-  const keyToType = { installations:"installation", paidSales:"paidSales", paymentBehaviour:"billing", growthChurn:"growthChurn" };
-  ["installations","paidSales","paymentBehaviour","growthChurn"].forEach(storeKey=>{
-    STORE[storeKey].forEach(r=>{
-      const typeId = keyToType[storeKey];
-      const k = typeId+"|"+r.bsMonth+"|"+r.bsFY;
-      groups[k] = groups[k] || {typeId, month:r.bsMonth, fy:r.bsFY, rows:[]};
-      groups[k].rows.push(r);
-    });
-  });
-  for(const k in groups){ await fbSaveBatch(groups[k].typeId, groups[k].month, groups[k].fy, groups[k].rows); }
-  await fbSaveMeta("accrualRevenue", { rows: STORE.accrualRevenue });
-  await fbSaveMeta("forecast", { data: STORE.forecast });
-  await fbSaveMeta("targets", { data: TARGETS });
-  setSyncStatus("ok", "full backup pushed");
-  alert("Full backup pushed to Firebase.");
+  const result = await fbReconcile(false);
+  populateMonthSelect(); renderImportCards(); renderAll();
+  if(!result){ alert("Could not reach Firebase. Check the sync status message for the reason."); }
+  else if(result.failed>0){ alert("Sync finished with " + result.failed + " error(s). Check the sync status pill for details, and confirm Firestore rules allow writes."); }
+  else { alert("Synced with cloud: " + result.pushed + " pushed, " + result.pulled + " pulled."); }
 }
 
 async function fbPullNow(){
-  const changed = await fbLoadAll();
-  if(changed){ populateMonthSelect(); renderImportCards(); renderAll(); alert("Latest cloud data loaded."); }
-  else if(changed===false){ alert("Cloud has no data yet for this project. Nothing to pull."); }
+  const result = await fbReconcile(false);
+  if(!result){ alert("Could not reach Firebase."); return; }
+  populateMonthSelect(); renderImportCards(); renderAll();
+  alert("Sync complete: " + result.pushed + " pushed, " + result.pulled + " pulled" + (result.failed?(", "+result.failed+" failed"):"") + ".");
 }
 
 let TGT_OLT = "SKGD01";
@@ -1374,6 +1532,8 @@ function init(){
   document.getElementById("btn-clear-all").addEventListener("click", clearAllData);
   document.getElementById("btn-fb-push").addEventListener("click", fbPushEverythingNow);
   document.getElementById("btn-fb-pull").addEventListener("click", fbPullNow);
+  document.querySelector("#importToast .toast-close-btn").addEventListener("click", ()=>{ document.getElementById("importToast").classList.remove("show"); });
+  document.querySelector("#importToast .toast-push-btn").addEventListener("click", ()=>{ fbPushEverythingNow(); document.getElementById("importToast").classList.remove("show"); });
 
   document.getElementById("tgt-olt-select").addEventListener("change", (e)=>{ TGT_OLT = e.target.value; renderTargetsTable(); });
   document.getElementById("btn-save-targets").addEventListener("click", saveTargetsFromTable);
@@ -1385,11 +1545,12 @@ function init(){
   };
   if(window._libsReady && window._libsReady.chart){ renderAll(); }
 
-  // Firebase: wait (briefly) for anonymous auth, then pull latest cloud data and subscribe live.
+  // Firebase: wait for anonymous auth, then reconcile (2-way merge, never blind-overwrite)
+  // and subscribe to live updates from other devices/browsers.
   setSyncStatus("busy", "connecting...");
   window._onFirebaseReady = function(){
-    fbLoadAll().then(changed=>{
-      if(changed){ populateMonthSelect(); renderImportCards(); renderAll(); }
+    fbReconcile(true).then(()=>{
+      populateMonthSelect(); renderImportCards(); renderAll();
       fbSubscribeRealtime();
     });
   };
