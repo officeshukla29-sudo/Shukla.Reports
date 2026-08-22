@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -31,9 +31,6 @@ _loadLib([
 ], function(){ return typeof XLSX !== 'undefined'; }, function(){ window._libsReady.xlsx = (typeof XLSX !== 'undefined'); if(window._onLibsReady) window._onLibsReady(); });
 </script>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, getDocs, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const firebaseConfig = {
   apiKey: "AIzaSyALb8QcMC_3BSDy27wsQaYkPgma2XStCes",
   authDomain: "data-f8737.firebaseapp.com",
@@ -42,24 +39,35 @@ const firebaseConfig = {
   messagingSenderId: "214517440168",
   appId: "1:214517440168:web:fecc77066bdd987a20ec9d"
 };
-try{
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-  window.__fb = { db, doc, setDoc, getDoc, getDocs, collection, onSnapshot, auth, ready:false, error:null };
-  signInAnonymously(auth).catch(function(err){
-    window.__fb.error = err.message;
-    console.warn('Firebase anonymous auth failed:', err.message);
-    if(window._onFirebaseError) window._onFirebaseError(err.message);
-  });
-  onAuthStateChanged(auth, function(user){
-    window.__fb.ready = !!user;
-    if(user && window._onFirebaseReady) window._onFirebaseReady();
-  });
-}catch(err){
-  window.__fb = { ready:false, error: err.message };
-  console.warn('Firebase init failed:', err.message);
-}
+window.__fb = { ready:false, error:null };
+(async function initFirebase(){
+  try{
+    const [{ initializeApp }, { getFirestore, doc, setDoc, getDoc, getDocs, collection, onSnapshot }, { getAuth, signInAnonymously, onAuthStateChanged }] = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js")
+    ]);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    Object.assign(window.__fb, { db, doc, setDoc, getDoc, getDocs, collection, onSnapshot, auth });
+    signInAnonymously(auth).catch(function(err){
+      window.__fb.error = 'auth: ' + err.code + ' ' + err.message;
+      console.warn('Firebase anonymous auth failed:', err.code, err.message);
+      if(window._onFirebaseError) window._onFirebaseError(window.__fb.error);
+    });
+    onAuthStateChanged(auth, function(user){
+      window.__fb.ready = !!user;
+      if(user && window._onFirebaseReady) window._onFirebaseReady();
+    });
+  }catch(err){
+    // This now actually catches network/CDN failures (blocked gstatic.com, offline,
+    // ad-blocker, corporate firewall, etc.) instead of failing silently with no trace.
+    window.__fb.error = 'load: ' + (err && err.message ? err.message : String(err));
+    console.warn('Firebase SDK failed to load:', err);
+    if(window._onFirebaseError) window._onFirebaseError(window.__fb.error);
+  }
+})();
 </script>
 <style>
 :root{
@@ -235,6 +243,7 @@ canvas{max-width:100%;}
     <!-- ===================== OVERVIEW ===================== -->
     <div class="section active" id="sec-overview">
       <div class="note">Yo overview le Target &rarr; Sales &rarr; New Customer &rarr; Billing &rarr; Retention &rarr; Winback &rarr; NS &rarr; Churn &rarr; Active &rarr; Revenue &rarr; Forecast sabai connect garera dekhauxa, selected BS month ra OLT ko lagi.</div>
+      <div class="note" id="ov-date-warning" style="display:none;border-left-color:var(--red);">&#9888; Could not read the expiry dates in this month's forecast file (unrecognized date format), so Retention/Winback/NS% are shown against the full forecast total instead of just what's due so far. Re-check the date column format in that import if this persists.</div>
       <div class="grid kpi-grid" id="ov-kpis"></div>
 
       <div class="two-col" style="margin-top:16px;">
@@ -496,10 +505,51 @@ function monthIdx(m){ return BS_MONTHS.indexOf(m); }
 function oltList(){ return STATE.olt==="ALL" ? OLTS : [STATE.olt]; }
 
 function filterByMonthOlt(arr, olt){
-  return arr.filter(r => r.bsMonth===STATE.month && r.bsFY===STATE.fy && (olt==="ALL" || r.OLT===olt || r.Olt===olt));
+  const isAll = STATE.month===ALL_MONTHS_VALUE;
+  return arr.filter(r => (isAll || r.bsMonth===STATE.month) && r.bsFY===STATE.fy && (olt==="ALL" || r.OLT===olt || r.Olt===olt));
 }
 
 // ---------- normalizers ----------
+// Robust date parser: handles native Date objects, Excel serial numbers, ISO
+// (YYYY-MM-DD), and common slash/dash formats (DD/MM/YYYY, MM/DD/YYYY,
+// DD-MM-YYYY, DD-Mon-YYYY). Native `new Date(str)` alone is unreliable across
+// browsers for anything other than ISO, which silently breaks any date math
+// (e.g. forecast-due-MTD collapsing to 0) whenever an imported file's dates
+// come through in a different string shape than the original seed data.
+function parseFlexDate(v){
+  if(v===null || v===undefined || v==="") return null;
+  if(v instanceof Date) return isNaN(v.getTime()) ? null : v;
+  if(typeof v === "number"){
+    // Excel serial date (days since 1899-12-30)
+    const ms = Math.round((v - 25569) * 86400 * 1000);
+    const d = new Date(ms);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  const s = String(v).trim();
+  if(!s) return null;
+  // ISO: YYYY-MM-DD (optionally with time)
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return new Date(+m[1], +m[2]-1, +m[3]);
+  // DD/MM/YYYY or DD-MM-YYYY (assume day-first, common in exports; 2-digit year -> 2000s)
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if(m){
+    let [_, a, b, y] = m;
+    y = y.length===2 ? (2000+ +y) : +y;
+    let day = +a, month = +b;
+    if(month > 12 && day <= 12){ const t=day; day=month; month=t; } // swap if clearly MM/DD
+    return new Date(y, month-1, day);
+  }
+  // DD-Mon-YYYY or DD-Mon-YY (e.g. 16-Aug-2026, 16-Aug-26)
+  m = s.match(/^(\d{1,2})[\-\s]([A-Za-z]{3,})[\-\s](\d{2,4})$/);
+  if(m){
+    const months = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+    const mi = months[m[2].slice(0,3).toLowerCase()];
+    if(mi!==undefined){ let y=+m[3]; y = y<100 ? 2000+y : y; return new Date(y, mi, +m[1]); }
+  }
+  // Last resort: native parser (handles things like "Aug 16 2026", full ISO timestamps, etc.)
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
 function normFY(s){
   if(!s) return "";
   s = String(s).trim();
@@ -519,8 +569,12 @@ function getForecastRows(month, fy){ return STORE.forecast[forecastKey(month,fy)
 
 // ---------- CUSTOMER BEHAVIOUR ENGINE ----------
 function classifyBehaviour(oltFilter){
-  const pb = STORE.paymentBehaviour.filter(r => r.bsMonth===STATE.month && r.bsFY===STATE.fy && (oltFilter==="ALL" || r.OLT===oltFilter));
-  const fc = getForecastRows(STATE.month, STATE.fy).filter(r => oltFilter==="ALL" || r.OLT===oltFilter);
+  const isAll = STATE.month===ALL_MONTHS_VALUE;
+  const months = isAll ? activeMonthsList() : [STATE.month];
+  const pb = STORE.paymentBehaviour.filter(r => months.includes(r.bsMonth) && r.bsFY===STATE.fy && (oltFilter==="ALL" || r.OLT===oltFilter));
+  const fc = isAll
+    ? months.flatMap(m=> getForecastRows(m, STATE.fy)).filter(r => oltFilter==="ALL" || r.OLT===oltFilter)
+    : getForecastRows(STATE.month, STATE.fy).filter(r => oltFilter==="ALL" || r.OLT===oltFilter);
   const fcSet = new Set(fc.map(r=>r.Username));
   const renewedUsernames = new Set(pb.map(r=>r.USERNAME));
 
@@ -555,8 +609,8 @@ function classifyBehaviour(oltFilter){
   const today = new Date();
   fc.forEach(r=>{
     if(renewedUsernames.has(r.Username)) return; // already handled above via paymentBehaviour
-    const expiry = r["Expiry Date"] ? new Date(r["Expiry Date"]) : null;
-    if(!expiry || isNaN(expiry.getTime())) return;
+    const expiry = parseFlexDate(r["Expiry Date"]);
+    if(!expiry) return;
     const gapDays = Math.floor((today - expiry) / 86400000);
     if(gapDays > 30){
       counts.WIN++;
@@ -571,33 +625,71 @@ function classifyBehaviour(oltFilter){
   // "Forecast due MTD" = only the forecast customers whose expiry date has already
   // passed as of today (i.e. they were actually due to renew by now) — excludes
   // forecast rows with a future expiry date still to come later in the month.
-  const forecastDueMTD = fc.filter(r=>{
-    const expiry = r["Expiry Date"] ? new Date(r["Expiry Date"]) : null;
-    return expiry && !isNaN(expiry.getTime()) && expiry <= today;
-  }).length;
+  const parsedExpiries = fc.map(r=>parseFlexDate(r["Expiry Date"]));
+  const unparsedCount = parsedExpiries.filter(d=>d===null).length;
+  let forecastDueMTD;
+  if(forecastTotal>0 && unparsedCount===forecastTotal){
+    // Every single expiry date failed to parse (unexpected/corrupt date format in
+    // the import) — degrade gracefully to the full forecast count rather than
+    // silently showing 0/blank everywhere, and flag it so it's visible, not hidden.
+    forecastDueMTD = forecastTotal;
+  } else {
+    forecastDueMTD = parsedExpiries.filter(d=> d && d<=today).length;
+  }
   const winbackPct = forecastDueMTD ? (counts.WIN/forecastDueMTD*100) : 0;
   const retentionPct = forecastDueMTD ? (counts.RET/forecastDueMTD*100) : 0;
   const nsPct = forecastDueMTD ? (counts.NS/forecastDueMTD*100) : 0;
-  return {rows, counts, total, forecastTotal, forecastDueMTD, winbackPct, retentionPct, nsPct, maxGapByOlt, pendingCount};
+  return {rows, counts, total, forecastTotal, forecastDueMTD, winbackPct, retentionPct, nsPct, maxGapByOlt, pendingCount, dateParseIssue: unparsedCount===forecastTotal && forecastTotal>0};
 }
 
 // ---------- SALES & GROWTH ENGINE ----------
+const ALL_MONTHS_VALUE = "__ALL__";
+function activeMonthsList(){
+  const monthsSet = new Set();
+  STORE.installations.forEach(r=>{ if(r.bsFY===STATE.fy) monthsSet.add(r.bsMonth); });
+  STORE.paidSales.forEach(r=>{ if(r.bsFY===STATE.fy) monthsSet.add(r.bsMonth); });
+  STORE.growthChurn.forEach(r=>{ if(r.bsFY===STATE.fy) monthsSet.add(r.bsMonth); });
+  STORE.paymentBehaviour.forEach(r=>{ if(r.bsFY===STATE.fy) monthsSet.add(r.bsMonth); });
+  Object.keys(STORE.forecast).forEach(k=>{ const [m,fy]=k.split("|"); if(fy===STATE.fy) monthsSet.add(m); });
+  STORE.accrualRevenue.forEach(r=>{ if(normFY(r["Accrued Fy Year"])===STATE.fy){ const mn = BS_MONTHS.find(m=>m.toLowerCase()===String(r["Accrued month"]||"").toLowerCase()); if(mn) monthsSet.add(mn); } });
+  monthsSet.delete(undefined);
+  return BS_MONTHS.filter(m=>monthsSet.has(m));
+}
+
 function latestGrowthChurnRow(olt){
-  const rows = STORE.growthChurn.filter(r=> r.bsMonth===STATE.month && r.bsFY===STATE.fy && r.OLT===olt);
+  const months = STATE.month===ALL_MONTHS_VALUE ? null : [STATE.month];
+  const rows = STORE.growthChurn.filter(r=> (months===null || months.includes(r.bsMonth)) && r.bsFY===STATE.fy && r.OLT===olt);
   if(!rows.length) return null;
-  rows.sort((a,b)=> new Date(a.SNAPSHOT_DATE) - new Date(b.SNAPSHOT_DATE));
+  rows.sort((a,b)=> (parseFlexDate(a.SNAPSHOT_DATE)||0) - (parseFlexDate(b.SNAPSHOT_DATE)||0));
   return rows[rows.length-1];
 }
 function growthMetricsFor(oltFilter){
   const olts = oltFilter==="ALL" ? OLTS : [oltFilter];
   let out = {installation:0, paidSales:0, growth:0, churn:0, active:0, byOlt:{}};
+  const isAll = STATE.month===ALL_MONTHS_VALUE;
+  const months = isAll ? activeMonthsList() : [STATE.month];
   olts.forEach(olt=>{
-    const gc = latestGrowthChurnRow(olt);
-    const inst = STORE.installations.filter(r=> r.bsMonth===STATE.month && r.bsFY===STATE.fy && r.OLT===olt).length;
-    const paid = STORE.paidSales.filter(r=> r.bsMonth===STATE.month && r.bsFY===STATE.fy && r.OLT===olt).length;
-    const g = gc ? (gc["GROWTH MTD"]||0) : 0;
-    const c = gc ? (gc["CHURN MTD"]||0) : 0;
-    const a = gc ? (gc["CL ACTIVE CUSTOMER"]||0) : 0;
+    const inst = STORE.installations.filter(r=> months.includes(r.bsMonth) && r.bsFY===STATE.fy && r.OLT===olt).length;
+    const paid = STORE.paidSales.filter(r=> months.includes(r.bsMonth) && r.bsFY===STATE.fy && r.OLT===olt).length;
+    let g=0, c=0, a=0;
+    if(isAll){
+      // growth/churn: sum each month's own MTD total (each month's cumulative figure resets).
+      // active customers: NOT summable across months (it's a snapshot, not a flow) — use the
+      // single most recent snapshot across all months instead.
+      months.forEach(m=>{
+        const save = STATE.month; STATE.month = m;
+        const gc = latestGrowthChurnRow(olt);
+        STATE.month = save;
+        if(gc){ g += gc["GROWTH MTD"]||0; c += gc["CHURN MTD"]||0; }
+      });
+      const latest = latestGrowthChurnRow(olt); // STATE.month is ALL here -> true latest across everything
+      a = latest ? (latest["CL ACTIVE CUSTOMER"]||0) : 0;
+    } else {
+      const gc = latestGrowthChurnRow(olt);
+      g = gc ? (gc["GROWTH MTD"]||0) : 0;
+      c = gc ? (gc["CHURN MTD"]||0) : 0;
+      a = gc ? (gc["CL ACTIVE CUSTOMER"]||0) : 0;
+    }
     out.installation += inst; out.paidSales += paid; out.growth += g; out.churn += c; out.active += a;
     out.byOlt[olt] = {installation:inst, paidSales:paid, growth:g, churn:c, active:a};
   });
@@ -625,7 +717,22 @@ function revenueFor(month, fy, oltFilter){
   const total = rows.reduce((s,r)=> s + (typeof r.Amount==="number"?r.Amount:parseFloat(r.Amount)||0), 0);
   return {total, count: rows.length};
 }
+// Revenue for whatever is currently selected in the month dropdown — handles "All Months"
+// by summing every month that actually has data, instead of just STATE.month directly.
+function revenueForState(oltFilter){
+  if(STATE.month===ALL_MONTHS_VALUE){
+    let total = 0, count = 0;
+    activeMonthsList().forEach(m=>{ const r = revenueFor(m, STATE.fy, oltFilter); total += r.total; count += r.count; });
+    return {total, count};
+  }
+  return revenueFor(STATE.month, STATE.fy, oltFilter);
+}
 function ytdRevenue(oltFilter){
+  if(STATE.month===ALL_MONTHS_VALUE){
+    let sum = 0;
+    activeMonthsList().forEach(m=> sum += revenueFor(m, STATE.fy, oltFilter).total);
+    return sum;
+  }
   const idx = monthIdx(STATE.month);
   let sum = 0;
   for(let i=0;i<=idx;i++){ sum += revenueFor(BS_MONTHS[i], STATE.fy, oltFilter).total; }
@@ -641,6 +748,21 @@ function targetFor(olt, month, metric){
 }
 function targetSumFor(oltFilter, month, metric){
   const olts = oltFilter==="ALL" ? OLTS : [oltFilter];
+  if(month===ALL_MONTHS_VALUE){
+    // Sum (or average, for rate metrics) target across every month that has actual
+    // data imported, so "All Months" actual-vs-target stays apples-to-apples with
+    // what's really been achieved so far rather than the full 12-month plan.
+    const months = activeMonthsList();
+    if(!months.length) return null;
+    if(metric==="retention" || metric==="winback"){
+      let vals = [];
+      months.forEach(m=> olts.forEach(o=>{ const v=targetFor(o,m,metric); if(v!==null&&v!==undefined) vals.push(v); }));
+      return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+    }
+    let s = 0;
+    months.forEach(m=> olts.forEach(o=>{ const v=targetFor(o,m,metric); if(v!==null&&v!==undefined) s+=v; }));
+    return s;
+  }
   if(metric==="retention" || metric==="winback"){
     // average of applicable OLTs
     let vals = olts.map(o=>targetFor(o,month,metric)).filter(v=>v!==null && v!==undefined);
@@ -683,26 +805,42 @@ function kpiCountOrPct(label, count, total, extraCaption, deltaUp){
   }
   return kpiCard(label, fmtNum(count), total?(fmtPct(p)+(extraCaption?(" \u00b7 "+extraCaption):"")):extraCaption, deltaUp, total?p:undefined);
 }
+// Actual-vs-target flavour of the same idea, used for KPI cards that compare a
+// month's actual figure against its plan target (installation, revenue, active,
+// growth, churn). Money values are auto-detected by label so the caption still
+// reads "Rs X of Rs Y" rather than a bare number.
+function kpiTargetOrPct(label, actual, target, isMoney){
+  const fmt = isMoney ? fmtMoney : fmtNum;
+  const p = target ? pct(actual,target) : null;
+  if(STATE.showPct){
+    return kpiCard(label, target?fmtPct(p):'-', target?(fmt(actual)+" of "+fmt(target)):"No target set", target? p>=100 : true, target?p:undefined);
+  }
+  return kpiCard(label, fmt(actual), target?("Target "+fmt(target)):undefined, target? actual>=target : true, target?p:undefined);
+}
 
 function renderOverview(){
   const olt = STATE.olt;
   const gm = growthMetricsFor(olt);
-  const rev = revenueFor(STATE.month, STATE.fy, olt);
+  const rev = revenueForState(olt);
   const beh = classifyBehaviour(olt);
   const tInstall = targetSumFor(olt, STATE.month, "installation");
   const tRevenue = targetSumFor(olt, STATE.month, "revenue");
   const tActive = targetSumFor(olt, STATE.month, "active");
+  const tGrowth = targetSumFor(olt, STATE.month, "growth");
+  const tChurn = targetSumFor(olt, STATE.month, "churn");
 
   let html = "";
-  html += kpiCard("New Installation", fmtNum(gm.installation), tInstall?`Target ${fmtNum(tInstall)}`:undefined, gm.installation>=(tInstall||0), tInstall? pct(gm.installation,tInstall):undefined);
-  html += kpiCard("Accrual Revenue (MTD)", fmtMoney(rev.total), tRevenue?`Target ${fmtMoney(tRevenue)}`:undefined, rev.total>=(tRevenue||0), tRevenue? pct(rev.total,tRevenue):undefined);
-  html += kpiCard("Active Customers", fmtNum(gm.active), tActive?`Target ${fmtNum(tActive)}`:undefined, gm.active>=(tActive||0), tActive? pct(gm.active,tActive):undefined);
-  html += kpiCard("Growth (MTD)", fmtNum(gm.growth));
-  html += kpiCard("Churn (MTD)", fmtNum(gm.churn));
+  html += kpiTargetOrPct("New Installation", gm.installation, tInstall, false);
+  html += kpiTargetOrPct("Accrual Revenue (MTD)", rev.total, tRevenue, true);
+  html += kpiTargetOrPct("Active Customers", gm.active, tActive, false);
+  html += kpiTargetOrPct("Growth (MTD)", gm.growth, tGrowth, false);
+  html += kpiTargetOrPct("Churn (MTD)", gm.churn, tChurn, false);
   html += kpiCard("Retention", beh.forecastDueMTD? fmtPct(beh.retentionPct) : "-", beh.forecastDueMTD?`${beh.counts.RET} of ${beh.forecastDueMTD} forecast due (MTD)`:undefined, true);
   html += kpiCard("Winback %", fmtPct(beh.winbackPct), `${beh.counts.WIN} winback / ${beh.forecastDueMTD} forecast due (MTD)`, beh.winbackPct<=15);
   html += kpiCard("NS (unmatched)", beh.forecastDueMTD? fmtPct(beh.nsPct) : "-", `${beh.counts.NS} of ${beh.forecastDueMTD} forecast due (MTD)`, beh.counts.NS===0);
   document.getElementById("ov-kpis").innerHTML = html;
+  const warnEl = document.getElementById("ov-date-warning");
+  if(warnEl) warnEl.style.display = beh.dateParseIssue ? "block" : "none";
 
   // target progress bars
   const metrics = [["Installation","installation",gm.installation],["Growth","growth",gm.growth],["Active Customers","active",gm.active],["Revenue","revenue",rev.total]];
@@ -747,7 +885,7 @@ function renderOverview(){
   // active customers trend
   const activeSeries = monthsWithData.map(m=>{
     const olts = olt==="ALL"?OLTS:[olt];
-    let s=0; olts.forEach(o=>{ const rows = STORE.growthChurn.filter(r=>r.bsMonth===m && r.bsFY===STATE.fy && r.OLT===o); if(rows.length){ rows.sort((a,b)=>new Date(a.SNAPSHOT_DATE)-new Date(b.SNAPSHOT_DATE)); s+= rows[rows.length-1]["CL ACTIVE CUSTOMER"]||0; } });
+    let s=0; olts.forEach(o=>{ const rows = STORE.growthChurn.filter(r=>r.bsMonth===m && r.bsFY===STATE.fy && r.OLT===o); if(rows.length){ rows.sort((a,b)=>(parseFlexDate(a.SNAPSHOT_DATE)||0)-(parseFlexDate(b.SNAPSHOT_DATE)||0)); s+= rows[rows.length-1]["CL ACTIVE CUSTOMER"]||0; } });
     return s;
   });
   renderChart('ov-active', document.getElementById('chart-ov-active'), {
@@ -757,7 +895,7 @@ function renderOverview(){
   });
 
   // Top Performing OLT donut (by revenue share, selected month)
-  const oltRevShare = OLTS.map(o=>revenueFor(STATE.month, STATE.fy, o).total);
+  const oltRevShare = OLTS.map(o=>revenueForState(o).total);
   const revShareTotal = oltRevShare.reduce((a,b)=>a+b,0) || 1;
   renderChart('ov-topolt', document.getElementById('chart-ov-topolt'), {
     type:'doughnut',
@@ -770,7 +908,7 @@ function renderOverview(){
   let tbody = "";
   OLTS.forEach(o=>{
     const g = growthMetricsFor(o);
-    const r = revenueFor(STATE.month, STATE.fy, o);
+    const r = revenueForState(o);
     const b = classifyBehaviour(o);
     tbody += `<tr><td><span class="badge-olt">${o}</span></td><td>${fmtNum(g.installation)}</td><td>${fmtNum(g.growth)}</td><td>${fmtNum(g.churn)}</td><td>${fmtNum(g.active)}</td><td>${fmtMoney(r.total)}</td><td>${b.forecastDueMTD?fmtPct(b.retentionPct):'-'}</td><td>${fmtPct(b.winbackPct)}</td></tr>`;
   });
@@ -957,7 +1095,7 @@ function renderGrowth(){
 
 function renderRevenue(){
   const olt = STATE.olt;
-  const rev = revenueFor(STATE.month, STATE.fy, olt);
+  const rev = revenueForState(olt);
   const gm = growthMetricsFor(olt);
   const arpu = gm.active ? rev.total/gm.active : 0;
   const tRevenue = targetSumFor(olt, STATE.month, "revenue");
@@ -969,7 +1107,7 @@ function renderRevenue(){
   const revGrowthPct = prevRev ? ((rev.total-prevRev)/prevRev*100) : null;
 
   let html = "";
-  html += kpiCard("Accrual Revenue (MTD)", fmtMoney(rev.total), tRevenue?`Target ${fmtMoney(tRevenue)}`:undefined, rev.total>=(tRevenue||0), tRevenue?pct(rev.total,tRevenue):undefined);
+  html += kpiTargetOrPct("Accrual Revenue (MTD)", rev.total, tRevenue, true);
   html += kpiCard("Revenue Growth (MoM)", revGrowthPct===null?'-':fmtPct(revGrowthPct), prevM?`vs ${prevM}`:'No prior month data yet', (revGrowthPct||0)>=0);
   html += kpiCard("ARPU", fmtMoney(arpu));
   html += kpiCard("Active Customers", fmtNum(gm.active));
@@ -977,7 +1115,7 @@ function renderRevenue(){
   html += kpiCard("Target Achv % (MTD)", tRevenue?fmtPct(pct(rev.total,tRevenue)):"-");
   document.getElementById("rev-kpis").innerHTML = html;
 
-  const oltRevs = OLTS.map(o=>revenueFor(STATE.month, STATE.fy, o).total);
+  const oltRevs = OLTS.map(o=>revenueForState(o).total);
   renderChart('rev-olt', document.getElementById('chart-rev-olt'), {
     type:'bar',
     data:{ labels: OLTS, datasets:[{label:'Revenue', data:oltRevs, backgroundColor:['#3ba7ff99','#7c5cff99','#33d69f99'], borderRadius:6}]},
@@ -998,7 +1136,7 @@ function renderRevenue(){
 
   let thead = "<tr><th>OLT</th><th>Revenue (MTD)</th><th>Target</th><th>Achv %</th><th>ARPU</th><th>YTD</th></tr>";
   let tbody = OLTS.map(o=>{
-    const r = revenueFor(STATE.month, STATE.fy, o);
+    const r = revenueForState(o);
     const g = growthMetricsFor(o);
     const t = targetSumFor(o, STATE.month, "revenue");
     const a = g.active ? r.total/g.active : 0;
@@ -1036,6 +1174,9 @@ function renderImportCards(){
   let html = "";
   IMPORT_TYPES.forEach(t=>{
     const log = STORE.importLog.filter(l=>l.type===t.title).slice(-1)[0];
+    const rowCount = (t.id==="forecast") ? Object.values(STORE.forecast).reduce((s,r)=>s+r.length,0)
+      : (t.id==="accrualRevenue") ? STORE.accrualRevenue.length
+      : STORE[t.store].length;
     html += `<div class="import-card" data-type="${t.id}">
       <h4>${t.title}</h4>
       <p>${t.desc}</p>
@@ -1045,7 +1186,10 @@ function renderImportCards(){
       </div>` : ''}
       <input type="file" class="imp-file" accept=".xlsx,.xls,.csv">
       <div class="detect-preview" style="display:none;"></div>
-      <button class="btn small imp-go">Import</button>
+      <div class="chip-row">
+        <button class="btn small imp-go">Import</button>
+        <button class="btn ghost small imp-export" ${rowCount?'':'disabled'}>Export JSON (${rowCount})</button>
+      </div>
       <div class="status">${log ? `Last import: ${log.rows} rows &middot; ${new Date(log.at).toLocaleString()}` : 'No import yet for this dataset.'}</div>
     </div>`;
   });
@@ -1092,6 +1236,14 @@ function renderImportCards(){
     fileInput.addEventListener("change", updatePreview);
     if(monthSel) monthSel.addEventListener("change", updatePreview);
     if(fySel) fySel.addEventListener("change", updatePreview);
+
+    const exportBtn = card.querySelector(".imp-export");
+    if(exportBtn) exportBtn.addEventListener("click", ()=>{
+      const data = (cfg.id==="forecast") ? STORE.forecast
+        : (cfg.id==="accrualRevenue") ? STORE.accrualRevenue
+        : STORE[cfg.store];
+      downloadJSON(data, "shuklagandaki_" + cfg.id + "_" + new Date().toISOString().slice(0,10) + ".json");
+    });
 
     card.querySelector(".imp-go").addEventListener("click", ()=>{
       if(!fileInput.files.length){ alert("Select a file first."); return; }
@@ -1215,30 +1367,50 @@ function updateImportToast(success, detail){
 
 
 function populateMonthSelect(){
-  const monthsSet = new Set();
-  STORE.installations.forEach(r=>monthsSet.add(r.bsMonth));
-  STORE.paidSales.forEach(r=>monthsSet.add(r.bsMonth));
-  STORE.growthChurn.forEach(r=>monthsSet.add(r.bsMonth));
-  STORE.paymentBehaviour.forEach(r=>monthsSet.add(r.bsMonth));
-  Object.keys(STORE.forecast).forEach(k=>monthsSet.add(k.split("|")[0]));
-  STORE.accrualRevenue.forEach(r=>{ const mn = BS_MONTHS.find(m=>m.toLowerCase()===String(r["Accrued month"]||"").toLowerCase()); if(mn) monthsSet.add(mn); });
-  monthsSet.delete(undefined);
-  let months = BS_MONTHS.filter(m=>monthsSet.has(m));
+  let months = activeMonthsList();
   if(!months.length) months = ["Bhadra"];
   const sel = document.getElementById("monthSelect");
-  sel.innerHTML = months.map(m=>`<option value="${m}" ${m===STATE.month?'selected':''}>${m}</option>`).join("");
-  if(!months.includes(STATE.month)) STATE.month = months[months.length-1];
+  const optHtml = months.map(m=>`<option value="${m}" ${m===STATE.month?'selected':''}>${m}</option>`).join("");
+  sel.innerHTML = `<option value="${ALL_MONTHS_VALUE}" ${STATE.month===ALL_MONTHS_VALUE?'selected':''}>All Months (${months.length})</option>` + optHtml;
+  if(STATE.month!==ALL_MONTHS_VALUE && !months.includes(STATE.month)) STATE.month = months[months.length-1];
   sel.value = STATE.month;
 }
 
 // ---------- Backup / restore / clear ----------
 function exportBackup(){
-  const blob = new Blob([JSON.stringify({store:STORE, targets:TARGETS}, null, 2)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "shuklagandaki_dashboard_backup_"+new Date().toISOString().slice(0,10)+".json";
-  a.click();
-  URL.revokeObjectURL(url);
+  const data = {store:STORE, targets:TARGETS};
+  downloadJSON(data, "shuklagandaki_dashboard_backup_"+new Date().toISOString().slice(0,10)+".json");
+}
+function downloadJSON(data, filename){
+  const text = JSON.stringify(data, null, 2);
+  try{
+    const blob = new Blob([text], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    return;
+  }catch(err){
+    console.warn("Blob download failed, falling back to data URI:", err);
+  }
+  try{
+    const a = document.createElement("a");
+    a.href = "data:application/json;charset=utf-8," + encodeURIComponent(text);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return;
+  }catch(err){
+    console.warn("Data URI download also failed:", err);
+  }
+  // Last resort: open a new tab with the raw JSON so the person can copy/save it manually.
+  const w = window.open("", "_blank");
+  if(w){ w.document.write("<pre>"+text.replace(/</g,"&lt;")+"</pre>"); }
+  else { alert("Could not trigger a download automatically. Copy this JSON manually from the browser console: window.__lastExport"); window.__lastExport = text; }
 }
 function restoreBackup(file){
   const reader = new FileReader();
@@ -1557,7 +1729,7 @@ function init(){
   window._onFirebaseError = function(msg){ setSyncStatus("off", msg); };
   if(fbAvailable()){ window._onFirebaseReady(); }
   else {
-    setTimeout(()=>{ if(!fbAvailable()) setSyncStatus("off", "no connection yet \u2014 will retry on next import"); }, 6000);
+    setTimeout(()=>{ if(!fbAvailable()) setSyncStatus("off", (window.__fb && window.__fb.error) ? window.__fb.error : "no connection yet \u2014 will retry on next import"); }, 6000);
   }
 }
 document.addEventListener("DOMContentLoaded", init);
