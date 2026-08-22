@@ -35,12 +35,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, doc, setDoc, getDoc, getDocs, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const firebaseConfig = {
-  apiKey: "AIzaSyDvSyhGSlurnzocYh7K1kkJZSv2gZki_8U",
-  authDomain: "applw-a314c.firebaseapp.com",
-  projectId: "applw-a314c",
-  storageBucket: "applw-a314c.firebasestorage.app",
-  messagingSenderId: "218726837478",
-  appId: "1:218726837478:web:46393bc1dc7cdc8abd9f27"
+  apiKey: "AIzaSyALb8QcMC_3BSDy27wsQaYkPgma2XStCes",
+  authDomain: "data-f8737.firebaseapp.com",
+  projectId: "data-f8737",
+  storageBucket: "data-f8737.firebasestorage.app",
+  messagingSenderId: "214517440168",
+  appId: "1:214517440168:web:fecc77066bdd987a20ec9d"
 };
 try{
   const app = initializeApp(firebaseConfig);
@@ -63,96 +63,112 @@ try{
 </script>
 <style>
 :root{
-  --bg:#0a0e1a; --bg2:#0d1424; --panel:#111a2e; --panel2:#141f38; --border:#1e2c4a;
-  --txt:#e8edf7; --txt2:#8fa1c7; --txt3:#5c6d8f;
-  --accent:#3ba7ff; --accent2:#7c5cff; --green:#33d69f; --red:#ff5c7c; --amber:#ffb84d;
-  --grad1:linear-gradient(135deg,#1a2947,#0d1424);
-  --grad2:linear-gradient(135deg,#3ba7ff22,#7c5cff22);
-  --radius:14px;
+  --bg:#f3f5fb; --bg2:#ffffff; --panel:#ffffff; --panel2:#f7f8fd; --border:#e8eaf6;
+  --txt:#1b2140; --txt2:#6b7290; --txt3:#9aa0c0;
+  --accent:#6d5bf6; --accent2:#4e8dff; --green:#22c48d; --red:#ff5c7c; --amber:#ffab3d;
+  --grad1:linear-gradient(135deg,#6d5bf6,#4e8dff);
+  --grad2:linear-gradient(135deg,#efe9ff,#e8f0ff);
+  --grad-side:linear-gradient(165deg,#241a5e 0%,#4630b8 45%,#6d5bf6 100%);
+  --radius:16px;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;}
 body{min-height:100vh;}
 ::-webkit-scrollbar{width:8px;height:8px;}
-::-webkit-scrollbar-thumb{background:#2a3a5e;border-radius:4px;}
+::-webkit-scrollbar-thumb{background:#d7dcf2;border-radius:4px;}
 .app{display:flex;min-height:100vh;}
-.sidebar{width:250px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);padding:20px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;}
-.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 20px 8px;border-bottom:1px solid var(--border);margin-bottom:16px;}
-.brand-badge{width:38px;height:38px;border-radius:10px;background:var(--grad2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);border:1px solid #2a3a5e;}
-.brand-text b{display:block;font-size:14px;letter-spacing:.3px;}
-.brand-text span{display:block;font-size:11px;color:var(--txt3);}
-.nav-group-label{font-size:10.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin:16px 8px 8px;}
-.nav-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:none;color:var(--txt2);padding:10px 12px;border-radius:10px;font-size:13.5px;cursor:pointer;margin-bottom:3px;transition:.15s;}
-.nav-btn:hover{background:#16223c;color:var(--txt);}
-.nav-btn.active{background:var(--grad2);color:var(--accent);font-weight:600;box-shadow:inset 0 0 0 1px #2f4a7a;}
-.nav-ico{width:18px;text-align:center;font-size:14px;}
+.sidebar{width:250px;flex-shrink:0;background:var(--grad-side);border-right:none;padding:20px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;color:#fff;}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 20px 8px;border-bottom:1px solid #ffffff2b;margin-bottom:16px;}
+.brand-badge{width:38px;height:38px;border-radius:11px;background:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:800;color:#5c4bdb;box-shadow:0 4px 14px #00000030;}
+.brand-text b{display:block;font-size:14px;letter-spacing:.3px;color:#fff;}
+.brand-text span{display:block;font-size:11px;color:#d9d4ff;}
+.nav-group-label{font-size:10.5px;color:#c8c2f7;text-transform:uppercase;letter-spacing:1px;margin:16px 8px 8px;}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:none;color:#e3dffb;padding:10px 12px;border-radius:11px;font-size:13.5px;cursor:pointer;margin-bottom:3px;transition:.15s;}
+.nav-btn:hover{background:#ffffff1c;color:#fff;}
+.nav-btn.active{background:#ffffff;color:#5c4bdb;font-weight:700;box-shadow:0 6px 16px #00000025;}
+.nav-ico{width:20px;text-align:center;font-size:14px;}
 .main{flex:1;min-width:0;padding:22px 28px 60px;}
 .topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
-.topbar h1{font-size:20px;margin:0;font-weight:700;}
+.topbar h1{font-size:21px;margin:0;font-weight:800;color:var(--txt);}
 .topbar .sub{color:var(--txt3);font-size:12.5px;margin-top:2px;}
 .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-.pill-tabs{display:flex;gap:6px;background:var(--panel);padding:4px;border-radius:10px;border:1px solid var(--border);flex-wrap:wrap;}
-.pill-tabs button{background:transparent;border:none;color:var(--txt2);padding:7px 13px;border-radius:7px;font-size:12.5px;cursor:pointer;font-weight:600;}
-.pill-tabs button.active{background:var(--accent);color:#04101f;}
-select, input[type=text], input[type=file]{background:var(--panel);border:1px solid var(--border);color:var(--txt);padding:7px 10px;border-radius:8px;font-size:12.5px;}
+.pill-tabs{display:flex;gap:6px;background:var(--panel);padding:4px;border-radius:11px;border:1px solid var(--border);flex-wrap:wrap;box-shadow:0 2px 10px #6d5bf60d;}
+.pill-tabs button{background:transparent;border:none;color:var(--txt2);padding:7px 13px;border-radius:8px;font-size:12.5px;cursor:pointer;font-weight:600;}
+.pill-tabs button.active{background:var(--grad1);color:#fff;}
+select, input[type=text], input[type=file]{background:#fff;border:1px solid var(--border);color:var(--txt);padding:7px 10px;border-radius:9px;font-size:12.5px;}
 select:focus,input:focus{outline:1px solid var(--accent);}
-.btn{background:var(--accent);color:#04101f;border:none;padding:8px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;}
-.btn.ghost{background:transparent;border:1px solid var(--border);color:var(--txt2);}
-.btn.small{padding:5px 10px;font-size:11.5px;}
-.btn:hover{filter:brightness(1.1);}
+.btn{background:var(--grad1);color:#fff;border:none;padding:9px 15px;border-radius:10px;font-size:12.5px;font-weight:700;cursor:pointer;box-shadow:0 6px 14px #6d5bf636;}
+.btn.ghost{background:#fff;border:1px solid var(--border);color:var(--txt2);box-shadow:none;}
+.btn.small{padding:6px 11px;font-size:11.5px;}
+.btn:hover{filter:brightness(1.06);}
 .grid{display:grid;gap:14px;}
 .kpi-grid{grid-template-columns:repeat(auto-fit,minmax(178px,1fr));}
-.kpi{background:var(--grad1);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;}
-.kpi .lbl{color:var(--txt3);font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
-.kpi .val{font-size:24px;font-weight:800;}
-.kpi .delta{font-size:11.5px;margin-top:6px;font-weight:600;}
-.kpi .delta.up{color:var(--green);} .kpi .delta.down{color:var(--red);}
-.kpi .bar{height:4px;border-radius:3px;background:#1c2947;margin-top:10px;overflow:hidden;}
-.kpi .bar i{display:block;height:100%;background:var(--accent);}
-.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;}
-.panel h3{margin:0 0 4px;font-size:14.5px;}
+.kpi{background:var(--grad1);color:#fff;border:none;border-radius:var(--radius);padding:17px;position:relative;overflow:hidden;box-shadow:0 10px 24px #4e5eea26;}
+.kpi:nth-child(3n+2){background:linear-gradient(135deg,#4e8dff,#6d5bf6);}
+.kpi:nth-child(3n+3){background:linear-gradient(135deg,#8a63f2,#c15be0);}
+.kpi .lbl{color:#ffffffcc;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
+.kpi .val{font-size:24px;font-weight:800;color:#fff;}
+.kpi .delta{font-size:11.5px;margin-top:6px;font-weight:600;color:#ffffffdd;}
+.kpi .delta.up{color:#d8ffe9;} .kpi .delta.down{color:#ffe0e6;}
+.kpi .bar{height:5px;border-radius:3px;background:#ffffff33;margin-top:10px;overflow:hidden;}
+.kpi .bar i{display:block;height:100%;background:#fff;}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;box-shadow:0 4px 18px #6d5bf60d;}
+.panel h3{margin:0 0 4px;font-size:14.5px;color:var(--txt);}
 .panel .hint{color:var(--txt3);font-size:11.5px;margin-bottom:14px;}
 .two-col{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
 .three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
 @media(max-width:1000px){.two-col,.three-col{grid-template-columns:1fr;}}
 table{width:100%;border-collapse:collapse;font-size:12.3px;}
-th{text-align:left;color:var(--txt3);font-weight:600;text-transform:uppercase;font-size:10.5px;letter-spacing:.4px;padding:8px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);}
-td{padding:8px 10px;border-bottom:1px solid #16203a;}
-tr:hover td{background:#131e36;}
-.tbl-wrap{max-height:420px;overflow:auto;border-radius:10px;border:1px solid var(--border);}
-.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;}
-.tag.new{background:#33d69f22;color:var(--green);}
-.tag.ret{background:#3ba7ff22;color:var(--accent);}
-.tag.win{background:#ffb84d22;color:var(--amber);}
-.tag.ns{background:#ff5c7c22;color:var(--red);}
-.badge-olt{background:#1c2947;color:var(--txt2);padding:2px 8px;border-radius:6px;font-size:10.5px;font-weight:700;}
+th{text-align:left;color:var(--txt3);font-weight:700;text-transform:uppercase;font-size:10.5px;letter-spacing:.4px;padding:9px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);}
+td{padding:9px 10px;border-bottom:1px solid #f0f1fa;color:var(--txt);}
+tr:hover td{background:#f7f7ff;}
+.tbl-wrap{max-height:420px;overflow:auto;border-radius:12px;border:1px solid var(--border);}
+.tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;}
+.tag.new{background:#e4f9f1;color:#159a6c;}
+.tag.ret{background:#eaf1ff;color:#3568d8;}
+.tag.win{background:#fff2e0;color:#c67a12;}
+.tag.ns{background:#ffe8ec;color:#d43a58;}
+.badge-olt{background:#eeeaff;color:#5c4bdb;padding:3px 9px;border-radius:7px;font-size:10.5px;font-weight:700;}
 .progress-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .progress-row .name{width:80px;font-size:12px;color:var(--txt2);flex-shrink:0;}
-.progress-row .track{flex:1;height:8px;background:#182444;border-radius:5px;overflow:hidden;}
+.progress-row .track{flex:1;height:8px;background:#eef0fb;border-radius:5px;overflow:hidden;}
 .progress-row .track i{display:block;height:100%;border-radius:5px;}
-.progress-row .pct{width:52px;text-align:right;font-size:12px;font-weight:700;flex-shrink:0;}
+.progress-row .pct{width:52px;text-align:right;font-size:12px;font-weight:700;flex-shrink:0;color:var(--txt);}
 .import-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;}
-.import-card{background:var(--panel2);border:1px dashed #2a3a5e;border-radius:12px;padding:16px;}
-.import-card h4{margin:0 0 4px;font-size:13px;}
+.import-card{background:var(--panel2);border:1px dashed #cfc9f9;border-radius:14px;padding:16px;}
+.import-card h4{margin:0 0 4px;font-size:13px;color:var(--txt);}
 .import-card p{color:var(--txt3);font-size:11.3px;margin:0 0 10px;}
-.import-card .status{font-size:11px;color:var(--green);margin-top:8px;}
+.import-card .status{font-size:11px;color:#159a6c;margin-top:8px;}
 .import-card input[type=file]{width:100%;margin-bottom:8px;}
 .chip-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
 .chip-row select{flex:1;min-width:100px;}
 canvas{max-width:100%;}
 .chart-box{position:relative;width:100%;height:230px;}
 .chart-box canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important;}
-.note{background:#1a2947;border-left:3px solid var(--accent);padding:10px 14px;border-radius:8px;font-size:12px;color:var(--txt2);margin-bottom:14px;}
-.editable-tbl input{width:70px;background:#0d1424;border:1px solid var(--border);color:var(--txt);padding:4px 6px;border-radius:5px;font-size:11.5px;}
+.note{background:#f1eeff;border-left:3px solid var(--accent);padding:10px 14px;border-radius:10px;font-size:12px;color:#4b3f99;margin-bottom:14px;}
+.editable-tbl input{width:70px;background:#fff;border:1px solid var(--border);color:var(--txt);padding:4px 6px;border-radius:6px;font-size:11.5px;}
 .section{display:none;}
 .section.active{display:block;}
 .footer-note{color:var(--txt3);font-size:11px;text-align:center;margin-top:30px;}
 .flex-between{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
 .small-muted{color:var(--txt3);font-size:11px;}
 .sync-pill{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
-.sync-pill.sync-ok{background:#33d69f22;color:var(--green);}
-.sync-pill.sync-off{background:#ff5c7c22;color:var(--red);}
-.sync-pill.sync-busy{background:#ffb84d22;color:var(--amber);}
+.sync-pill.sync-ok{background:#e4f9f1;color:#159a6c;}
+.sync-pill.sync-off{background:#ffe8ec;color:#d43a58;}
+.sync-pill.sync-busy{background:#fff2e0;color:#c67a12;}
+.pct-switch{width:34px;height:19px;border-radius:20px;background:#dfe1f2;position:relative;transition:.15s;flex-shrink:0;}
+.pct-switch i{position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0002;transition:.15s;}
+.pct-switch.on{background:var(--grad1);}
+.pct-switch.on i{left:17px;}
+.insight-card{background:#ffffff1c;border:1px solid #ffffff30;border-radius:14px;padding:14px;margin-top:14px;color:#fff;}
+.insight-card b{display:block;font-size:12.5px;margin-bottom:4px;}
+.insight-card span{font-size:11.3px;color:#e3dffb;}
+.quick-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+.quick-actions button{flex:1;min-width:140px;background:var(--grad1);color:#fff;border:none;padding:12px 14px;border-radius:12px;font-size:12.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px #6d5bf62e;}
+.quick-actions button:nth-child(2){background:linear-gradient(135deg,#4e8dff,#6d5bf6);}
+.quick-actions button:nth-child(3){background:linear-gradient(135deg,#7a63e8,#a75be0);}
+.quick-actions button:nth-child(4){background:linear-gradient(135deg,#9a5be0,#c15be0);}
+.quick-actions button:nth-child(5){background:linear-gradient(135deg,#e0605b,#ea7a5b);}
 </style>
 </head>
 <body>
@@ -178,7 +194,8 @@ canvas{max-width:100%;}
     </div>
     <div class="nav-group-label">Cloud Sync</div>
     <div style="padding:0 8px;"><span class="sync-pill sync-off" id="syncStatus">&#9729; Connecting...</span></div>
-    <div class="footer-note" style="text-align:left;padding:10px 8px;">Data syncs to Firebase automatically on import. Also cached locally in this browser as offline backup.</div>
+    <div class="insight-card" id="sidebar-insight"><b>Today's Insights</b><span>Loading...</span></div>
+    <div class="footer-note" style="text-align:left;padding:10px 8px;color:#c8c2f7;">Data syncs to Firebase automatically on import. Also cached locally in this browser as offline backup.</div>
   </div>
 
   <div class="main">
@@ -195,6 +212,11 @@ canvas{max-width:100%;}
           <button data-olt="RISH01">RISH01</button>
         </div>
         <select id="monthSelect"></select>
+        <label id="pctToggleLabel" style="margin:0;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);border-radius:9px;padding:7px 12px;cursor:pointer;user-select:none;">
+          <span class="pct-switch" id="pctSwitch"><i></i></span>
+          <span style="font-size:12.5px;color:var(--txt2);font-weight:600;">Show as %</span>
+          <input type="checkbox" id="pctToggle" style="display:none;">
+        </label>
       </div>
     </div>
 
@@ -216,7 +238,7 @@ canvas{max-width:100%;}
         </div>
       </div>
 
-      <div class="two-col">
+      <div class="three-col">
         <div class="panel">
           <h3>Revenue Trend (Accrual, by BS month)</h3>
           <div class="chart-box"><canvas id="chart-ov-revenue"></canvas></div>
@@ -225,17 +247,34 @@ canvas{max-width:100%;}
           <h3>Active Customers &amp; Net Growth Trend</h3>
           <div class="chart-box"><canvas id="chart-ov-active"></canvas></div>
         </div>
+        <div class="panel">
+          <h3>Top Performing OLT</h3>
+          <div class="hint">By accrual revenue share, selected month</div>
+          <div class="chart-box"><canvas id="chart-ov-topolt"></canvas></div>
+        </div>
       </div>
 
       <div class="panel">
         <h3>OLT-wise Snapshot &mdash; selected month</h3>
         <div class="tbl-wrap"><table id="ov-olt-table"><thead></thead><tbody></tbody></table></div>
       </div>
+
+      <div class="panel">
+        <h3>Quick Actions</h3>
+        <div class="quick-actions" id="ov-quick-actions">
+          <button data-tab="targets">&#127919; Manage Targets</button>
+          <button data-tab="import">&#8593; Data Import</button>
+          <button data-tab="behaviour">&#128100; Customer Behaviour</button>
+          <button data-tab="growth">&#128200; Sales &amp; Growth</button>
+          <button data-tab="revenue">&#128196; Revenue Report</button>
+        </div>
+      </div>
     </div>
+
 
     <!-- ===================== CUSTOMER BEHAVIOUR ===================== -->
     <div class="section" id="sec-behaviour">
-      <div class="note">Winback = expiry huneko din dekhi 30 din bhanda badi vaisakyo tara renew vaisakeko chaina, VA already renew vayo tara 30 din bhanda dhilo garyo &mdash; dubai count huncha, ra din bitepachi automatically update huncha (naya data import nagari pani). Retention = forecast list ma vako customer le renew garyo. NS = New/Retention/Winback kunai ma naparne billing customer. Pending = forecast due chha tara aile samma 30 din pugeko chaina.</div>
+      <div class="note">Winback = customer 30+ din late renew गर्यो (paisa tirिसकेको भए पनि dhilो भयो), वा अझै renew गरेकैछैन ra expiry bhaएको 30+ din vaisakyo &mdash; dubai count huncha, ra din bitepachi automatically update huncha (naya data import nagari pani). Note: source file ma "ACTUAL DIFF" negative number le late renewal janaउँछ (jasto -35 matlab 35 din late) &mdash; jति thulो negative (-2000, -3000 samet) uti nai winback ho. Retention = forecast list ma vako customer le renew garyo. NS = New/Retention/Winback kunai ma naparne billing customer. Pending = forecast due chha tara aile samma 30 din pugeko chaina. <b>Sabai % ("Retention%", "Winback%", "NS%") "Forecast Due (MTD)" &mdash; matlab aajसम्म expire bhaisakeko forecast customer matra &mdash; lai base garera calculate huncha, mahinाको पूरा forecast (future date samet) lai hoina.</b></div>
       <div class="note" id="beh-asof-note"></div>
       <div class="grid kpi-grid" id="beh-kpis"></div>
 
@@ -252,7 +291,7 @@ canvas{max-width:100%;}
 
       <div class="panel">
         <h3>Max Gap Days (Days since last billing/recharge) &mdash; OLT-wise</h3>
-        <div class="hint">Actual difference = Recent Invoice Renew Date &minus; Previous Invoice Expiry Date. Max = worst-case customer per OLT.</div>
+        <div class="hint">Days late = Renew Date &minus; Previous Expiry Date (only counted when renewal was after expiry). Max = worst-case customer per OLT.</div>
         <div id="beh-maxdays"></div>
       </div>
 
@@ -434,7 +473,7 @@ function saveTargets(t){ localStorage.setItem(LS_TARGETS, JSON.stringify(t)); }
 let STORE = loadStore();
 let TARGETS = loadTargets();
 
-let STATE = { olt: "ALL", month: "Bhadra", fy: "2083/84", tab: "overview" };
+let STATE = { olt: "ALL", month: "Bhadra", fy: "2083/84", tab: "overview", showPct: false };
 
 // ---------- helpers ----------
 function fmtNum(n){ if(n===undefined||n===null||isNaN(n)) return "-"; return Math.round(n).toLocaleString('en-IN'); }
@@ -477,19 +516,26 @@ function classifyBehaviour(oltFilter){
   let counts = {NEW:0, RET:0, WIN:0, NS:0};
   let pendingCount = 0; // forecast customers not yet renewed, still within 30-day grace
   let maxGapByOlt = {};
-  const updateMaxGap = (olt, diff) => { if(!isNaN(diff) && (!(olt in maxGapByOlt) || diff>maxGapByOlt[olt])) maxGapByOlt[olt]=diff; };
+  const updateMaxGap = (olt, daysLate) => { if(!isNaN(daysLate) && (!(olt in maxGapByOlt) || daysLate>maxGapByOlt[olt])) maxGapByOlt[olt]=daysLate; };
 
+  // NOTE on sign convention: ACTUAL DIFF = (Previous Expiry Date) - (Renewal Date).
+  // A customer who renews AFTER their expiry (late) therefore gets a NEGATIVE value
+  // (e.g. expiry 16-Aug, renewed 17-Aug => -1). A customer who renews BEFORE expiry
+  // (early/on-time) gets zero or a positive value. So "days late" = -(ACTUAL DIFF),
+  // and Winback = days late >= 30, i.e. ACTUAL DIFF <= -30 (any magnitude beyond that,
+  // -45, -2000, -3000, all still count — the more negative, the more overdue).
   pb.forEach(r=>{
-    const diff = (typeof r["ACTUAL DIFF"]==="number") ? r["ACTUAL DIFF"] : parseFloat(r["ACTUAL DIFF"]);
+    const rawDiff = (typeof r["ACTUAL DIFF"]==="number") ? r["ACTUAL DIFF"] : parseFloat(r["ACTUAL DIFF"]);
+    const daysLate = isNaN(rawDiff) ? NaN : Math.max(0, -rawDiff);
     const olt = r.OLT;
-    updateMaxGap(olt, diff);
+    updateMaxGap(olt, daysLate);
     let cat;
     if(r["IS NEW CUSTOMER"]==="Y"){ cat="NEW"; }
-    else if(!isNaN(diff) && diff>30){ cat="WIN"; }
+    else if(!isNaN(rawDiff) && rawDiff<=-30){ cat="WIN"; }
     else if(fcSet.has(r.USERNAME)){ cat="RET"; }
     else { cat="NS"; }
     counts[cat]++;
-    rows.push({username:r.USERNAME, olt:olt, transDate:r["TRANS DATE"], prevExpiry:r["PREVIOUS INVOICE EXPIRY DATE"], renewDate:r["RECENT INVOICE RENEW DATE"], amount:r.AMOUNT, diff:diff, category:cat, pending:false});
+    rows.push({username:r.USERNAME, olt:olt, transDate:r["TRANS DATE"], prevExpiry:r["PREVIOUS INVOICE EXPIRY DATE"], renewDate:r["RECENT INVOICE RENEW DATE"], amount:r.AMOUNT, diff:daysLate, category:cat, pending:false});
   });
 
   // Forecast customers who have NOT renewed yet this month — gap keeps growing daily.
@@ -510,8 +556,17 @@ function classifyBehaviour(oltFilter){
   });
   const total = pb.length;
   const forecastTotal = fc.length;
-  const winbackPct = forecastTotal ? (counts.WIN/forecastTotal*100) : 0;
-  return {rows, counts, total, forecastTotal, winbackPct, maxGapByOlt, pendingCount};
+  // "Forecast due MTD" = only the forecast customers whose expiry date has already
+  // passed as of today (i.e. they were actually due to renew by now) — excludes
+  // forecast rows with a future expiry date still to come later in the month.
+  const forecastDueMTD = fc.filter(r=>{
+    const expiry = r["Expiry Date"] ? new Date(r["Expiry Date"]) : null;
+    return expiry && !isNaN(expiry.getTime()) && expiry <= today;
+  }).length;
+  const winbackPct = forecastDueMTD ? (counts.WIN/forecastDueMTD*100) : 0;
+  const retentionPct = forecastDueMTD ? (counts.RET/forecastDueMTD*100) : 0;
+  const nsPct = forecastDueMTD ? (counts.NS/forecastDueMTD*100) : 0;
+  return {rows, counts, total, forecastTotal, forecastDueMTD, winbackPct, retentionPct, nsPct, maxGapByOlt, pendingCount};
 }
 
 // ---------- SALES & GROWTH ENGINE ----------
@@ -607,6 +662,15 @@ function kpiCard(label, val, deltaTxt, deltaUp, barPct){
     ${barPct!==undefined ? `<div class="bar"><i style="width:${Math.max(0,Math.min(100,barPct))}%"></i></div>` : ''}
   </div>`;
 }
+// When the "Show as %" toggle is on, count-based KPIs flip to show % as the headline
+// value (with the raw count as the small caption underneath) instead of the other way round.
+function kpiCountOrPct(label, count, total, extraCaption, deltaUp){
+  const p = total ? pct(count,total) : 0;
+  if(STATE.showPct){
+    return kpiCard(label, total?fmtPct(p):'-', fmtNum(count)+" customers"+(extraCaption?(" \u00b7 "+extraCaption):""), deltaUp, total?p:undefined);
+  }
+  return kpiCard(label, fmtNum(count), total?(fmtPct(p)+(extraCaption?(" \u00b7 "+extraCaption):"")):extraCaption, deltaUp, total?p:undefined);
+}
 
 function renderOverview(){
   const olt = STATE.olt;
@@ -623,9 +687,9 @@ function renderOverview(){
   html += kpiCard("Active Customers", fmtNum(gm.active), tActive?`Target ${fmtNum(tActive)}`:undefined, gm.active>=(tActive||0), tActive? pct(gm.active,tActive):undefined);
   html += kpiCard("Growth (MTD)", fmtNum(gm.growth));
   html += kpiCard("Churn (MTD)", fmtNum(gm.churn));
-  html += kpiCard("Retention", beh.total? fmtPct(pct(beh.counts.RET,beh.total)) : "-", beh.total?`${beh.counts.RET} of ${beh.total} billed`:undefined, true);
-  html += kpiCard("Winback %", fmtPct(beh.winbackPct), `${beh.counts.WIN} winback / ${beh.forecastTotal} forecast`, beh.winbackPct<=15);
-  html += kpiCard("NS (unmatched)", beh.total? fmtPct(pct(beh.counts.NS,beh.total)) : "-", `${beh.counts.NS} customers`, beh.counts.NS===0);
+  html += kpiCard("Retention", beh.forecastDueMTD? fmtPct(beh.retentionPct) : "-", beh.forecastDueMTD?`${beh.counts.RET} of ${beh.forecastDueMTD} forecast due (MTD)`:undefined, true);
+  html += kpiCard("Winback %", fmtPct(beh.winbackPct), `${beh.counts.WIN} winback / ${beh.forecastDueMTD} forecast due (MTD)`, beh.winbackPct<=15);
+  html += kpiCard("NS (unmatched)", beh.forecastDueMTD? fmtPct(beh.nsPct) : "-", `${beh.counts.NS} of ${beh.forecastDueMTD} forecast due (MTD)`, beh.counts.NS===0);
   document.getElementById("ov-kpis").innerHTML = html;
 
   // target progress bars
@@ -680,6 +744,15 @@ function renderOverview(){
     options: baseChartOpts()
   });
 
+  // Top Performing OLT donut (by revenue share, selected month)
+  const oltRevShare = OLTS.map(o=>revenueFor(STATE.month, STATE.fy, o).total);
+  const revShareTotal = oltRevShare.reduce((a,b)=>a+b,0) || 1;
+  renderChart('ov-topolt', document.getElementById('chart-ov-topolt'), {
+    type:'doughnut',
+    data:{ labels: OLTS.map((o,i)=>o+" "+Math.round(oltRevShare[i]/revShareTotal*100)+"%"), datasets:[{data:oltRevShare, backgroundColor:['#6d5bf6','#4e8dff','#22c48d'], borderWidth:0}] },
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{color:'#6b7290', font:{size:10.5}, boxWidth:10}}}}
+  });
+
   // OLT snapshot table
   let thead = "<tr><th>OLT</th><th>Installation</th><th>Growth</th><th>Churn</th><th>Active</th><th>Revenue</th><th>Retention%</th><th>Winback%</th></tr>";
   let tbody = "";
@@ -687,9 +760,23 @@ function renderOverview(){
     const g = growthMetricsFor(o);
     const r = revenueFor(STATE.month, STATE.fy, o);
     const b = classifyBehaviour(o);
-    tbody += `<tr><td><span class="badge-olt">${o}</span></td><td>${fmtNum(g.installation)}</td><td>${fmtNum(g.growth)}</td><td>${fmtNum(g.churn)}</td><td>${fmtNum(g.active)}</td><td>${fmtMoney(r.total)}</td><td>${b.total?fmtPct(pct(b.counts.RET,b.total)):'-'}</td><td>${fmtPct(b.winbackPct)}</td></tr>`;
+    tbody += `<tr><td><span class="badge-olt">${o}</span></td><td>${fmtNum(g.installation)}</td><td>${fmtNum(g.growth)}</td><td>${fmtNum(g.churn)}</td><td>${fmtNum(g.active)}</td><td>${fmtMoney(r.total)}</td><td>${b.forecastDueMTD?fmtPct(b.retentionPct):'-'}</td><td>${fmtPct(b.winbackPct)}</td></tr>`;
   });
   document.getElementById("ov-olt-table").innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
+
+  // Sidebar "Today's Insights" — how close to this month's revenue target
+  const insightEl = document.getElementById("sidebar-insight");
+  if(insightEl){
+    if(tRevenue){
+      const achv = pct(rev.total, tRevenue);
+      const remaining = Math.max(0, 100-achv);
+      insightEl.querySelector("span").textContent = achv>=100
+        ? ("Target achieved for " + STATE.month + "! Revenue is " + fmtPct(achv,0) + " of target.")
+        : ("You are " + fmtPct(achv,0) + " toward the " + STATE.month + " revenue target \u2014 " + fmtPct(remaining,0) + " to go.");
+    } else {
+      insightEl.querySelector("span").textContent = "No target set for " + STATE.month + " yet. Add one in Manage Targets.";
+    }
+  }
 }
 
 function baseChartOpts(){
@@ -710,14 +797,14 @@ function renderBehaviour(){
 
   let html = "";
   html += kpiCard("Total Billed / Renewed", fmtNum(beh.total));
-  html += kpiCard("New", fmtNum(beh.counts.NEW), beh.total?fmtPct(pct(beh.counts.NEW,beh.total)):undefined, true);
-  html += kpiCard("Retention", fmtNum(beh.counts.RET), beh.total?fmtPct(pct(beh.counts.RET,beh.total)):undefined, true);
-  html += kpiCard("Winback (>30d gap)", fmtNum(beh.counts.WIN), fmtPct(beh.winbackPct)+" of forecast", beh.winbackPct<=15);
-  html += kpiCard("NS (unmatched)", fmtNum(beh.counts.NS), beh.total?fmtPct(pct(beh.counts.NS,beh.total)):undefined, beh.counts.NS===0);
+  html += kpiCountOrPct("New", beh.counts.NEW, beh.total, undefined, true);
+  html += kpiCountOrPct("Retention", beh.counts.RET, beh.forecastDueMTD, "of forecast due (MTD)", true);
+  html += kpiCountOrPct("Winback (30+ days late)", beh.counts.WIN, beh.forecastDueMTD, "of forecast due (MTD)", beh.winbackPct<=15);
+  html += kpiCountOrPct("NS (unmatched)", beh.counts.NS, beh.forecastDueMTD, "of forecast due (MTD)", beh.counts.NS===0);
   html += kpiCard("Pending (within grace)", fmtNum(beh.pendingCount), "Forecast due, not yet 30 days overdue", true);
-  html += kpiCard("Forecast Due (this month)", fmtNum(beh.forecastTotal));
+  html += kpiCard("Forecast Due (MTD)", fmtNum(beh.forecastDueMTD), fmtNum(beh.forecastTotal)+" total forecasted for "+STATE.month);
   document.getElementById("beh-kpis").innerHTML = html;
-  document.getElementById("beh-asof-note").textContent = "As of today (" + today.toLocaleDateString() + "): " + beh.counts.WIN + " customers are winback risk (30+ days past their expiry, renewed or not), out of " + beh.forecastTotal + " forecasted for " + STATE.month + ". This number grows automatically each day even without a new import.";
+  document.getElementById("beh-asof-note").textContent = "As of today (" + today.toLocaleDateString() + "): " + beh.forecastDueMTD + " of " + beh.forecastTotal + " forecasted customers for " + STATE.month + " have already reached their expiry date (MTD) \u2014 all % figures above are based on this MTD-due pool, not the full month.";
 
   renderChart('beh-split', document.getElementById('chart-beh-split'), {
     type:'doughnut',
@@ -725,11 +812,11 @@ function renderBehaviour(){
     options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{color:'#8fa1c7', font:{size:11}}}}}
   });
 
-  let thead = "<tr><th>OLT</th><th>Billed</th><th>New</th><th>Retention</th><th>Winback</th><th>NS</th><th>Winback%</th></tr>";
+  let thead = "<tr><th>OLT</th><th>Billed</th><th>New</th><th>Retention</th><th>Winback</th><th>NS</th><th>Forecast Due (MTD)</th><th>Retention%</th><th>Winback%</th><th>NS%</th></tr>";
   let tbody = "";
   OLTS.forEach(o=>{
     const b = classifyBehaviour(o);
-    tbody += `<tr><td><span class="badge-olt">${o}</span></td><td>${fmtNum(b.total)}</td><td>${fmtNum(b.counts.NEW)}</td><td>${fmtNum(b.counts.RET)}</td><td>${fmtNum(b.counts.WIN)}</td><td>${fmtNum(b.counts.NS)}</td><td>${fmtPct(b.winbackPct)}</td></tr>`;
+    tbody += `<tr><td><span class="badge-olt">${o}</span></td><td>${fmtNum(b.total)}</td><td>${fmtNum(b.counts.NEW)}</td><td>${fmtNum(b.counts.RET)}</td><td>${fmtNum(b.counts.WIN)}</td><td>${fmtNum(b.counts.NS)}</td><td>${fmtNum(b.forecastDueMTD)}</td><td>${fmtPct(b.retentionPct)}</td><td>${fmtPct(b.winbackPct)}</td><td>${fmtPct(b.nsPct)}</td></tr>`;
   });
   document.getElementById("beh-olt-table").innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
 
@@ -757,7 +844,7 @@ function renderBehDetail(){
   rows = rows.slice(0,300);
   const tagClass = {NEW:'new',RET:'ret',WIN:'win',NS:'ns'};
   const tagLabel = {NEW:'New',RET:'Retention',WIN:'Winback',NS:'NS'};
-  let thead = "<tr><th>Username</th><th>OLT</th><th>Prev Expiry</th><th>Renew Date</th><th>Gap (days)</th><th>Amount</th><th>Category</th></tr>";
+  let thead = "<tr><th>Username</th><th>OLT</th><th>Prev Expiry</th><th>Renew Date</th><th>Days Late</th><th>Amount</th><th>Category</th></tr>";
   let tbody = rows.map(r=>`<tr><td>${r.username||''}</td><td><span class="badge-olt">${r.olt||''}</span></td><td>${r.prevExpiry||''}</td><td>${r.pending?'<span class="small-muted">not yet renewed</span>':(r.renewDate||'')}</td><td>${isNaN(r.diff)?'-':r.diff}</td><td>${fmtMoney(r.amount)}</td><td><span class="tag ${tagClass[r.category]}">${tagLabel[r.category]}${r.pending?' (pending)':''}</span></td></tr>`).join("");
   if(!rows.length) tbody = `<tr><td colspan="7" class="small-muted" style="padding:14px;">No records for this selection.</td></tr>`;
   document.getElementById("beh-detail-table").innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
@@ -774,9 +861,9 @@ function renderGrowth(){
   html += kpiCard("Growth (MTD)", fmtNum(gm.growth));
   html += kpiCard("Churn (MTD)", fmtNum(gm.churn));
   html += kpiCard("Active Customers", fmtNum(gm.active));
-  html += kpiCard("Retention", fmtNum(beh.counts.RET));
-  html += kpiCard("Winback", fmtNum(beh.counts.WIN));
-  html += kpiCard("NS", fmtNum(beh.counts.NS));
+  html += kpiCountOrPct("Retention", beh.counts.RET, beh.forecastDueMTD, "of forecast due (MTD)", true);
+  html += kpiCountOrPct("Winback", beh.counts.WIN, beh.forecastDueMTD, "of forecast due (MTD)", beh.winbackPct<=15);
+  html += kpiCountOrPct("NS", beh.counts.NS, beh.forecastDueMTD, "of forecast due (MTD)", beh.counts.NS===0);
   document.getElementById("gr-kpis").innerHTML = html;
 
   // month-wise trend across months with any data
@@ -1267,8 +1354,20 @@ function init(){
   }));
   document.getElementById("monthSelect").addEventListener("change", (e)=>{ STATE.month = e.target.value; renderAll(); });
   document.getElementById("fySelect").addEventListener("change", (e)=>{ STATE.fy = e.target.value; populateMonthSelect(); renderAll(); });
+  document.getElementById("pctToggle").addEventListener("change", (e)=>{
+    STATE.showPct = e.target.checked;
+    document.getElementById("pctSwitch").classList.toggle("on", STATE.showPct);
+    renderAll();
+  });
+  document.getElementById("pctToggleLabel").addEventListener("click", (e)=>{
+    e.preventDefault();
+    const cb = document.getElementById("pctToggle");
+    cb.checked = !cb.checked;
+    cb.dispatchEvent(new Event("change"));
+  });
   document.getElementById("beh-filter-cat").addEventListener("change", renderBehDetail);
   document.getElementById("beh-search").addEventListener("input", renderBehDetail);
+  document.querySelectorAll("#ov-quick-actions button").forEach(b=> b.addEventListener("click", ()=>switchTab(b.dataset.tab)));
 
   document.getElementById("btn-export").addEventListener("click", exportBackup);
   document.getElementById("restore-file").addEventListener("change", (e)=>{ if(e.target.files.length) restoreBackup(e.target.files[0]); });
