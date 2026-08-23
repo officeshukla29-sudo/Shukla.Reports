@@ -197,6 +197,14 @@ canvas{max-width:100%;}
 .quick-actions button:nth-child(3){background:linear-gradient(135deg,#7a63e8,#a75be0);}
 .quick-actions button:nth-child(4){background:linear-gradient(135deg,#9a5be0,#c15be0);}
 .quick-actions button:nth-child(5){background:linear-gradient(135deg,#e0605b,#ea7a5b);}
+@media print{
+  .sidebar, .topbar .controls, .quick-actions, #btn-print-summary, .footer-note{display:none!important;}
+  body{background:#fff;}
+  .main{padding:0;}
+  .panel{box-shadow:none;border:1px solid #ccc;break-inside:avoid;}
+  .section{display:none!important;}
+  .section#sec-summary{display:block!important;}
+}
 </style>
 </head>
 <body>
@@ -217,6 +225,7 @@ canvas{max-width:100%;}
     </div>
     <div class="nav-group-label">Overview</div>
     <button class="nav-btn active" data-tab="overview"><span class="nav-ico">&#9733;</span> Executive Overview</button>
+    <button class="nav-btn" data-tab="summary"><span class="nav-ico">&#128203;</span> Executive Summary</button>
     <div class="nav-group-label">Analysis</div>
     <button class="nav-btn" data-tab="behaviour"><span class="nav-ico">&#128100;</span> Customer Behaviour</button>
     <button class="nav-btn" data-tab="growth"><span class="nav-ico">&#128200;</span> Sales &amp; Growth</button>
@@ -308,10 +317,48 @@ canvas{max-width:100%;}
       </div>
     </div>
 
+    <!-- ===================== EXECUTIVE SUMMARY ===================== -->
+    <div class="section" id="sec-summary">
+      <div class="panel" id="es-narrative-panel">
+        <div class="flex-between">
+          <h3>Branch Narrative &mdash; <span id="es-narrative-scope"></span></h3>
+          <button class="btn small" id="btn-print-summary">&#128424; Print / Export Summary</button>
+        </div>
+        <p id="es-narrative" style="font-size:13px;line-height:1.7;color:var(--txt);"></p>
+      </div>
+
+      <div class="panel">
+        <h3>Comprehensive OLT Performance &mdash; selected scope</h3>
+        <div class="hint">Every core metric side by side, per OLT and branch total. This is the single table for a full monthly review.</div>
+        <div class="tbl-wrap"><table id="es-olt-full-table"><thead></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="panel">
+        <h3>Month-wise Trend &mdash; full table</h3>
+        <div class="hint">Every month with data imported so far, selected OLT.</div>
+        <div class="tbl-wrap"><table id="es-month-table"><thead></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3>Staff Performance Summary</h3>
+          <div class="tbl-wrap"><table id="es-staff-table"><thead></thead><tbody></tbody></table></div>
+        </div>
+        <div class="panel">
+          <h3>Entry Source Summary</h3>
+          <div class="tbl-wrap"><table id="es-source-table"><thead></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Revenue Composition &mdash; by transaction type, selected scope</h3>
+        <div class="tbl-wrap"><table id="es-revtype-table"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
 
     <!-- ===================== CUSTOMER BEHAVIOUR ===================== -->
     <div class="section" id="sec-behaviour">
-      <div class="note">Winback = customer 30+ din late renew गर्यो (paisa tirिसकेको भए पनि dhilो भयो), वा अझै renew गरेकैछैन ra expiry bhaएको 30+ din vaisakyo &mdash; dubai count huncha, ra din bitepachi automatically update huncha (naya data import nagari pani). Note: source file ma "ACTUAL DIFF" negative number le late renewal janaउँछ (jasto -35 matlab 35 din late) &mdash; jति thulो negative (-2000, -3000 samet) uti nai winback ho. Retention = forecast list ma vako customer le renew garyo. NS = New/Retention/Winback kunai ma naparne billing customer. Pending = forecast due chha tara aile samma 30 din pugeko chaina. <b>Sabai % ("Retention%", "Winback%", "NS%") "Forecast Due (MTD)" &mdash; matlab aajसम्म expire bhaisakeko forecast customer matra &mdash; lai base garera calculate huncha, mahinाको पूरा forecast (future date samet) lai hoina.</b></div>
+      <div class="note">Winback = customer 30+ din late renew गर्यो (paisa tirिसकेको भए पनि dhilो भयो), वा अझै renew गरेकैछैन ra expiry bhaएको 30+ din vaisakyo &mdash; dubai count huncha, ra din bitepachi automatically update huncha (naya data import nagari pani). Note: source file ma "ACTUAL DIFF" negative number le late renewal janaउँछ (jasto -35 matlab 35 din late) &mdash; jति thulो negative (-2000, -3000 samet) uti nai winback ho. Retention = forecast list ma vako customer le renew garyo. NS = New/Retention/Winback kunai ma naparne billing customer. Pending = forecast due chha tara aile samma 30 din pugeko chaina. <b>Sabai % ("Paid%", "Retention%", "Winback%", "NS%") "Forecast Due" &mdash; matlab HIJO SAMMA (aaja bahek, aaja ko expiry aaja ganтिदैन) expire bhaisakeko forecast customer matra &mdash; lai base garera calculate huncha, mahinाको पूरा forecast (future date samet) lai hoina.</b></div>
       <div class="note" id="beh-asof-note"></div>
       <div class="grid kpi-grid" id="beh-kpis"></div>
 
@@ -576,6 +623,15 @@ function parseFlexDate(v){
     const mi = months[m[2].slice(0,3).toLowerCase()];
     if(mi!==undefined){ let y=+m[3]; y = y<100 ? 2000+y : y; return new Date(y, mi, +m[1]); }
   }
+  // DD-Mon [weekday] with NO year at all (e.g. "16-Aug Sun", "16 Aug") — some exports
+  // format the Expiry Date column this way. Fall back to the current calendar year,
+  // since these are always near-term forecast dates within the current FY.
+  m = s.match(/^(\d{1,2})[\-\s]([A-Za-z]{3,4})(?:\s+[A-Za-z]{2,3})?$/);
+  if(m){
+    const months = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+    const mi = months[m[2].slice(0,3).toLowerCase()];
+    if(mi!==undefined){ return new Date(new Date().getFullYear(), mi, +m[1]); }
+  }
   // Last resort: native parser (handles things like "Aug 16 2026", full ISO timestamps, etc.)
   const d = new Date(s);
   return isNaN(d.getTime()) ? null : d;
@@ -636,12 +692,16 @@ function classifyBehaviour(oltFilter){
 
   // Forecast customers who have NOT renewed yet this month — gap keeps growing daily.
   // Past the 30-day grace period without renewing = Winback risk, even though no billing row exists yet.
+  // "Due" uses the START of today (midnight) as the cutoff, not the current clock time — so a
+  // customer expiring today itself is NOT yet counted as due; only yesterday and earlier are
+  // ("if today is 23 Aug, due = expired through 22 Aug").
   const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   fc.forEach(r=>{
     if(renewedUsernames.has(r.Username)) return; // already handled above via paymentBehaviour
     const expiry = parseFlexDate(r["Expiry Date"]);
     if(!expiry) return;
-    const gapDays = Math.floor((today - expiry) / 86400000);
+    const gapDays = Math.floor((startOfToday - expiry) / 86400000);
     if(gapDays > 30){
       counts.WIN++;
       updateMaxGap(r.OLT, gapDays);
@@ -652,11 +712,12 @@ function classifyBehaviour(oltFilter){
   });
   const total = pb.length;
   const forecastTotal = fc.length;
-  // "Forecast due MTD" = only the forecast customers whose expiry date has already
-  // passed as of today (i.e. they were actually due to renew by now) — excludes
-  // forecast rows with a future expiry date still to come later in the month.
+  // "Forecast due (as of yesterday)" = only the forecast customers whose expiry date is
+  // strictly before today — excludes both future dates AND today's own expiries (they get
+  // the full day before being counted as overdue/due).
   const parsedExpiries = fc.map(r=>parseFlexDate(r["Expiry Date"]));
   const unparsedCount = parsedExpiries.filter(d=>d===null).length;
+  const dueRows = fc.filter((r,i)=> parsedExpiries[i] && parsedExpiries[i] < startOfToday);
   let forecastDueMTD;
   if(forecastTotal>0 && unparsedCount===forecastTotal){
     // Every single expiry date failed to parse (unexpected/corrupt date format in
@@ -664,12 +725,14 @@ function classifyBehaviour(oltFilter){
     // silently showing 0/blank everywhere, and flag it so it's visible, not hidden.
     forecastDueMTD = forecastTotal;
   } else {
-    forecastDueMTD = parsedExpiries.filter(d=> d && d<=today).length;
+    forecastDueMTD = dueRows.length;
   }
+  const paidCount = dueRows.filter(r=>renewedUsernames.has(r.Username)).length;
   const winbackPct = forecastDueMTD ? (counts.WIN/forecastDueMTD*100) : 0;
   const retentionPct = forecastDueMTD ? (counts.RET/forecastDueMTD*100) : 0;
   const nsPct = forecastDueMTD ? (counts.NS/forecastDueMTD*100) : 0;
-  return {rows, counts, total, forecastTotal, forecastDueMTD, winbackPct, retentionPct, nsPct, maxGapByOlt, pendingCount, dateParseIssue: unparsedCount===forecastTotal && forecastTotal>0};
+  const paidPct = forecastDueMTD ? (paidCount/forecastDueMTD*100) : 0;
+  return {rows, counts, total, forecastTotal, forecastDueMTD, winbackPct, retentionPct, nsPct, paidCount, paidPct, maxGapByOlt, pendingCount, dateParseIssue: unparsedCount===forecastTotal && forecastTotal>0};
 }
 
 // ---------- SALES & GROWTH ENGINE ----------
@@ -865,9 +928,9 @@ function renderOverview(){
   html += kpiTargetOrPct("Active Customers", gm.active, tActive, false);
   html += kpiTargetOrPct("Growth (MTD)", gm.growth, tGrowth, false);
   html += kpiTargetOrPct("Churn (MTD)", gm.churn, tChurn, false);
-  html += kpiCard("Retention", beh.forecastDueMTD? fmtPct(beh.retentionPct) : "-", beh.forecastDueMTD?`${beh.counts.RET} of ${beh.forecastDueMTD} forecast due (MTD)`:undefined, true);
-  html += kpiCard("Winback %", fmtPct(beh.winbackPct), `${beh.counts.WIN} winback / ${beh.forecastDueMTD} forecast due (MTD)`, beh.winbackPct<=15);
-  html += kpiCard("NS (unmatched)", beh.forecastDueMTD? fmtPct(beh.nsPct) : "-", `${beh.counts.NS} of ${beh.forecastDueMTD} forecast due (MTD)`, beh.counts.NS===0);
+  html += kpiCard("Retention", beh.forecastDueMTD? fmtPct(beh.retentionPct) : "-", beh.forecastDueMTD?`${beh.counts.RET} of ${beh.forecastDueMTD} forecast due`:undefined, true);
+  html += kpiCard("Winback %", fmtPct(beh.winbackPct), `${beh.counts.WIN} winback / ${beh.forecastDueMTD} forecast due`, beh.winbackPct<=15);
+  html += kpiCard("NS (unmatched)", beh.forecastDueMTD? fmtPct(beh.nsPct) : "-", `${beh.counts.NS} of ${beh.forecastDueMTD} forecast due`, beh.counts.NS===0);
   document.getElementById("ov-kpis").innerHTML = html;
   const warnEl = document.getElementById("ov-date-warning");
   if(warnEl) warnEl.style.display = beh.dateParseIssue ? "block" : "none";
@@ -978,13 +1041,14 @@ function renderBehaviour(){
   let html = "";
   html += kpiCard("Total Billed / Renewed", fmtNum(beh.total));
   html += kpiCountOrPct("New", beh.counts.NEW, beh.total, undefined, true);
-  html += kpiCountOrPct("Retention", beh.counts.RET, beh.forecastDueMTD, "of forecast due (MTD)", true);
-  html += kpiCountOrPct("Winback (30+ days late)", beh.counts.WIN, beh.forecastDueMTD, "of forecast due (MTD)", beh.winbackPct<=15);
-  html += kpiCountOrPct("NS (unmatched)", beh.counts.NS, beh.forecastDueMTD, "of forecast due (MTD)", beh.counts.NS===0);
+  html += kpiCard("Paid %", beh.forecastDueMTD? fmtPct(beh.paidPct) : "-", beh.forecastDueMTD?`${beh.paidCount} of ${beh.forecastDueMTD} due (as of yesterday) have paid`:undefined, true);
+  html += kpiCountOrPct("Retention", beh.counts.RET, beh.forecastDueMTD, "of forecast due", true);
+  html += kpiCountOrPct("Winback (30+ days late)", beh.counts.WIN, beh.forecastDueMTD, "of forecast due", beh.winbackPct<=15);
+  html += kpiCountOrPct("NS (unmatched)", beh.counts.NS, beh.forecastDueMTD, "of forecast due", beh.counts.NS===0);
   html += kpiCard("Pending (within grace)", fmtNum(beh.pendingCount), "Forecast due, not yet 30 days overdue", true);
-  html += kpiCard("Forecast Due (MTD)", fmtNum(beh.forecastDueMTD), fmtNum(beh.forecastTotal)+" total forecasted for "+STATE.month);
+  html += kpiCard("Forecast Due (as of yesterday)", fmtNum(beh.forecastDueMTD), fmtNum(beh.forecastTotal)+" total forecasted for "+STATE.month);
   document.getElementById("beh-kpis").innerHTML = html;
-  document.getElementById("beh-asof-note").textContent = "As of today (" + today.toLocaleDateString() + "): " + beh.forecastDueMTD + " of " + beh.forecastTotal + " forecasted customers for " + STATE.month + " have already reached their expiry date (MTD) \u2014 all % figures above are based on this MTD-due pool, not the full month.";
+  document.getElementById("beh-asof-note").textContent = "As of today (" + today.toLocaleDateString() + "): " + beh.forecastDueMTD + " of " + beh.forecastTotal + " forecasted customers for " + STATE.month + " had already reached their expiry date through yesterday \u2014 all % figures above (Paid%, Retention%, Winback%, NS%) are based on this due-as-of-yesterday pool, not the full month and not including today's own expiries.";
 
   renderChart('beh-split', document.getElementById('chart-beh-split'), {
     type:'doughnut',
@@ -992,11 +1056,11 @@ function renderBehaviour(){
     options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{color:'#8fa1c7', font:{size:11}}}}}
   });
 
-  let thead = "<tr><th>OLT</th><th>Billed</th><th>New</th><th>Retention</th><th>Winback</th><th>NS</th><th>Forecast Due (MTD)</th><th>Retention%</th><th>Winback%</th><th>NS%</th></tr>";
+  let thead = "<tr><th>OLT</th><th>Billed</th><th>New</th><th>Forecast Due</th><th>Paid</th><th>Retention</th><th>Winback</th><th>NS</th><th>Paid%</th><th>Retention%</th><th>Winback%</th><th>NS%</th></tr>";
   let tbody = "";
   OLTS.forEach(o=>{
     const b = classifyBehaviour(o);
-    tbody += `<tr><td><span class="badge-olt">${o}</span></td><td>${fmtNum(b.total)}</td><td>${fmtNum(b.counts.NEW)}</td><td>${fmtNum(b.counts.RET)}</td><td>${fmtNum(b.counts.WIN)}</td><td>${fmtNum(b.counts.NS)}</td><td>${fmtNum(b.forecastDueMTD)}</td><td>${fmtPct(b.retentionPct)}</td><td>${fmtPct(b.winbackPct)}</td><td>${fmtPct(b.nsPct)}</td></tr>`;
+    tbody += `<tr><td><span class="badge-olt">${o}</span></td><td>${fmtNum(b.total)}</td><td>${fmtNum(b.counts.NEW)}</td><td>${fmtNum(b.forecastDueMTD)}</td><td>${fmtNum(b.paidCount)}</td><td>${fmtNum(b.counts.RET)}</td><td>${fmtNum(b.counts.WIN)}</td><td>${fmtNum(b.counts.NS)}</td><td>${fmtPct(b.paidPct)}</td><td>${fmtPct(b.retentionPct)}</td><td>${fmtPct(b.winbackPct)}</td><td>${fmtPct(b.nsPct)}</td></tr>`;
   });
   document.getElementById("beh-olt-table").innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
 
@@ -1041,9 +1105,9 @@ function renderGrowth(){
   html += kpiCard("Growth (MTD)", fmtNum(gm.growth));
   html += kpiCard("Churn (MTD)", fmtNum(gm.churn));
   html += kpiCard("Active Customers", fmtNum(gm.active));
-  html += kpiCountOrPct("Retention", beh.counts.RET, beh.forecastDueMTD, "of forecast due (MTD)", true);
-  html += kpiCountOrPct("Winback", beh.counts.WIN, beh.forecastDueMTD, "of forecast due (MTD)", beh.winbackPct<=15);
-  html += kpiCountOrPct("NS", beh.counts.NS, beh.forecastDueMTD, "of forecast due (MTD)", beh.counts.NS===0);
+  html += kpiCountOrPct("Retention", beh.counts.RET, beh.forecastDueMTD, "of forecast due", true);
+  html += kpiCountOrPct("Winback", beh.counts.WIN, beh.forecastDueMTD, "of forecast due", beh.winbackPct<=15);
+  html += kpiCountOrPct("NS", beh.counts.NS, beh.forecastDueMTD, "of forecast due", beh.counts.NS===0);
   document.getElementById("gr-kpis").innerHTML = html;
 
   // month-wise trend across months with any data
@@ -1183,6 +1247,110 @@ function renderRevenue(){
   const totalT = Object.values(typeMap).reduce((a,b)=>a+b,0)||1;
   let ttbody = Object.entries(typeMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${k}</td><td>${fmtMoney(v)}</td><td>${fmtPct(pct(v,totalT))}</td></tr>`).join("") || `<tr><td colspan="3" class="small-muted" style="padding:14px;">No accrual revenue rows for this month/OLT.</td></tr>`;
   document.getElementById("rev-type-table").innerHTML = `<thead>${tthead}</thead><tbody>${ttbody}</tbody>`;
+}
+
+// ---------- EXECUTIVE SUMMARY ----------
+function renderSummary(){
+  const olt = STATE.olt;
+  const scopeLabel = (olt==="ALL"?"All OLT":olt) + " \u00b7 " + (STATE.month===ALL_MONTHS_VALUE ? "All Months" : STATE.month) + " " + STATE.fy;
+  document.getElementById("es-narrative-scope").textContent = scopeLabel;
+
+  const gm = growthMetricsFor(olt);
+  const rev = revenueForState(olt);
+  const beh = classifyBehaviour(olt);
+  const tInstall = targetSumFor(olt, STATE.month, "installation");
+  const tRevenue = targetSumFor(olt, STATE.month, "revenue");
+  const arpu = gm.active ? rev.total/gm.active : 0;
+
+  const installLine = tInstall
+    ? `${fmtNum(gm.installation)} new installations against a target of ${fmtNum(tInstall)} (${fmtPct(pct(gm.installation,tInstall))} achieved)`
+    : `${fmtNum(gm.installation)} new installations`;
+  const revLine = tRevenue
+    ? `accrual revenue of ${fmtMoney(rev.total)}, ${fmtPct(pct(rev.total,tRevenue))} of the ${fmtMoney(tRevenue)} target`
+    : `accrual revenue of ${fmtMoney(rev.total)}`;
+  const retLine = beh.forecastDueMTD
+    ? `Of ${fmtNum(beh.forecastDueMTD)} customers due to renew so far, ${fmtNum(beh.counts.RET)} retained (${fmtPct(beh.retentionPct)}), ${fmtNum(beh.counts.WIN)} are winback risks 30+ days overdue (${fmtPct(beh.winbackPct)}), and ${fmtNum(beh.counts.NS)} did not match the forecast (${fmtPct(beh.nsPct)}).`
+    : `No forecast customers were due to renew in this scope yet.`;
+  const narrative = `Shuklagandaki branch recorded ${installLine}, with ${revLine}. Net customer growth was ${fmtNum(gm.growth)} against ${fmtNum(gm.churn)} churn, bringing active customers to ${fmtNum(gm.active)} (ARPU ${fmtMoney(arpu)}). ${retLine}`;
+  document.getElementById("es-narrative").textContent = narrative;
+
+  // Comprehensive OLT table
+  const metricCols = [
+    ["Installation", o=>growthMetricsFor(o).installation, fmtNum],
+    ["Paid Sales", o=>growthMetricsFor(o).paidSales, fmtNum],
+    ["Growth", o=>growthMetricsFor(o).growth, fmtNum],
+    ["Churn", o=>growthMetricsFor(o).churn, fmtNum],
+    ["Active", o=>growthMetricsFor(o).active, fmtNum],
+    ["Revenue", o=>revenueForState(o).total, fmtMoney],
+    ["Target Revenue", o=>targetSumFor(o, STATE.month, "revenue"), v=>v?fmtMoney(v):'-'],
+    ["Achv %", o=>{ const t=targetSumFor(o, STATE.month,"revenue"); return t? pct(revenueForState(o).total,t) : null; }, v=>v===null?'-':fmtPct(v)],
+    ["ARPU", o=>{ const g=growthMetricsFor(o); return g.active? revenueForState(o).total/g.active : 0; }, fmtMoney],
+    ["Retention%", o=>classifyBehaviour(o).retentionPct, fmtPct],
+    ["Winback%", o=>classifyBehaviour(o).winbackPct, fmtPct],
+    ["NS%", o=>classifyBehaviour(o).nsPct, fmtPct],
+    ["Pending", o=>classifyBehaviour(o).pendingCount, fmtNum],
+  ];
+  let ehead = "<tr><th>Metric</th>" + OLTS.map(o=>`<th>${o}</th>`).join("") + "<th>Branch Total</th></tr>";
+  let ebody = metricCols.map(([label, fn, fmt])=>{
+    const vals = OLTS.map(o=>fn(o));
+    const cells = vals.map(v=>`<td>${fmt(v)}</td>`).join("");
+    let totalCell;
+    if(label==="Achv %"){
+      const t = targetSumFor("ALL", STATE.month, "revenue"); totalCell = t? fmtPct(pct(revenueForState("ALL").total,t)) : '-';
+    } else if(label==="Retention%" || label==="Winback%" || label==="NS%"){
+      const b = classifyBehaviour("ALL");
+      totalCell = label==="Retention%" ? fmtPct(b.retentionPct) : label==="Winback%" ? fmtPct(b.winbackPct) : fmtPct(b.nsPct);
+    } else if(label==="ARPU"){
+      const g = growthMetricsFor("ALL"); totalCell = fmt(g.active ? revenueForState("ALL").total/g.active : 0);
+    } else {
+      const s = vals.filter(v=>typeof v==="number").reduce((a,b)=>a+b,0);
+      totalCell = fmt(s);
+    }
+    return `<tr><td>${label}</td>${cells}<td><b>${totalCell}</b></td></tr>`;
+  }).join("");
+  document.getElementById("es-olt-full-table").innerHTML = `<thead>${ehead}</thead><tbody>${ebody}</tbody>`;
+
+  // Month-wise trend table
+  const monthsWithData = BS_MONTHS.filter(m => STORE.installations.some(r=>r.bsMonth===m && r.bsFY===STATE.fy) || STORE.growthChurn.some(r=>r.bsMonth===m && r.bsFY===STATE.fy) || accrualRowsFor(m, STATE.fy, olt).length>0);
+  let mhead = "<tr><th>Month</th><th>Installation</th><th>Growth</th><th>Churn</th><th>Active</th><th>Revenue</th><th>Retention%</th><th>Winback%</th></tr>";
+  let mbody = monthsWithData.map(m=>{
+    const save = STATE.month; STATE.month = m;
+    const g = growthMetricsFor(olt);
+    const r = revenueFor(m, STATE.fy, olt);
+    const b = classifyBehaviour(olt);
+    STATE.month = save;
+    return `<tr><td>${m}</td><td>${fmtNum(g.installation)}</td><td>${fmtNum(g.growth)}</td><td>${fmtNum(g.churn)}</td><td>${fmtNum(g.active)}</td><td>${fmtMoney(r.total)}</td><td>${fmtPct(b.retentionPct)}</td><td>${fmtPct(b.winbackPct)}</td></tr>`;
+  }).join("") || `<tr><td colspan="8" class="small-muted" style="padding:14px;">No months with data yet.</td></tr>`;
+  document.getElementById("es-month-table").innerHTML = `<thead>${mhead}</thead><tbody>${mbody}</tbody>`;
+
+  // Staff performance (installations + paid sales + total amount paid)
+  const instRows = filterByMonthOlt(STORE.installations, olt);
+  const paidRows = filterByMonthOlt(STORE.paidSales, olt);
+  const staffMap = {};
+  instRows.forEach(r=>{ const k=r["MARKETED BY"]||"(blank)"; staffMap[k]=staffMap[k]||{inst:0,paid:0,amt:0}; staffMap[k].inst++; });
+  paidRows.forEach(r=>{ const k=r["MARKETED BY"]||"(blank)"; staffMap[k]=staffMap[k]||{inst:0,paid:0,amt:0}; staffMap[k].paid++; staffMap[k].amt += toNum(r["TOTAL AMT PAID"]); });
+  let sthead = "<tr><th>Staff</th><th>Installation</th><th>Paid Sales</th><th>Amount Collected</th></tr>";
+  let stArr = Object.entries(staffMap).sort((a,b)=>(b[1].inst+b[1].paid)-(a[1].inst+a[1].paid));
+  let stbody = stArr.map(([name,v])=>`<tr><td>${name}</td><td>${v.inst}</td><td>${v.paid}</td><td>${fmtMoney(v.amt)}</td></tr>`).join("") || `<tr><td colspan="4" class="small-muted" style="padding:14px;">No data for this scope.</td></tr>`;
+  document.getElementById("es-staff-table").innerHTML = `<thead>${sthead}</thead><tbody>${stbody}</tbody>`;
+
+  // Entry source summary
+  const srcMap = {};
+  instRows.forEach(r=>{ const k=r["ENTRY SOURCE"]||"(blank)"; srcMap[k]=srcMap[k]||{inst:0,paid:0}; srcMap[k].inst++; });
+  paidRows.forEach(r=>{ const k=r["ENTRY SOURCE"]||"(blank)"; srcMap[k]=srcMap[k]||{inst:0,paid:0}; srcMap[k].paid++; });
+  let ochead = "<tr><th>Entry Source</th><th>Installation</th><th>Paid Sales</th></tr>";
+  let ocArr = Object.entries(srcMap).sort((a,b)=>(b[1].inst+b[1].paid)-(a[1].inst+a[1].paid));
+  let ocbody = ocArr.map(([name,v])=>`<tr><td>${name}</td><td>${v.inst}</td><td>${v.paid}</td></tr>`).join("") || `<tr><td colspan="3" class="small-muted" style="padding:14px;">No data for this scope.</td></tr>`;
+  document.getElementById("es-source-table").innerHTML = `<thead>${ochead}</thead><tbody>${ocbody}</tbody>`;
+
+  // Revenue composition
+  const revRows = (STATE.month===ALL_MONTHS_VALUE ? activeMonthsList().flatMap(m=>accrualRowsFor(m, STATE.fy, olt)) : accrualRowsFor(STATE.month, STATE.fy, olt));
+  const typeMap2 = {};
+  revRows.forEach(r=>{ const k = r["Renew New"]||r["Rtype"]||"(blank)"; typeMap2[k]=(typeMap2[k]||0)+toNum(r.Amount); });
+  let rthead = "<tr><th>Type</th><th>Revenue</th><th>% of Total</th></tr>";
+  const rtTotal = Object.values(typeMap2).reduce((a,b)=>a+b,0)||1;
+  let rtbody = Object.entries(typeMap2).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${k}</td><td>${fmtMoney(v)}</td><td>${fmtPct(pct(v,rtTotal))}</td></tr>`).join("") || `<tr><td colspan="3" class="small-muted" style="padding:14px;">No accrual revenue rows for this scope.</td></tr>`;
+  document.getElementById("es-revtype-table").innerHTML = `<thead>${rthead}</thead><tbody>${rtbody}</tbody>`;
 }
 
 const IMPORT_TYPES = [
@@ -1682,6 +1850,7 @@ function switchTab(tab){
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
   document.getElementById("sec-"+tab).classList.add("active");
   const titles = {overview:["Executive Overview","Shuklagandaki Branch · M1–M12 performance, connected end to end"],
+    summary:["Executive Summary","Full narrative, comprehensive tables, and month-wise detail for branch review"],
     behaviour:["Customer Behaviour","OLT-wise billing behaviour, renewal gap analysis, and forecast comparison"],
     growth:["Sales & Customer Growth","Installation, sales, growth, churn and active customer movement"],
     revenue:["Revenue & Business Performance","Accrual revenue, ARPU, and target vs achievement"],
@@ -1695,6 +1864,7 @@ function switchTab(tab){
 
 function renderAll(){
   if(STATE.tab==="overview") renderOverview();
+  else if(STATE.tab==="summary") renderSummary();
   else if(STATE.tab==="behaviour") renderBehaviour();
   else if(STATE.tab==="growth") renderGrowth();
   else if(STATE.tab==="revenue") renderRevenue();
@@ -1739,6 +1909,7 @@ function init(){
 
   document.getElementById("tgt-olt-select").addEventListener("change", (e)=>{ TGT_OLT = e.target.value; renderTargetsTable(); });
   document.getElementById("btn-save-targets").addEventListener("click", saveTargetsFromTable);
+  document.getElementById("btn-print-summary").addEventListener("click", ()=>{ switchTab("summary"); setTimeout(()=>window.print(), 100); });
 
   switchTab("overview");
 
