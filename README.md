@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -40,12 +40,28 @@ const firebaseConfig = {
   appId: "1:332119884885:web:518d8a40773398d03b00dc"
 };
 window.__fb = { ready:false, error:null };
+async function importWithFallback(urls){
+  let lastErr;
+  for(const u of urls){
+    try{ return await import(u); }catch(err){ lastErr = err; }
+  }
+  throw lastErr;
+}
 (async function initFirebase(){
   try{
     const [{ initializeApp }, { getFirestore, doc, setDoc, getDoc, getDocs, collection, onSnapshot }, { getAuth, signInAnonymously, onAuthStateChanged }] = await Promise.all([
-      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"),
-      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"),
-      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js")
+      importWithFallback([
+        "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+        "https://esm.sh/firebase@10.12.2/app"
+      ]),
+      importWithFallback([
+        "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js",
+        "https://esm.sh/firebase@10.12.2/firestore"
+      ]),
+      importWithFallback([
+        "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js",
+        "https://esm.sh/firebase@10.12.2/auth"
+      ])
     ]);
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -497,6 +513,20 @@ let TARGETS = loadTargets();
 let STATE = { olt: "ALL", month: "Bhadra", fy: "2083/84", tab: "overview", showPct: false };
 
 // ---------- helpers ----------
+// Defensive numeric coercion for any value pulled from an imported row. Excel
+// exports can hand back numbers as actual JS numbers OR as formatted strings
+// (comma-grouped, currency-prefixed, locale-formatted) depending on the sheet's
+// cell format and the reader's settings — using such a value directly in `+=`
+// silently does STRING CONCATENATION in JS instead of addition once mixed with
+// a numeric accumulator, corrupting every downstream sum without ever throwing
+// an error. Always route imported numeric fields through this before summing.
+function toNum(v){
+  if(typeof v==="number") return isNaN(v) ? 0 : v;
+  if(v===null || v===undefined || v==="") return 0;
+  const cleaned = String(v).replace(/[,\s]/g,"").replace(/^Rs\.?/i,"");
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? 0 : n;
+}
 function fmtNum(n){ if(n===undefined||n===null||isNaN(n)) return "-"; return Math.round(n).toLocaleString('en-IN'); }
 function fmtMoney(n){ if(n===undefined||n===null||isNaN(n)) return "Rs -"; return "Rs "+Math.round(n).toLocaleString('en-IN'); }
 function pct(a,b){ if(!b) return 0; return (a/b)*100; }
@@ -591,7 +621,7 @@ function classifyBehaviour(oltFilter){
   // and Winback = days late >= 30, i.e. ACTUAL DIFF <= -30 (any magnitude beyond that,
   // -45, -2000, -3000, all still count — the more negative, the more overdue).
   pb.forEach(r=>{
-    const rawDiff = (typeof r["ACTUAL DIFF"]==="number") ? r["ACTUAL DIFF"] : parseFloat(r["ACTUAL DIFF"]);
+    const rawDiff = toNum(r["ACTUAL DIFF"]);
     const daysLate = isNaN(rawDiff) ? NaN : Math.max(0, -rawDiff);
     const olt = r.OLT;
     updateMaxGap(olt, daysLate);
@@ -601,7 +631,7 @@ function classifyBehaviour(oltFilter){
     else if(fcSet.has(r.USERNAME)){ cat="RET"; }
     else { cat="NS"; }
     counts[cat]++;
-    rows.push({username:r.USERNAME, olt:olt, transDate:r["TRANS DATE"], prevExpiry:r["PREVIOUS INVOICE EXPIRY DATE"], renewDate:r["RECENT INVOICE RENEW DATE"], amount:r.AMOUNT, diff:daysLate, category:cat, pending:false});
+    rows.push({username:r.USERNAME, olt:olt, transDate:r["TRANS DATE"], prevExpiry:r["PREVIOUS INVOICE EXPIRY DATE"], renewDate:r["RECENT INVOICE RENEW DATE"], amount:toNum(r.AMOUNT), diff:daysLate, category:cat, pending:false});
   });
 
   // Forecast customers who have NOT renewed yet this month — gap keeps growing daily.
@@ -615,7 +645,7 @@ function classifyBehaviour(oltFilter){
     if(gapDays > 30){
       counts.WIN++;
       updateMaxGap(r.OLT, gapDays);
-      rows.push({username:r.Username, olt:r.OLT, transDate:null, prevExpiry:r["Expiry Date"], renewDate:null, amount:r["Forecasted Revenue"], diff:gapDays, category:"WIN", pending:true});
+      rows.push({username:r.Username, olt:r.OLT, transDate:null, prevExpiry:r["Expiry Date"], renewDate:null, amount:toNum(r["Forecasted Revenue"]), diff:gapDays, category:"WIN", pending:true});
     } else if(gapDays >= 0){
       pendingCount++;
     }
@@ -680,15 +710,15 @@ function growthMetricsFor(oltFilter){
         const save = STATE.month; STATE.month = m;
         const gc = latestGrowthChurnRow(olt);
         STATE.month = save;
-        if(gc){ g += gc["GROWTH MTD"]||0; c += gc["CHURN MTD"]||0; }
+        if(gc){ g += toNum(gc["GROWTH MTD"]); c += toNum(gc["CHURN MTD"]); }
       });
       const latest = latestGrowthChurnRow(olt); // STATE.month is ALL here -> true latest across everything
-      a = latest ? (latest["CL ACTIVE CUSTOMER"]||0) : 0;
+      a = latest ? toNum(latest["CL ACTIVE CUSTOMER"]) : 0;
     } else {
       const gc = latestGrowthChurnRow(olt);
-      g = gc ? (gc["GROWTH MTD"]||0) : 0;
-      c = gc ? (gc["CHURN MTD"]||0) : 0;
-      a = gc ? (gc["CL ACTIVE CUSTOMER"]||0) : 0;
+      g = gc ? toNum(gc["GROWTH MTD"]) : 0;
+      c = gc ? toNum(gc["CHURN MTD"]) : 0;
+      a = gc ? toNum(gc["CL ACTIVE CUSTOMER"]) : 0;
     }
     out.installation += inst; out.paidSales += paid; out.growth += g; out.churn += c; out.active += a;
     out.byOlt[olt] = {installation:inst, paidSales:paid, growth:g, churn:c, active:a};
@@ -714,7 +744,7 @@ function accrualRowsFor(month, fy, oltFilter){
 }
 function revenueFor(month, fy, oltFilter){
   const rows = accrualRowsFor(month, fy, oltFilter);
-  const total = rows.reduce((s,r)=> s + (typeof r.Amount==="number"?r.Amount:parseFloat(r.Amount)||0), 0);
+  const total = rows.reduce((s,r)=> s + toNum(r.Amount), 0);
   return {total, count: rows.length};
 }
 // Revenue for whatever is currently selected in the month dropdown — handles "All Months"
@@ -885,7 +915,7 @@ function renderOverview(){
   // active customers trend
   const activeSeries = monthsWithData.map(m=>{
     const olts = olt==="ALL"?OLTS:[olt];
-    let s=0; olts.forEach(o=>{ const rows = STORE.growthChurn.filter(r=>r.bsMonth===m && r.bsFY===STATE.fy && r.OLT===o); if(rows.length){ rows.sort((a,b)=>(parseFlexDate(a.SNAPSHOT_DATE)||0)-(parseFlexDate(b.SNAPSHOT_DATE)||0)); s+= rows[rows.length-1]["CL ACTIVE CUSTOMER"]||0; } });
+    let s=0; olts.forEach(o=>{ const rows = STORE.growthChurn.filter(r=>r.bsMonth===m && r.bsFY===STATE.fy && r.OLT===o); if(rows.length){ rows.sort((a,b)=>(parseFlexDate(a.SNAPSHOT_DATE)||0)-(parseFlexDate(b.SNAPSHOT_DATE)||0)); s+= toNum(rows[rows.length-1]["CL ACTIVE CUSTOMER"]); } });
     return s;
   });
   renderChart('ov-active', document.getElementById('chart-ov-active'), {
@@ -1148,7 +1178,7 @@ function renderRevenue(){
   // revenue by transaction type
   const rows = accrualRowsFor(STATE.month, STATE.fy, olt);
   const typeMap = {};
-  rows.forEach(r=>{ const k = r["Renew New"]||r["Rtype"]||"(blank)"; typeMap[k]=(typeMap[k]||0)+(typeof r.Amount==="number"?r.Amount:parseFloat(r.Amount)||0); });
+  rows.forEach(r=>{ const k = r["Renew New"]||r["Rtype"]||"(blank)"; typeMap[k]=(typeMap[k]||0)+toNum(r.Amount); });
   let tthead = "<tr><th>Type</th><th>Revenue</th><th>% of Total</th></tr>";
   const totalT = Object.values(typeMap).reduce((a,b)=>a+b,0)||1;
   let ttbody = Object.entries(typeMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${k}</td><td>${fmtMoney(v)}</td><td>${fmtPct(pct(v,totalT))}</td></tr>`).join("") || `<tr><td colspan="3" class="small-muted" style="padding:14px;">No accrual revenue rows for this month/OLT.</td></tr>`;
@@ -1212,7 +1242,7 @@ function renderImportCards(){
         try{
           const wb = XLSX.read(ev.target.result, {type:"array", cellDates:true});
           const ws = wb.Sheets[wb.SheetNames[0]];
-          const raw = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:null});
+          const raw = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
           const headerIdx = findHeaderRow(raw, cfg.signature);
           if(headerIdx===-1){ preview.style.display="block"; preview.innerHTML = '<span style="color:var(--red);">Could not detect expected columns in this file for '+cfg.title+'.</span>'; return; }
           const rows = rowsFromRaw(raw, headerIdx);
@@ -1255,7 +1285,7 @@ function renderImportCards(){
         try{
           const wb = XLSX.read(ev.target.result, {type:"array", cellDates:true});
           const ws = wb.Sheets[wb.SheetNames[0]];
-          const raw = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:null});
+          const raw = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
           doImport(cfg, raw, monthSel?monthSel.value:null, fySel?fySel.value:"2083/84");
         }catch(err){
           console.error(err);
