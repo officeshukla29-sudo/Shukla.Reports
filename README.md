@@ -32,12 +32,12 @@ _loadLib([
 </script>
 <script type="module">
 const firebaseConfig = {
-  apiKey: "AIzaSyCiRQtdAIhlVdGgxpw_VxN1QElTP_43tH4",
-  authDomain: "prem-c9f3d.firebaseapp.com",
-  projectId: "prem-c9f3d",
-  storageBucket: "prem-c9f3d.firebasestorage.app",
-  messagingSenderId: "332119884885",
-  appId: "1:332119884885:web:518d8a40773398d03b00dc"
+  apiKey: "AIzaSyCtRpxAiAdl0RIpLbx3JuuD5aO_gGYJnNY",
+  authDomain: "shuklareports.firebaseapp.com",
+  projectId: "shuklareports",
+  storageBucket: "shuklareports.firebasestorage.app",
+  messagingSenderId: "133308067679",
+  appId: "1:133308067679:web:a921e81c720178a0bdd0ea"
 };
 window.__fb = { ready:false, error:null };
 async function importWithFallback(urls){
@@ -188,6 +188,14 @@ canvas{max-width:100%;}
 .toast.show{transform:translateX(0);opacity:1;pointer-events:auto;}
 .toast .toast-title{font-weight:800;font-size:13.5px;color:var(--txt);margin-bottom:4px;}
 .toast .toast-detail{font-size:12px;color:var(--txt2);line-height:1.5;}
+.wr-dot{width:9px;height:9px;border-radius:50%;background:#dfe1f2;cursor:pointer;border:none;padding:0;}
+.wr-dot.active{background:var(--grad1);width:22px;border-radius:5px;}
+.wr-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;}
+.wr-badge.review{background:#eaf1ff;color:#3568d8;}
+.wr-badge.planning{background:#fff0e6;color:#c2650f;}
+.wr-action-item{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f0f1fa;}
+.wr-action-item:last-child{border-bottom:none;}
+.wr-action-item .wr-num{width:24px;height:24px;border-radius:50%;background:var(--grad1);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .insight-card{background:#ffffff1c;border:1px solid #ffffff30;border-radius:14px;padding:14px;margin-top:14px;color:#fff;}
 .insight-card b{display:block;font-size:12.5px;margin-bottom:4px;}
 .insight-card span{font-size:11.3px;color:#e3dffb;}
@@ -226,6 +234,7 @@ canvas{max-width:100%;}
     <div class="nav-group-label">Overview</div>
     <button class="nav-btn active" data-tab="overview"><span class="nav-ico">&#9733;</span> Executive Overview</button>
     <button class="nav-btn" data-tab="summary"><span class="nav-ico">&#128203;</span> Executive Summary</button>
+    <button class="nav-btn" data-tab="weekly"><span class="nav-ico">&#128197;</span> Weekly Review</button>
     <div class="nav-group-label">Analysis</div>
     <button class="nav-btn" data-tab="behaviour"><span class="nav-ico">&#128100;</span> Customer Behaviour</button>
     <button class="nav-btn" data-tab="growth"><span class="nav-ico">&#128200;</span> Sales &amp; Growth</button>
@@ -353,6 +362,23 @@ canvas{max-width:100%;}
       <div class="panel">
         <h3>Revenue Composition &mdash; by transaction type, selected scope</h3>
         <div class="tbl-wrap"><table id="es-revtype-table"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ===================== WEEKLY REVIEW ===================== -->
+    <div class="section" id="sec-weekly">
+      <div class="note">Slide 1 = यो हप्ताको data review (20%). Slide 2&ndash;5 = अगाडिको हप्ताको planning &amp; action items (80%) &mdash; target gap, winback follow-up list, आउँदो हप्ता due हुने forecast, ra OLT priority. Weekly meeting मा seedhai slide-by-slide हिँड्न मिल्छ.</div>
+      <div class="panel" id="wr-panel">
+        <div class="flex-between">
+          <h3 id="wr-slide-title">This Week at a Glance</h3>
+          <div class="chip-row" style="margin:0;">
+            <span class="small-muted" id="wr-slide-counter">1 / 5</span>
+            <button class="btn ghost small" id="wr-prev">&#8592; Prev</button>
+            <button class="btn small" id="wr-next">Next &#8594;</button>
+          </div>
+        </div>
+        <div id="wr-slide-body" style="min-height:340px;"></div>
+        <div class="chip-row" id="wr-dots" style="justify-content:center;margin-top:14px;"></div>
       </div>
     </div>
 
@@ -1353,6 +1379,123 @@ function renderSummary(){
   document.getElementById("es-revtype-table").innerHTML = `<thead>${rthead}</thead><tbody>${rtbody}</tbody>`;
 }
 
+// ---------- WEEKLY REVIEW (slide deck) ----------
+let WR_SLIDE = 0;
+const WR_SLIDE_COUNT = 5;
+function weekRange(offsetWeeks){
+  const end = new Date(); end.setHours(23,59,59,999); end.setDate(end.getDate() - offsetWeeks*7);
+  const start = new Date(end); start.setDate(start.getDate()-6); start.setHours(0,0,0,0);
+  return {start, end};
+}
+function inRange(dateVal, range){
+  const d = parseFlexDate(dateVal);
+  return d && d>=range.start && d<=range.end;
+}
+function weeklyFlow(offsetWeeks, oltFilter){
+  const range = weekRange(offsetWeeks);
+  const oltOk = r => oltFilter==="ALL" || r.OLT===oltFilter;
+  const install = STORE.installations.filter(r=> r.bsFY===STATE.fy && oltOk(r) && inRange(r["CREATE DATE"], range)).length;
+  const paid = STORE.paidSales.filter(r=> r.bsFY===STATE.fy && oltOk(r) && inRange(r["PAID DATE"], range)).length;
+  let growth=0, churn=0;
+  STORE.growthChurn.filter(r=> r.bsFY===STATE.fy && oltOk(r) && inRange(r.SNAPSHOT_DATE, range)).forEach(r=>{
+    growth += toNum(r["GROWTH ON DAY"]); churn += toNum(r["CHURN_ON_DAY"]);
+  });
+  const renewals = STORE.paymentBehaviour.filter(r=> r.bsFY===STATE.fy && oltOk(r) && inRange(r["TRANS DATE"], range));
+  const winbackAdds = renewals.filter(r=> toNum(r["ACTUAL DIFF"]) <= -30).length;
+  return {install, paid, growth, churn, renewals: renewals.length, winbackAdds};
+}
+function wrDeltaRow(label, cur, prev){
+  const delta = cur-prev;
+  const cls = delta>=0?'up':'down';
+  return `<div class="progress-row"><div class="name">${label}</div><div class="track"><i style="width:${Math.min(100,Math.abs(cur)*4)}%;background:${delta>=0?'var(--green)':'var(--red)'}"></i></div><div class="pct">${cur}</div></div><div class="small-muted" style="margin:-6px 0 10px 90px;">vs ${prev} last week (<span class="delta ${cls}">${delta>=0?'+':''}${delta}</span>)</div>`;
+}
+
+function wrSlide1(olt){
+  const cur = weeklyFlow(0, olt), prev = weeklyFlow(1, olt);
+  const r = weekRange(0);
+  return `<div class="wr-badge review">Review</div>
+    <p class="hint" style="margin-top:10px;">${r.start.toDateString()} &ndash; ${r.end.toDateString()}, last 7 days vs the 7 days before, ${olt==="ALL"?"all OLTs":olt}.</p>
+    ${wrDeltaRow("New Installation", cur.install, prev.install)}
+    ${wrDeltaRow("New Paid Sales", cur.paid, prev.paid)}
+    ${wrDeltaRow("Growth (daily sum)", cur.growth, prev.growth)}
+    ${wrDeltaRow("Churn (daily sum)", cur.churn, prev.churn)}
+    ${wrDeltaRow("Renewal Transactions", cur.renewals, prev.renewals)}
+    ${wrDeltaRow("New Winback Cases (30+ late this week)", cur.winbackAdds, prev.winbackAdds)}`;
+}
+function wrSlide2(olt){
+  const olts = olt==="ALL" ? OLTS : [olt];
+  let rows = [];
+  olts.forEach(o=>{
+    const g = growthMetricsFor(o);
+    const rev = revenueForState(o);
+    const tI = targetSumFor(o, STATE.month, "installation");
+    const tR = targetSumFor(o, STATE.month, "revenue");
+    if(tI && g.installation<tI) rows.push({o, metric:"Installation", actual:g.installation, target:tI, gap:tI-g.installation, isMoney:false});
+    if(tR && rev.total<tR) rows.push({o, metric:"Revenue", actual:rev.total, target:tR, gap:tR-rev.total, isMoney:true});
+  });
+  rows.sort((a,b)=> (b.gap/b.target) - (a.gap/a.target));
+  if(!rows.length) return `<div class="wr-badge planning">Planning</div><p style="margin-top:14px;">No target gaps found for this scope &mdash; every tracked OLT is at or above target for the selected month. Great position heading into next week.</p>`;
+  let body = rows.map((r,i)=>`<div class="wr-action-item"><div class="wr-num">${i+1}</div><div><b>${r.o} &mdash; ${r.metric}</b><br><span class="small-muted">${r.isMoney?fmtMoney(r.actual):fmtNum(r.actual)} of ${r.isMoney?fmtMoney(r.target):fmtNum(r.target)} target &mdash; behind by ${r.isMoney?fmtMoney(r.gap):fmtNum(r.gap)} (${fmtPct(pct(r.gap,r.target))})</span></div></div>`).join("");
+  return `<div class="wr-badge planning">Planning</div><p class="hint" style="margin-top:10px;">Biggest gaps first &mdash; these need attention next week.</p>${body}`;
+}
+function wrSlide3(olt){
+  const beh = classifyBehaviour(olt);
+  const winRows = beh.rows.filter(r=>r.category==="WIN").sort((a,b)=>b.diff-a.diff).slice(0,15);
+  if(!winRows.length) return `<div class="wr-badge planning">Planning</div><p style="margin-top:14px;">No winback-risk customers in this scope right now.</p>`;
+  let thead = "<tr><th>#</th><th>Username</th><th>OLT</th><th>Days Late</th><th>Status</th></tr>";
+  let tbody = winRows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.username}</td><td><span class="badge-olt">${r.olt}</span></td><td>${r.diff}</td><td>${r.pending?'<span class="small-muted">not yet paid</span>':'paid late'}</td></tr>`).join("");
+  return `<div class="wr-badge planning">Planning</div><p class="hint" style="margin-top:10px;">Top ${winRows.length} winback-risk customers by days overdue &mdash; call these first next week.</p><div class="tbl-wrap" style="max-height:280px;"><table><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>`;
+}
+function wrSlide4(olt){
+  const in7 = new Date(); in7.setHours(23,59,59,999); in7.setDate(in7.getDate()+7);
+  const today0 = new Date(); today0.setHours(0,0,0,0);
+  const fc = getForecastRows(STATE.month===ALL_MONTHS_VALUE ? activeMonthsList().slice(-1)[0]||STATE.month : STATE.month, STATE.fy).filter(r=> olt==="ALL"||r.OLT===olt);
+  const upcoming = fc.filter(r=>{ const e=parseFlexDate(r["Expiry Date"]); return e && e>=today0 && e<=in7; });
+  const byOlt = {};
+  upcoming.forEach(r=>{ byOlt[r.OLT]=(byOlt[r.OLT]||0)+1; });
+  let cards = Object.entries(byOlt).map(([o,n])=>`<div class="progress-row"><div class="name">${o}</div><div class="track"><i style="width:${Math.min(100,n)}%;background:var(--accent2)"></i></div><div class="pct">${n}</div></div>`).join("") || `<p class="small-muted">No upcoming renewals detected in the next 7 days for this scope.</p>`;
+  return `<div class="wr-badge planning">Planning</div><p class="hint" style="margin-top:10px;">${fmtNum(upcoming.length)} customers are due to expire in the next 7 days &mdash; reach out proactively before they lapse into winback.</p>${cards}`;
+}
+function wrSlide5(olt){
+  const gm = growthMetricsFor(olt);
+  const beh = classifyBehaviour(olt);
+  const olts = olt==="ALL"?OLTS:[olt];
+  let worstOlt = null, worstGap = -Infinity;
+  olts.forEach(o=>{
+    const tR = targetSumFor(o, STATE.month, "revenue");
+    const rev = revenueForState(o).total;
+    if(tR){ const gapPct = pct(tR-rev, tR); if(gapPct>worstGap){ worstGap=gapPct; worstOlt=o; } }
+  });
+  const items = [];
+  if(worstOlt && worstGap>0) items.push(`Prioritise <b>${worstOlt}</b> next week &mdash; furthest behind its revenue target (${fmtPct(worstGap)} short).`);
+  if(beh.counts.WIN>0) items.push(`Assign follow-up calls for <b>${beh.counts.WIN}</b> winback-risk customers (see previous slide for the list).`);
+  if(gm.churn>0) items.push(`Investigate churn drivers &mdash; <b>${fmtNum(gm.churn)}</b> customers lost this period.`);
+  items.push(`Track daily installation pace against the monthly target to catch shortfalls early rather than at month-end.`);
+  let list = items.map((t,i)=>`<div class="wr-action-item"><div class="wr-num">${i+1}</div><div>${t}</div></div>`).join("");
+  return `<div class="wr-badge planning">Planning</div><p class="hint" style="margin-top:10px;">Auto-generated focus points for next week&apos;s work, based on this scope&apos;s current numbers.</p>${list}`;
+}
+
+function renderWeekly(){
+  const olt = STATE.olt;
+  const slides = [
+    ["This Week at a Glance", wrSlide1],
+    ["Target Gap \u2014 Where We're Behind", wrSlide2],
+    ["Winback Action List", wrSlide3],
+    ["Upcoming Renewals \u2014 Next 7 Days", wrSlide4],
+    ["Next Week Focus Summary", wrSlide5],
+  ];
+  if(WR_SLIDE<0) WR_SLIDE=0;
+  if(WR_SLIDE>=slides.length) WR_SLIDE=slides.length-1;
+  const [title, fn] = slides[WR_SLIDE];
+  document.getElementById("wr-slide-title").textContent = title;
+  document.getElementById("wr-slide-counter").textContent = (WR_SLIDE+1)+" / "+slides.length;
+  document.getElementById("wr-slide-body").innerHTML = fn(olt);
+  document.getElementById("wr-dots").innerHTML = slides.map((s,i)=>`<button class="wr-dot ${i===WR_SLIDE?'active':''}" data-idx="${i}"></button>`).join("");
+  document.querySelectorAll(".wr-dot").forEach(b=> b.addEventListener("click", ()=>{ WR_SLIDE=parseInt(b.dataset.idx); renderWeekly(); }));
+  document.getElementById("wr-prev").disabled = WR_SLIDE===0;
+  document.getElementById("wr-next").textContent = WR_SLIDE===slides.length-1 ? "Restart \u21BA" : "Next \u2192";
+}
+
 const IMPORT_TYPES = [
   { id:"installation", title:"New Installation", desc:"New Installation Details export (USERNAME, CREATE DATE, OLT, PLAN NAME, PAYMENT STATUS, ENTRY SOURCE, MARKETED BY...)",
     signature:["USERNAME","CREATE DATE","OLT","PLAN NAME"], needsMonth:true, store:"installations" },
@@ -1851,6 +1994,7 @@ function switchTab(tab){
   document.getElementById("sec-"+tab).classList.add("active");
   const titles = {overview:["Executive Overview","Shuklagandaki Branch · M1–M12 performance, connected end to end"],
     summary:["Executive Summary","Full narrative, comprehensive tables, and month-wise detail for branch review"],
+    weekly:["Weekly Review","Slide-by-slide weekly meeting deck \u2014 this week's data, then next week's plan"],
     behaviour:["Customer Behaviour","OLT-wise billing behaviour, renewal gap analysis, and forecast comparison"],
     growth:["Sales & Customer Growth","Installation, sales, growth, churn and active customer movement"],
     revenue:["Revenue & Business Performance","Accrual revenue, ARPU, and target vs achievement"],
@@ -1865,6 +2009,7 @@ function switchTab(tab){
 function renderAll(){
   if(STATE.tab==="overview") renderOverview();
   else if(STATE.tab==="summary") renderSummary();
+  else if(STATE.tab==="weekly") renderWeekly();
   else if(STATE.tab==="behaviour") renderBehaviour();
   else if(STATE.tab==="growth") renderGrowth();
   else if(STATE.tab==="revenue") renderRevenue();
@@ -1910,6 +2055,8 @@ function init(){
   document.getElementById("tgt-olt-select").addEventListener("change", (e)=>{ TGT_OLT = e.target.value; renderTargetsTable(); });
   document.getElementById("btn-save-targets").addEventListener("click", saveTargetsFromTable);
   document.getElementById("btn-print-summary").addEventListener("click", ()=>{ switchTab("summary"); setTimeout(()=>window.print(), 100); });
+  document.getElementById("wr-prev").addEventListener("click", ()=>{ if(WR_SLIDE>0){ WR_SLIDE--; renderWeekly(); } });
+  document.getElementById("wr-next").addEventListener("click", ()=>{ WR_SLIDE = (WR_SLIDE>=4) ? 0 : WR_SLIDE+1; renderWeekly(); });
 
   switchTab("overview");
 
