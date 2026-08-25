@@ -235,6 +235,7 @@ canvas{max-width:100%;}
     <button class="nav-btn active" data-tab="overview"><span class="nav-ico">&#9733;</span> Executive Overview</button>
     <button class="nav-btn" data-tab="summary"><span class="nav-ico">&#128203;</span> Executive Summary</button>
     <button class="nav-btn" data-tab="weekly"><span class="nav-ico">&#128197;</span> Weekly Review</button>
+    <button class="nav-btn" data-tab="monthlyreview"><span class="nav-ico">&#128198;</span> Monthly Review</button>
     <div class="nav-group-label">Analysis</div>
     <button class="nav-btn" data-tab="behaviour"><span class="nav-ico">&#128100;</span> Customer Behaviour</button>
     <button class="nav-btn" data-tab="growth"><span class="nav-ico">&#128200;</span> Sales &amp; Growth</button>
@@ -367,18 +368,60 @@ canvas{max-width:100%;}
 
     <!-- ===================== WEEKLY REVIEW ===================== -->
     <div class="section" id="sec-weekly">
-      <div class="note">Slide 1 = यो हप्ताको data review (20%). Slide 2&ndash;5 = अगाडिको हप्ताको planning &amp; action items (80%) &mdash; target gap, winback follow-up list, आउँदो हप्ता due हुने forecast, ra OLT priority. Weekly meeting मा seedhai slide-by-slide हिँड्न मिल्छ.</div>
+      <div class="note">Slide 1 = 7-section weekly business review format &mdash; select the week to review, then step through with Next/Prev or the dots.</div>
+      <div class="panel">
+        <div class="chip-row" style="margin:0;">
+          <label class="small-muted" style="align-self:center;">Week:</label>
+          <input type="date" id="wr-week-start" style="flex:1;min-width:130px;">
+          <span class="small-muted" style="align-self:center;">to</span>
+          <input type="date" id="wr-week-end" style="flex:1;min-width:130px;">
+          <button class="btn small" id="wr-apply-week">Apply</button>
+        </div>
+      </div>
       <div class="panel" id="wr-panel">
         <div class="flex-between">
           <h3 id="wr-slide-title">This Week at a Glance</h3>
           <div class="chip-row" style="margin:0;">
-            <span class="small-muted" id="wr-slide-counter">1 / 5</span>
+            <span class="small-muted" id="wr-slide-counter">1 / 7</span>
             <button class="btn ghost small" id="wr-prev">&#8592; Prev</button>
             <button class="btn small" id="wr-next">Next &#8594;</button>
           </div>
         </div>
         <div id="wr-slide-body" style="min-height:340px;"></div>
         <div class="chip-row" id="wr-dots" style="justify-content:center;margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <!-- ===================== MONTHLY REVIEW ===================== -->
+    <div class="section" id="sec-monthlyreview">
+      <div class="note">Monthly business review format for the selected month/OLT scope above. Sections 1&ndash;3 are computed from your data; Sections 4&ndash;5 are your team's written review, saved per month.</div>
+
+      <div class="panel">
+        <div class="flex-between">
+          <h3>1. Monthly Executive Summary</h3>
+          <div id="mr-status-picker"></div>
+        </div>
+        <div id="mr-exec-summary"></div>
+      </div>
+
+      <div class="panel">
+        <h3>2. Month-wise Business Trend</h3>
+        <div class="tbl-wrap"><table id="mr-trend-table"><thead></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="panel">
+        <h3>3. OLT-wise Performance</h3>
+        <div class="tbl-wrap"><table id="mr-olt-table"><thead></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="panel">
+        <h3>4. Business Risk &amp; Opportunity</h3>
+        <div class="tbl-wrap"><table id="mr-risk-table"><thead></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="panel">
+        <h3>5. Final Management Review</h3>
+        <div id="mr-final-review"></div>
       </div>
     </div>
 
@@ -1379,13 +1422,73 @@ function renderSummary(){
   document.getElementById("es-revtype-table").innerHTML = `<thead>${rthead}</thead><tbody>${rtbody}</tbody>`;
 }
 
-// ---------- WEEKLY REVIEW (slide deck) ----------
+// ---------- REVIEW NOTES (persisted editable fields for Weekly/Monthly review templates) ----------
+function ensureReviewNotes(){ if(!STORE.reviewNotes) STORE.reviewNotes = {weekly:{}, monthly:{}}; return STORE.reviewNotes; }
+function getByPath(obj, path){ return path.split('.').reduce((o,k)=> (o && o[k]!==undefined) ? o[k] : '', obj); }
+function setByPath(obj, path, val){
+  const parts = path.split('.');
+  let cur = obj;
+  for(let i=0;i<parts.length-1;i++){ if(cur[parts[i]]===undefined || cur[parts[i]]===null) cur[parts[i]]={}; cur = cur[parts[i]]; }
+  cur[parts[parts.length-1]] = val;
+}
+function weekKey(){ return WR_WEEK_START.toISOString().slice(0,10); }
+function getWeeklyNotes(){
+  const rn = ensureReviewNotes();
+  const k = weekKey();
+  if(!rn.weekly[k]) rn.weekly[k] = { keyReasons:{}, retention:{}, winback:{}, sixG:[{source:"CFU List"},{source:"100+ Days Active Customer"},{source:"Other"}], staff:{}, issues:[{priority:"\uD83D\uDD34"}], focus:["","","","",""] };
+  if(!rn.weekly[k].sixG || !rn.weekly[k].sixG.length) rn.weekly[k].sixG = [{source:"CFU List"},{source:"100+ Days Active Customer"},{source:"Other"}];
+  if(!rn.weekly[k].issues) rn.weekly[k].issues = [];
+  if(!rn.weekly[k].focus) rn.weekly[k].focus = ["","","","",""];
+  return rn.weekly[k];
+}
+function monthKey(){ return STATE.month+"|"+STATE.fy; }
+function getMonthlyNotes(){
+  const rn = ensureReviewNotes();
+  const k = monthKey();
+  if(!rn.monthly[k]) rn.monthly[k] = { status:"", sixG:{}, risk:[
+    {area:"Retention", priority:"\uD83D\uDD34"},{area:"Winback", priority:"\uD83D\uDD34"},{area:"6G", priority:"\uD83D\uDFE0"},{area:"Revenue", priority:"\uD83D\uDFE0"},{area:"Channel Partner", priority:"\uD83D\uDFE2"}
+  ], monthTrend6G:{}, oltSixG:{}, finalReview:{} };
+  if(!rn.monthly[k].risk) rn.monthly[k].risk = [];
+  if(!rn.monthly[k].finalReview) rn.monthly[k].finalReview = {};
+  return rn.monthly[k];
+}
+function bindNoteInputs(container, notesObj){
+  container.querySelectorAll('[data-note-path]').forEach(el=>{
+    const evt = (el.tagName==="SELECT" || el.type==="date") ? "change" : "input";
+    el.addEventListener(evt, ()=>{
+      setByPath(notesObj, el.dataset.notePath, el.value);
+      saveStore(STORE);
+    });
+  });
+}
+function niText(notesObj, path, placeholder, extraStyle){
+  const v = (getByPath(notesObj, path)||"").toString().replace(/"/g,"&quot;");
+  return `<input type="text" data-note-path="${path}" value="${v}" placeholder="${placeholder||''}" style="width:100%;${extraStyle||''}">`;
+}
+function niNum(notesObj, path, extraStyle){
+  const v = getByPath(notesObj, path);
+  return `<input type="number" data-note-path="${path}" value="${v===''?'':v}" style="width:70px;${extraStyle||''}">`;
+}
+function niDate(notesObj, path){
+  const v = getByPath(notesObj, path)||"";
+  return `<input type="date" data-note-path="${path}" value="${v}">`;
+}
+function niSelect(notesObj, path, options){
+  const v = getByPath(notesObj, path)||"";
+  return `<select data-note-path="${path}">${options.map(o=>`<option value="${o}" ${o===v?'selected':''}>${o}</option>`).join("")}</select>`;
+}
+
+// ---------- WEEKLY REVIEW (7-section business review deck) ----------
 let WR_SLIDE = 0;
-const WR_SLIDE_COUNT = 5;
+function defaultWeekStart(){ const y = new Date().getFullYear(); return new Date(y,7,17); } // Aug 17 default per user's first week
+function defaultWeekEnd(){ const y = new Date().getFullYear(); const d = new Date(y,7,21); d.setHours(23,59,59,999); return d; }
+let WR_WEEK_START = defaultWeekStart();
+let WR_WEEK_END = defaultWeekEnd();
 function weekRange(offsetWeeks){
-  const end = new Date(); end.setHours(23,59,59,999); end.setDate(end.getDate() - offsetWeeks*7);
-  const start = new Date(end); start.setDate(start.getDate()-6); start.setHours(0,0,0,0);
-  return {start, end};
+  const spanDays = Math.max(1, Math.round((WR_WEEK_END - WR_WEEK_START)/86400000) + 1);
+  const end = new Date(WR_WEEK_END); end.setDate(end.getDate() - offsetWeeks*spanDays);
+  const start = new Date(WR_WEEK_START); start.setDate(start.getDate() - offsetWeeks*spanDays);
+  return {start, end, spanDays};
 }
 function inRange(dateVal, range){
   const d = parseFlexDate(dateVal);
@@ -1395,70 +1498,135 @@ function weeklyFlow(offsetWeeks, oltFilter){
   const range = weekRange(offsetWeeks);
   const oltOk = r => oltFilter==="ALL" || r.OLT===oltFilter;
   const install = STORE.installations.filter(r=> r.bsFY===STATE.fy && oltOk(r) && inRange(r["CREATE DATE"], range)).length;
-  const paid = STORE.paidSales.filter(r=> r.bsFY===STATE.fy && oltOk(r) && inRange(r["PAID DATE"], range)).length;
+  const paid = STORE.paidSales.filter(r=> r.bsFY===STATE.fy && oltOk(r) && inRange(r["PAID DATE"], range));
   let growth=0, churn=0;
   STORE.growthChurn.filter(r=> r.bsFY===STATE.fy && oltOk(r) && inRange(r.SNAPSHOT_DATE, range)).forEach(r=>{
     growth += toNum(r["GROWTH ON DAY"]); churn += toNum(r["CHURN_ON_DAY"]);
   });
   const renewals = STORE.paymentBehaviour.filter(r=> r.bsFY===STATE.fy && oltOk(r) && inRange(r["TRANS DATE"], range));
   const winbackAdds = renewals.filter(r=> toNum(r["ACTUAL DIFF"]) <= -30).length;
-  return {install, paid, growth, churn, renewals: renewals.length, winbackAdds};
+  const collected = paid.reduce((s,r)=>s+toNum(r["TOTAL AMT PAID"]),0);
+  return {install, paid: paid.length, growth, churn, renewals: renewals.length, winbackAdds, collected};
 }
-function wrDeltaRow(label, cur, prev){
-  const delta = cur-prev;
-  const cls = delta>=0?'up':'down';
-  return `<div class="progress-row"><div class="name">${label}</div><div class="track"><i style="width:${Math.min(100,Math.abs(cur)*4)}%;background:${delta>=0?'var(--green)':'var(--red)'}"></i></div><div class="pct">${cur}</div></div><div class="small-muted" style="margin:-6px 0 10px 90px;">vs ${prev} last week (<span class="delta ${cls}">${delta>=0?'+':''}${delta}</span>)</div>`;
+function prorateTarget(monthlyTarget, spanDays){ return monthlyTarget ? (monthlyTarget * spanDays / 30) : null; }
+
+function wrSection1(olt){
+  const range = weekRange(0);
+  const cur = weeklyFlow(0, olt), prev = weeklyFlow(1, olt);
+  const notes = getWeeklyNotes();
+  const gm = growthMetricsFor(olt);
+  const tInstall = prorateTarget(targetSumFor(olt, STATE.month, "installation"), range.spanDays);
+  const tGrowth = prorateTarget(targetSumFor(olt, STATE.month, "growth"), range.spanDays);
+  const tChurn = prorateTarget(targetSumFor(olt, STATE.month, "churn"), range.spanDays);
+  const tRevenue = prorateTarget(targetSumFor(olt, STATE.month, "revenue"), range.spanDays);
+  const arpu = gm.active ? cur.collected/gm.active : 0;
+  const rowsDef = [
+    ["installation","New Installation", cur.install, tInstall, prev.install, false],
+    ["paidSales","Paid Sales", cur.paid, null, prev.paid, false],
+    ["growth","Growth", cur.growth, tGrowth, prev.growth, false],
+    ["churn","Churn", cur.churn, tChurn, prev.churn, false],
+    ["sixg","6G / WiFi 6", null, null, null, false],
+    ["revenue","Revenue (collected)", cur.collected, tRevenue, prev.collected, true],
+    ["arpu","ARPU", arpu, null, null, true],
+  ];
+  let thead = "<tr><th>KPI</th><th>Target</th><th>Achievement</th><th>%Ach</th><th>Last Week</th><th>WoW%</th><th>Gap</th><th>Key Reason</th></tr>";
+  let tbody = rowsDef.map(([key,label,ach,tgt,lastW,isMoney])=>{
+    if(key==="sixg"){
+      return `<tr><td>${label}</td><td>${niNum(notes,"keyReasons.sixgTarget")}</td><td>${niNum(notes,"keyReasons.sixgAch")}</td><td class="small-muted">manual</td><td class="small-muted">no data source</td><td class="small-muted">&mdash;</td><td class="small-muted">&mdash;</td><td>${niText(notes,"keyReasons.sixg","reason")}</td></tr>`;
+    }
+    const fmt = isMoney ? fmtMoney : fmtNum;
+    const achAch = ach===null?'-':fmt(ach);
+    const pctAch = tgt? fmtPct(pct(ach,tgt)) : '<span class="small-muted">no target</span>';
+    const wow = (lastW!==null && lastW!==undefined) ? fmtPct(pct(ach-lastW, lastW||1)) : '-';
+    const gap = tgt!==null ? fmt(Math.max(0,tgt-ach)) : '-';
+    return `<tr><td>${label}</td><td>${tgt?fmt(tgt):'<span class="small-muted">n/a</span>'}</td><td>${achAch}</td><td>${pctAch}</td><td>${lastW!==null&&lastW!==undefined?fmt(lastW):'-'}</td><td>${wow}</td><td>${gap}</td><td>${niText(notes,"keyReasons."+key,"reason")}</td></tr>`;
+  }).join("");
+  const html = `<div class="wr-badge review">Review</div>
+    <p class="hint" style="margin-top:10px;">${range.start.toDateString()} &ndash; ${range.end.toDateString()} (${range.spanDays} days), ${olt==="ALL"?"all OLTs":olt}. Target columns are prorated from the monthly target (approx, 30-day month). Revenue here is cash collected via Paid Sales this week &mdash; the Accrual Revenue import is month-level only, not daily.</p>
+    <div class="tbl-wrap"><table>${thead}<tbody>${tbody}</tbody></table></div>`;
+  return html;
 }
 
-function wrSlide1(olt){
-  const cur = weeklyFlow(0, olt), prev = weeklyFlow(1, olt);
-  const r = weekRange(0);
-  return `<div class="wr-badge review">Review</div>
-    <p class="hint" style="margin-top:10px;">${r.start.toDateString()} &ndash; ${r.end.toDateString()}, last 7 days vs the 7 days before, ${olt==="ALL"?"all OLTs":olt}.</p>
-    ${wrDeltaRow("New Installation", cur.install, prev.install)}
-    ${wrDeltaRow("New Paid Sales", cur.paid, prev.paid)}
-    ${wrDeltaRow("Growth (daily sum)", cur.growth, prev.growth)}
-    ${wrDeltaRow("Churn (daily sum)", cur.churn, prev.churn)}
-    ${wrDeltaRow("Renewal Transactions", cur.renewals, prev.renewals)}
-    ${wrDeltaRow("New Winback Cases (30+ late this week)", cur.winbackAdds, prev.winbackAdds)}`;
-}
-function wrSlide2(olt){
+function wrSection2(olt){
+  const range = weekRange(0);
+  const notes = getWeeklyNotes();
   const olts = olt==="ALL" ? OLTS : [olt];
-  let rows = [];
-  olts.forEach(o=>{
-    const g = growthMetricsFor(o);
-    const rev = revenueForState(o);
-    const tI = targetSumFor(o, STATE.month, "installation");
-    const tR = targetSumFor(o, STATE.month, "revenue");
-    if(tI && g.installation<tI) rows.push({o, metric:"Installation", actual:g.installation, target:tI, gap:tI-g.installation, isMoney:false});
-    if(tR && rev.total<tR) rows.push({o, metric:"Revenue", actual:rev.total, target:tR, gap:tR-rev.total, isMoney:true});
-  });
-  rows.sort((a,b)=> (b.gap/b.target) - (a.gap/a.target));
-  if(!rows.length) return `<div class="wr-badge planning">Planning</div><p style="margin-top:14px;">No target gaps found for this scope &mdash; every tracked OLT is at or above target for the selected month. Great position heading into next week.</p>`;
-  let body = rows.map((r,i)=>`<div class="wr-action-item"><div class="wr-num">${i+1}</div><div><b>${r.o} &mdash; ${r.metric}</b><br><span class="small-muted">${r.isMoney?fmtMoney(r.actual):fmtNum(r.actual)} of ${r.isMoney?fmtMoney(r.target):fmtNum(r.target)} target &mdash; behind by ${r.isMoney?fmtMoney(r.gap):fmtNum(r.gap)} (${fmtPct(pct(r.gap,r.target))})</span></div></div>`).join("");
-  return `<div class="wr-badge planning">Planning</div><p class="hint" style="margin-top:10px;">Biggest gaps first &mdash; these need attention next week.</p>${body}`;
+  const monthForFc = STATE.month===ALL_MONTHS_VALUE ? (activeMonthsList().slice(-1)[0]||STATE.month) : STATE.month;
+  let thead = "<tr><th>OLT</th><th>Due</th><th>Renewed</th><th>Lost</th><th>Renewal%</th><th>At-Risk</th><th>Called</th><th>Reached</th><th>Visit Planned</th></tr>";
+  let totals = {due:0, ren:0, lost:0, risk:0};
+  let rows = olts.map(o=>{
+    const fc = getForecastRows(monthForFc, STATE.fy).filter(r=>r.OLT===o).filter(r=>{ const e=parseFlexDate(r["Expiry Date"]); return e && e>=range.start && e<=range.end; });
+    const pb = STORE.paymentBehaviour.filter(r=> r.bsFY===STATE.fy && r.OLT===o && inRange(r["TRANS DATE"], range));
+    const renewedUsernames = new Set(pb.map(r=>r.USERNAME));
+    const renewed = fc.filter(r=>renewedUsernames.has(r.Username)).length;
+    const due = fc.length;
+    const flow = weeklyFlow(0, o);
+    const beh = classifyBehaviour(o);
+    const atRisk = beh.counts.WIN + beh.pendingCount;
+    totals.due+=due; totals.ren+=renewed; totals.lost+=flow.churn; totals.risk+=atRisk;
+    return `<tr><td><span class="badge-olt">${o}</span></td><td>${due}</td><td>${renewed}</td><td>${fmtNum(flow.churn)}</td><td>${due?fmtPct(pct(renewed,due)):'-'}</td><td>${atRisk}</td><td>${niNum(notes,"retention."+o+".called")}</td><td>${niNum(notes,"retention."+o+".reached")}</td><td>${niNum(notes,"retention."+o+".visitPlanned")}</td></tr>`;
+  }).join("");
+  const totalRow = `<tr><td><b>Total</b></td><td><b>${totals.due}</b></td><td><b>${totals.ren}</b></td><td><b>${fmtNum(totals.lost)}</b></td><td><b>${totals.due?fmtPct(pct(totals.ren,totals.due)):'-'}</b></td><td><b>${totals.risk}</b></td><td colspan="3" class="small-muted">sum of above</td></tr>`;
+  return `<div class="wr-badge review">Review</div><p class="hint" style="margin-top:10px;">Due/Renewed = forecast customers whose expiry falls in the selected week. Called/Reached/Visit Planned are manual follow-up tracking &mdash; enter as your team works the list.</p><div class="tbl-wrap"><table>${thead}<tbody>${rows}${totalRow}</tbody></table></div>`;
 }
-function wrSlide3(olt){
-  const beh = classifyBehaviour(olt);
-  const winRows = beh.rows.filter(r=>r.category==="WIN").sort((a,b)=>b.diff-a.diff).slice(0,15);
-  if(!winRows.length) return `<div class="wr-badge planning">Planning</div><p style="margin-top:14px;">No winback-risk customers in this scope right now.</p>`;
-  let thead = "<tr><th>#</th><th>Username</th><th>OLT</th><th>Days Late</th><th>Status</th></tr>";
-  let tbody = winRows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.username}</td><td><span class="badge-olt">${r.olt}</span></td><td>${r.diff}</td><td>${r.pending?'<span class="small-muted">not yet paid</span>':'paid late'}</td></tr>`).join("");
-  return `<div class="wr-badge planning">Planning</div><p class="hint" style="margin-top:10px;">Top ${winRows.length} winback-risk customers by days overdue &mdash; call these first next week.</p><div class="tbl-wrap" style="max-height:280px;"><table><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>`;
+
+function wrSection3(olt){
+  const range = weekRange(0);
+  const notes = getWeeklyNotes();
+  const olts = olt==="ALL" ? OLTS : [olt];
+  let thead = "<tr><th>OLT</th><th>Lost 30+ Days</th><th>Calls</th><th>Reached</th><th>Visits</th><th>Promised</th><th>Won Back</th><th>Winback%</th></tr>";
+  let totals = {lost:0, won:0};
+  let rows = olts.map(o=>{
+    const beh = classifyBehaviour(o);
+    const wonBack = beh.rows.filter(r=>r.category==="WIN" && !r.pending && inRange(r.renewDate, range)).length;
+    totals.lost += beh.counts.WIN; totals.won += wonBack;
+    return `<tr><td><span class="badge-olt">${o}</span></td><td>${beh.counts.WIN}</td><td>${niNum(notes,"winback."+o+".calls")}</td><td>${niNum(notes,"winback."+o+".reached")}</td><td>${niNum(notes,"winback."+o+".visits")}</td><td>${niNum(notes,"winback."+o+".promised")}</td><td>${wonBack}</td><td>${beh.counts.WIN?fmtPct(pct(wonBack,beh.counts.WIN)):'-'}</td></tr>`;
+  }).join("");
+  const totalRow = `<tr><td><b>Total</b></td><td><b>${totals.lost}</b></td><td colspan="4" class="small-muted">sum of above</td><td><b>${totals.won}</b></td><td><b>${totals.lost?fmtPct(pct(totals.won,totals.lost)):'-'}</b></td></tr>`;
+  return `<div class="wr-badge review">Review</div><p class="hint" style="margin-top:10px;">Lost 30+ Days = current winback-risk pool per OLT. Won Back = winback customers who renewed during the selected week. Calls/Reached/Visits/Promised are manual follow-up tracking.</p><div class="tbl-wrap"><table>${thead}<tbody>${rows}${totalRow}</tbody></table></div>`;
 }
-function wrSlide4(olt){
-  const in7 = new Date(); in7.setHours(23,59,59,999); in7.setDate(in7.getDate()+7);
-  const today0 = new Date(); today0.setHours(0,0,0,0);
-  const fc = getForecastRows(STATE.month===ALL_MONTHS_VALUE ? activeMonthsList().slice(-1)[0]||STATE.month : STATE.month, STATE.fy).filter(r=> olt==="ALL"||r.OLT===olt);
-  const upcoming = fc.filter(r=>{ const e=parseFlexDate(r["Expiry Date"]); return e && e>=today0 && e<=in7; });
-  const byOlt = {};
-  upcoming.forEach(r=>{ byOlt[r.OLT]=(byOlt[r.OLT]||0)+1; });
-  let cards = Object.entries(byOlt).map(([o,n])=>`<div class="progress-row"><div class="name">${o}</div><div class="track"><i style="width:${Math.min(100,n)}%;background:var(--accent2)"></i></div><div class="pct">${n}</div></div>`).join("") || `<p class="small-muted">No upcoming renewals detected in the next 7 days for this scope.</p>`;
-  return `<div class="wr-badge planning">Planning</div><p class="hint" style="margin-top:10px;">${fmtNum(upcoming.length)} customers are due to expire in the next 7 days &mdash; reach out proactively before they lapse into winback.</p>${cards}`;
+
+function wrSection4(){
+  const notes = getWeeklyNotes();
+  let thead = "<tr><th>Source</th><th>Leads/Customers</th><th>Calls</th><th>Reached</th><th>Upgrades</th><th>Conversion%</th></tr>";
+  let totals = {leads:0, upgrades:0};
+  let rows = notes.sixG.map((r,i)=>{
+    const leads = toNum(getByPath(notes,"sixG."+i+".leads"));
+    const upgrades = toNum(getByPath(notes,"sixG."+i+".upgrades"));
+    totals.leads+=leads; totals.upgrades+=upgrades;
+    return `<tr><td>${r.source||niText(notes,"sixG."+i+".source")}</td><td>${niNum(notes,"sixG."+i+".leads")}</td><td>${niNum(notes,"sixG."+i+".calls")}</td><td>${niNum(notes,"sixG."+i+".reached")}</td><td>${niNum(notes,"sixG."+i+".upgrades")}</td><td>${leads?fmtPct(pct(upgrades,leads)):'-'}</td></tr>`;
+  }).join("");
+  const totalRow = `<tr><td><b>Total</b></td><td><b>${totals.leads}</b></td><td colspan="2" class="small-muted">&mdash;</td><td><b>${totals.upgrades}</b></td><td><b>${totals.leads?fmtPct(pct(totals.upgrades,totals.leads)):'-'}</b></td></tr>`;
+  return `<div class="wr-badge planning">Planning</div><p class="hint" style="margin-top:10px;">No 6G/WiFi 6 data has been imported into the dashboard yet &mdash; this whole section is manual entry, saved locally per week.</p><div class="tbl-wrap"><table>${thead}<tbody>${rows}${totalRow}</tbody></table></div>`;
 }
-function wrSlide5(olt){
+
+function wrSection5(olt){
+  const range = weekRange(0);
+  const notes = getWeeklyNotes();
+  const instRows = STORE.installations.filter(r=> r.bsFY===STATE.fy && (olt==="ALL"||r.OLT===olt) && inRange(r["CREATE DATE"], range));
+  const staffSet = new Set(instRows.map(r=>r["MARKETED BY"]||"(blank)"));
+  STORE.paidSales.filter(r=> r.bsFY===STATE.fy && (olt==="ALL"||r.OLT===olt) && inRange(r["PAID DATE"], range)).forEach(r=>staffSet.add(r["MARKETED BY"]||"(blank)"));
+  if(!staffSet.size) staffSet.add("(no activity this week)");
+  let thead = "<tr><th>Staff / Partner</th><th>Installation</th><th>Growth</th><th>6G</th><th>Winback</th><th>Retention</th><th>Key Issue</th></tr>";
+  let rows = [...staffSet].map(name=>{
+    const inst = instRows.filter(r=>(r["MARKETED BY"]||"(blank)")===name).length;
+    const key = name.replace(/[^a-zA-Z0-9]/g,"_");
+    return `<tr><td>${name}</td><td>${inst}</td><td>${niNum(notes,"staff."+key+".growth")}</td><td>${niNum(notes,"staff."+key+".sixg")}</td><td>${niNum(notes,"staff."+key+".winback")}</td><td>${niNum(notes,"staff."+key+".retention")}</td><td>${niText(notes,"staff."+key+".issue","note")}</td></tr>`;
+  }).join("");
+  return `<div class="wr-badge review">Review</div><p class="hint" style="margin-top:10px;">Installation is computed from this week's imports; Growth/6G/Winback/Retention aren't staff-attributed in the current data, so those and Key Issue are manual entry.</p><div class="tbl-wrap"><table>${thead}<tbody>${rows}</tbody></table></div>`;
+}
+
+function wrSection6(){
+  const notes = getWeeklyNotes();
+  let thead = "<tr><th>Priority</th><th>Issue</th><th>Root Cause</th><th>Action Taken</th><th>Owner</th><th>Deadline</th><th>Status</th><th></th></tr>";
+  let rows = notes.issues.map((r,i)=>`<tr><td>${niSelect(notes,"issues."+i+".priority",["\uD83D\uDD34","\uD83D\uDFE0","\uD83D\uDFE2"])}</td><td>${niText(notes,"issues."+i+".issue")}</td><td>${niText(notes,"issues."+i+".rootCause")}</td><td>${niText(notes,"issues."+i+".actionTaken")}</td><td>${niText(notes,"issues."+i+".owner")}</td><td>${niDate(notes,"issues."+i+".deadline")}</td><td>${niSelect(notes,"issues."+i+".status",["Open","In Progress","Done"])}</td><td><button class="btn ghost small wr-del-issue" data-idx="${i}">&times;</button></td></tr>`).join("") || `<tr><td colspan="8" class="small-muted" style="padding:14px;">No issues logged yet.</td></tr>`;
+  return `<div class="wr-badge planning">Planning</div><div class="tbl-wrap"><table>${thead}<tbody>${rows}</tbody></table></div><button class="btn small" id="wr-add-issue" style="margin-top:10px;">+ Add Issue</button>`;
+}
+
+function wrSection7(olt){
   const gm = growthMetricsFor(olt);
   const beh = classifyBehaviour(olt);
+  const notes = getWeeklyNotes();
   const olts = olt==="ALL"?OLTS:[olt];
   let worstOlt = null, worstGap = -Infinity;
   olts.forEach(o=>{
@@ -1466,35 +1634,121 @@ function wrSlide5(olt){
     const rev = revenueForState(o).total;
     if(tR){ const gapPct = pct(tR-rev, tR); if(gapPct>worstGap){ worstGap=gapPct; worstOlt=o; } }
   });
-  const items = [];
-  if(worstOlt && worstGap>0) items.push(`Prioritise <b>${worstOlt}</b> next week &mdash; furthest behind its revenue target (${fmtPct(worstGap)} short).`);
-  if(beh.counts.WIN>0) items.push(`Assign follow-up calls for <b>${beh.counts.WIN}</b> winback-risk customers (see previous slide for the list).`);
-  if(gm.churn>0) items.push(`Investigate churn drivers &mdash; <b>${fmtNum(gm.churn)}</b> customers lost this period.`);
-  items.push(`Track daily installation pace against the monthly target to catch shortfalls early rather than at month-end.`);
-  let list = items.map((t,i)=>`<div class="wr-action-item"><div class="wr-num">${i+1}</div><div>${t}</div></div>`).join("");
-  return `<div class="wr-badge planning">Planning</div><p class="hint" style="margin-top:10px;">Auto-generated focus points for next week&apos;s work, based on this scope&apos;s current numbers.</p>${list}`;
+  const suggestions = [];
+  if(worstOlt && worstGap>0) suggestions.push(`Prioritise ${worstOlt} \u2014 furthest behind revenue target (${fmtPct(worstGap)} short).`);
+  if(beh.counts.WIN>0) suggestions.push(`Follow up on ${beh.counts.WIN} winback-risk customers.`);
+  if(gm.churn>0) suggestions.push(`Review churn drivers \u2014 ${fmtNum(gm.churn)} customers lost this period.`);
+  suggestions.push(`Track daily installation pace against target.`);
+  suggestions.push(`Review 6G/WiFi 6 upgrade pipeline with field staff.`);
+  const rows = [0,1,2,3,4].map(i=>{
+    const v = notes.focus[i];
+    return `<div class="wr-action-item"><div class="wr-num">${i+1}</div><div style="flex:1;">${niText(notes,"focus."+i, suggestions[i]||"action item")}</div></div>`;
+  }).join("");
+  return `<div class="wr-badge planning">Planning</div><p class="hint" style="margin-top:10px;">Top 5 actions for next week &mdash; pre-filled with suggestions based on current numbers (placeholder text), edit and save your own.</p>${rows}`;
 }
 
 function renderWeekly(){
   const olt = STATE.olt;
+  document.getElementById("wr-week-start").value = WR_WEEK_START.toISOString().slice(0,10);
+  document.getElementById("wr-week-end").value = WR_WEEK_END.toISOString().slice(0,10);
   const slides = [
-    ["This Week at a Glance", wrSlide1],
-    ["Target Gap \u2014 Where We're Behind", wrSlide2],
-    ["Winback Action List", wrSlide3],
-    ["Upcoming Renewals \u2014 Next 7 Days", wrSlide4],
-    ["Next Week Focus Summary", wrSlide5],
+    ["1. Overall Business Performance", ()=>wrSection1(olt)],
+    ["2. Customer Retention", ()=>wrSection2(olt)],
+    ["3. Winback Performance", ()=>wrSection3(olt)],
+    ["4. 6G / WiFi 6 Performance", ()=>wrSection4()],
+    ["5. Staff / Channel Partner Performance", ()=>wrSection5(olt)],
+    ["6. Key Issues & Actions", ()=>wrSection6()],
+    ["7. Next Week Focus", ()=>wrSection7(olt)],
   ];
   if(WR_SLIDE<0) WR_SLIDE=0;
   if(WR_SLIDE>=slides.length) WR_SLIDE=slides.length-1;
   const [title, fn] = slides[WR_SLIDE];
   document.getElementById("wr-slide-title").textContent = title;
   document.getElementById("wr-slide-counter").textContent = (WR_SLIDE+1)+" / "+slides.length;
-  document.getElementById("wr-slide-body").innerHTML = fn(olt);
+  const body = document.getElementById("wr-slide-body");
+  body.innerHTML = fn();
+  bindNoteInputs(body, getWeeklyNotes());
+  const addIssueBtn = document.getElementById("wr-add-issue");
+  if(addIssueBtn) addIssueBtn.addEventListener("click", ()=>{ getWeeklyNotes().issues.push({priority:"\uD83D\uDD34"}); saveStore(STORE); renderWeekly(); });
+  body.querySelectorAll(".wr-del-issue").forEach(b=> b.addEventListener("click", ()=>{ getWeeklyNotes().issues.splice(parseInt(b.dataset.idx),1); saveStore(STORE); renderWeekly(); }));
   document.getElementById("wr-dots").innerHTML = slides.map((s,i)=>`<button class="wr-dot ${i===WR_SLIDE?'active':''}" data-idx="${i}"></button>`).join("");
   document.querySelectorAll(".wr-dot").forEach(b=> b.addEventListener("click", ()=>{ WR_SLIDE=parseInt(b.dataset.idx); renderWeekly(); }));
   document.getElementById("wr-prev").disabled = WR_SLIDE===0;
   document.getElementById("wr-next").textContent = WR_SLIDE===slides.length-1 ? "Restart \u21BA" : "Next \u2192";
 }
+
+// ---------- MONTHLY REVIEW (business review format) ----------
+function renderMonthlyReview(){
+  const olt = STATE.olt;
+  const notes = getMonthlyNotes();
+  const gm = growthMetricsFor(olt);
+  const rev = revenueForState(olt);
+  const beh = classifyBehaviour(olt);
+  const tInstall = targetSumFor(olt, STATE.month, "installation");
+  const tGrowth = targetSumFor(olt, STATE.month, "growth");
+  const tRevenue = targetSumFor(olt, STATE.month, "revenue");
+  const tWinbackPct = targetSumFor(olt, STATE.month, "winback");
+  const arpu = gm.active ? rev.total/gm.active : 0;
+  const churnPct = gm.active ? pct(gm.churn, gm.active+gm.churn) : 0;
+
+  // Section 1
+  document.getElementById("mr-status-picker").innerHTML = niSelect(notes, "status", ["\uD83D\uDFE2 On Track","\uD83D\uDFE0 Needs Attention","\uD83D\uDD34 Off Track"]);
+  const execRows = [
+    ["Customer Base", fmtNum(gm.active), ""],
+    ["New Installation", fmtNum(gm.installation), tInstall?("Target "+fmtNum(tInstall)+" ("+fmtPct(pct(gm.installation,tInstall))+")"):"no target"],
+    ["Growth", fmtNum(gm.growth), tGrowth?("Target "+fmtNum(tGrowth)+" ("+fmtPct(pct(gm.growth,tGrowth))+")"):"no target"],
+    ["Churn %", fmtPct(churnPct), ""],
+    ["Revenue", fmtMoney(rev.total), tRevenue?("Target "+fmtMoney(tRevenue)+" ("+fmtPct(pct(rev.total,tRevenue))+")"):"no target"],
+    ["ARPU", fmtMoney(arpu), ""],
+    ["Winback %", fmtPct(beh.winbackPct), tWinbackPct?("Target "+fmtPct(tWinbackPct)):"no target"],
+    ["Renewal %", fmtPct(beh.retentionPct), ""],
+  ];
+  document.getElementById("mr-exec-summary").innerHTML = execRows.map(([l,v,c])=>`<div class="progress-row"><div class="name">${l}</div><div class="track"><i style="width:60%;background:var(--accent2)"></i></div><div class="pct">${v}</div></div><div class="small-muted" style="margin:-6px 0 10px 90px;">${c}</div>`).join("")
+    + `<div class="progress-row"><div class="name">6G Sales</div><div style="flex:1;display:flex;gap:8px;">${niNum(notes,"sixG.actual")} of ${niNum(notes,"sixG.target")} target (manual, no data source)</div></div>`;
+
+  // Section 2: month-wise trend
+  const monthsWithData = BS_MONTHS.filter(m => STORE.installations.some(r=>r.bsMonth===m && r.bsFY===STATE.fy) || STORE.growthChurn.some(r=>r.bsMonth===m && r.bsFY===STATE.fy) || accrualRowsFor(m, STATE.fy, olt).length>0);
+  const trendMetrics = [
+    ["Installation", m=>{ const s=STATE.month; STATE.month=m; const v=growthMetricsFor(olt).installation; STATE.month=s; return fmtNum(v); }],
+    ["Growth", m=>{ const s=STATE.month; STATE.month=m; const v=growthMetricsFor(olt).growth; STATE.month=s; return fmtNum(v); }],
+    ["Churn", m=>{ const s=STATE.month; STATE.month=m; const v=growthMetricsFor(olt).churn; STATE.month=s; return fmtNum(v); }],
+    ["Revenue", m=>fmtMoney(revenueFor(m, STATE.fy, olt).total)],
+    ["ARPU", m=>{ const s=STATE.month; STATE.month=m; const g=growthMetricsFor(olt); STATE.month=s; return fmtMoney(g.active?revenueFor(m,STATE.fy,olt).total/g.active:0); }],
+    ["6G", m=>niNum(notes,"monthTrend6G."+m)],
+    ["Winback", m=>{ const s=STATE.month; STATE.month=m; const v=classifyBehaviour(olt).counts.WIN; STATE.month=s; return fmtNum(v); }],
+  ];
+  let trHead = "<tr><th>KPI</th>" + monthsWithData.map(m=>`<th>${m.slice(0,4)}</th>`).join("") + "</tr>";
+  let trBody = trendMetrics.map(([label,fn])=>`<tr><td>${label}</td>${monthsWithData.map(m=>`<td>${fn(m)}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="2" class="small-muted" style="padding:14px;">No months with data yet.</td></tr>`;
+  document.getElementById("mr-trend-table").innerHTML = `<thead>${trHead}</thead><tbody>${trBody}</tbody>`;
+
+  // Section 3: OLT-wise performance
+  let orHead = "<tr><th>OLT</th><th>Customer Base</th><th>Installation</th><th>Growth</th><th>Churn %</th><th>Renewal %</th><th>Winback</th><th>6G</th><th>Revenue</th></tr>";
+  let orBody = OLTS.map(o=>{
+    const g = growthMetricsFor(o);
+    const b = classifyBehaviour(o);
+    const r = revenueForState(o);
+    const cp = g.active ? pct(g.churn, g.active+g.churn) : 0;
+    return `<tr><td><span class="badge-olt">${o}</span></td><td>${fmtNum(g.active)}</td><td>${fmtNum(g.installation)}</td><td>${fmtNum(g.growth)}</td><td>${fmtPct(cp)}</td><td>${fmtPct(b.retentionPct)}</td><td>${fmtNum(b.counts.WIN)}</td><td>${niNum(notes,"oltSixG."+o)}</td><td>${fmtMoney(r.total)}</td></tr>`;
+  }).join("");
+  document.getElementById("mr-olt-table").innerHTML = `<thead>${orHead}</thead><tbody>${orBody}</tbody>`;
+
+  // Section 4: risk & opportunity
+  let rkHead = "<tr><th>Area</th><th>Finding</th><th>Business Impact</th><th>Priority</th><th>Action</th></tr>";
+  let rkBody = notes.risk.map((r,i)=>`<tr><td>${r.area||niText(notes,"risk."+i+".area")}</td><td>${niText(notes,"risk."+i+".finding")}</td><td>${niText(notes,"risk."+i+".impact")}</td><td>${niSelect(notes,"risk."+i+".priority",["\uD83D\uDD34","\uD83D\uDFE0","\uD83D\uDFE2"])}</td><td>${niText(notes,"risk."+i+".action")}</td></tr>`).join("");
+  document.getElementById("mr-risk-table").innerHTML = `<thead>${rkHead}</thead><tbody>${rkBody}</tbody>`;
+
+  // Section 5: final management review
+  const finalFields = [
+    ["wentWell","What went well?"],["wentWrong","What went wrong?"],["whyHappened","Why did it happen?"],
+    ["changing","What are we changing?"],["owner","Who owns the action?"],["expectedResult","Expected result next month?"]
+  ];
+  document.getElementById("mr-final-review").innerHTML = finalFields.map(([key,label])=>
+    `<div style="margin-bottom:12px;"><label class="small-muted" style="display:block;margin-bottom:4px;">${label}</label><textarea data-note-path="finalReview.${key}" rows="2" style="width:100%;font-family:inherit;padding:8px;border-radius:8px;border:1px solid var(--border);">${(getByPath(notes,"finalReview."+key)||"").toString()}</textarea></div>`
+  ).join("");
+
+  [document.getElementById("mr-status-picker"), document.getElementById("mr-exec-summary"), document.getElementById("mr-trend-table"), document.getElementById("mr-olt-table"), document.getElementById("mr-risk-table"), document.getElementById("mr-final-review")].forEach(el=> bindNoteInputs(el, notes));
+}
+
 
 const IMPORT_TYPES = [
   { id:"installation", title:"New Installation", desc:"New Installation Details export (USERNAME, CREATE DATE, OLT, PLAN NAME, PAYMENT STATUS, ENTRY SOURCE, MARKETED BY...)",
@@ -1995,6 +2249,7 @@ function switchTab(tab){
   const titles = {overview:["Executive Overview","Shuklagandaki Branch · M1–M12 performance, connected end to end"],
     summary:["Executive Summary","Full narrative, comprehensive tables, and month-wise detail for branch review"],
     weekly:["Weekly Review","Slide-by-slide weekly meeting deck \u2014 this week's data, then next week's plan"],
+    monthlyreview:["Monthly Review","Full monthly business review \u2014 executive summary, trend, OLT performance, risk register, and final review"],
     behaviour:["Customer Behaviour","OLT-wise billing behaviour, renewal gap analysis, and forecast comparison"],
     growth:["Sales & Customer Growth","Installation, sales, growth, churn and active customer movement"],
     revenue:["Revenue & Business Performance","Accrual revenue, ARPU, and target vs achievement"],
@@ -2010,6 +2265,7 @@ function renderAll(){
   if(STATE.tab==="overview") renderOverview();
   else if(STATE.tab==="summary") renderSummary();
   else if(STATE.tab==="weekly") renderWeekly();
+  else if(STATE.tab==="monthlyreview") renderMonthlyReview();
   else if(STATE.tab==="behaviour") renderBehaviour();
   else if(STATE.tab==="growth") renderGrowth();
   else if(STATE.tab==="revenue") renderRevenue();
@@ -2056,7 +2312,14 @@ function init(){
   document.getElementById("btn-save-targets").addEventListener("click", saveTargetsFromTable);
   document.getElementById("btn-print-summary").addEventListener("click", ()=>{ switchTab("summary"); setTimeout(()=>window.print(), 100); });
   document.getElementById("wr-prev").addEventListener("click", ()=>{ if(WR_SLIDE>0){ WR_SLIDE--; renderWeekly(); } });
-  document.getElementById("wr-next").addEventListener("click", ()=>{ WR_SLIDE = (WR_SLIDE>=4) ? 0 : WR_SLIDE+1; renderWeekly(); });
+  document.getElementById("wr-next").addEventListener("click", ()=>{ WR_SLIDE = (WR_SLIDE>=6) ? 0 : WR_SLIDE+1; renderWeekly(); });
+  document.getElementById("wr-apply-week").addEventListener("click", ()=>{
+    const s = document.getElementById("wr-week-start").value;
+    const e = document.getElementById("wr-week-end").value;
+    if(s){ WR_WEEK_START = new Date(s+"T00:00:00"); }
+    if(e){ WR_WEEK_END = new Date(e+"T23:59:59"); }
+    renderWeekly();
+  });
 
   switchTab("overview");
 
