@@ -202,6 +202,27 @@ canvas{max-width:100%;}
 .quick-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
 .quick-actions button{flex:1;min-width:140px;background:var(--grad1);color:#fff;border:none;padding:12px 14px;border-radius:12px;font-size:12.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px #6d5bf62e;}
 .quick-actions button:nth-child(2){background:linear-gradient(135deg,#4e8dff,#6d5bf6);}
+
+/* ---------- PPT-style slide deck (Weekly / Monthly Review) ---------- */
+.ppt-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+.ppt-stage{background:#e8eaf6;border-radius:18px;padding:26px;box-shadow:inset 0 2px 10px #0000000f;}
+.ppt-slide{background:#fff;border-radius:14px;box-shadow:0 18px 46px #2c206b26,0 2px 8px #2c206b12;overflow:hidden;aspect-ratio:16/9;display:flex;flex-direction:column;max-width:980px;margin:0 auto;}
+.ppt-slide-head{background:var(--grad1);color:#fff;padding:20px 30px 16px;flex-shrink:0;position:relative;}
+.ppt-slide-head::after{content:"";position:absolute;right:0;top:0;bottom:0;width:130px;background:radial-gradient(circle at 100% 0%, #ffffff26, transparent 60%);}
+.ppt-eyebrow{font-size:10.5px;letter-spacing:2px;text-transform:uppercase;opacity:.85;font-weight:800;}
+.ppt-slide-head h2{font-size:23px;margin:4px 0 0;font-weight:800;letter-spacing:.2px;}
+.ppt-slide-no{position:absolute;top:18px;right:24px;font-size:11.5px;font-weight:800;background:#ffffff26;padding:5px 13px;border-radius:20px;}
+.ppt-slide-body{padding:20px 30px;flex:1;overflow:auto;font-size:12.5px;}
+.ppt-slide-body h3{display:none;} /* section h3 hidden inside slide body — title already shown in head */
+.ppt-slide-foot{padding:8px 30px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:10.5px;color:var(--txt3);background:#fafbff;flex-shrink:0;}
+.ppt-nav{display:flex;justify-content:center;align-items:center;gap:16px;margin-top:16px;}
+.ppt-nav .wr-dot.active{background:var(--accent);}
+.mr-slide-panel{display:none;}
+.mr-slide-panel.active{display:block;}
+@media print{
+  .ppt-stage{background:none;padding:0;}
+  .ppt-slide{aspect-ratio:auto;box-shadow:none;}
+}
 .quick-actions button:nth-child(3){background:linear-gradient(135deg,#7a63e8,#a75be0);}
 .quick-actions button:nth-child(4){background:linear-gradient(135deg,#9a5be0,#c15be0);}
 .quick-actions button:nth-child(5){background:linear-gradient(135deg,#e0605b,#ea7a5b);}
@@ -240,6 +261,7 @@ canvas{max-width:100%;}
     <button class="nav-btn" data-tab="behaviour"><span class="nav-ico">&#128100;</span> Customer Behaviour</button>
     <button class="nav-btn" data-tab="growth"><span class="nav-ico">&#128200;</span> Sales &amp; Growth</button>
     <button class="nav-btn" data-tab="revenue"><span class="nav-ico">&#128176;</span> Revenue &amp; Performance</button>
+    <button class="nav-btn" data-tab="technical"><span class="nav-ico">&#128295;</span> Technical Data</button>
     <div class="nav-group-label">Admin</div>
     <button class="nav-btn" data-tab="import"><span class="nav-ico">&#8593;</span> Data Import</button>
     <button class="nav-btn" data-tab="targets"><span class="nav-ico">&#127919;</span> Manage Targets</button>
@@ -277,7 +299,7 @@ canvas{max-width:100%;}
 
     <!-- ===================== OVERVIEW ===================== -->
     <div class="section active" id="sec-overview">
-      <div class="note">Yo overview le Target &rarr; Sales &rarr; New Customer &rarr; Billing &rarr; Retention &rarr; Winback &rarr; NS &rarr; Churn &rarr; Active &rarr; Revenue &rarr; Forecast sabai connect garera dekhauxa, selected BS month ra OLT ko lagi.</div>
+      <div class="note">Yo overview le Target &rarr; Sales &rarr; New Customer &rarr; Billing &rarr; Retention &rarr; Winback &rarr; NS &rarr; Churn &rarr; Active &rarr; Revenue &rarr; Forecast &rarr; 6G &rarr; Technical Tickets sabai connect garera dekhauxa, selected BS month ra OLT ko lagi.</div>
       <div class="note" id="ov-date-warning" style="display:none;border-left-color:var(--red);">&#9888; Could not read the expiry dates in this month's forecast file (unrecognized date format), so Retention/Winback/NS% are shown against the full forecast total instead of just what's due so far. Re-check the date column format in that import if this persists.</div>
       <div class="grid kpi-grid" id="ov-kpis"></div>
 
@@ -310,6 +332,19 @@ canvas{max-width:100%;}
         </div>
       </div>
 
+      <div class="two-col">
+        <div class="panel">
+          <h3>6G / WiFi 6 Sales Trend</h3>
+          <div class="hint">Upgrades vs target (114/month), by BS month</div>
+          <div class="chart-box"><canvas id="chart-ov-sixg"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>Technical Tickets (&gt;20 min) Trend</h3>
+          <div class="hint">Delayed-ticket volume by BS month, all OLT</div>
+          <div class="chart-box"><canvas id="chart-ov-tech"></canvas></div>
+        </div>
+      </div>
+
       <div class="panel">
         <h3>OLT-wise Snapshot &mdash; selected month</h3>
         <div class="tbl-wrap"><table id="ov-olt-table"><thead></thead><tbody></tbody></table></div>
@@ -323,6 +358,7 @@ canvas{max-width:100%;}
           <button data-tab="behaviour">&#128100; Customer Behaviour</button>
           <button data-tab="growth">&#128200; Sales &amp; Growth</button>
           <button data-tab="revenue">&#128196; Revenue Report</button>
+          <button data-tab="technical">&#128295; Technical Data</button>
         </div>
       </div>
     </div>
@@ -368,60 +404,69 @@ canvas{max-width:100%;}
 
     <!-- ===================== WEEKLY REVIEW ===================== -->
     <div class="section" id="sec-weekly">
-      <div class="note">Slide 1 = 7-section weekly business review format &mdash; select the week to review, then step through with Next/Prev or the dots.</div>
-      <div class="panel">
+      <div class="ppt-toolbar">
+        <div class="note" style="margin:0;flex:1;">Weekly Business Review deck &mdash; select the week, then present slide by slide with Next/Prev or the dots.</div>
         <div class="chip-row" style="margin:0;">
           <label class="small-muted" style="align-self:center;">Week:</label>
-          <input type="date" id="wr-week-start" style="flex:1;min-width:130px;">
+          <input type="date" id="wr-week-start" style="min-width:130px;">
           <span class="small-muted" style="align-self:center;">to</span>
-          <input type="date" id="wr-week-end" style="flex:1;min-width:130px;">
+          <input type="date" id="wr-week-end" style="min-width:130px;">
           <button class="btn small" id="wr-apply-week">Apply</button>
         </div>
       </div>
-      <div class="panel" id="wr-panel">
-        <div class="flex-between">
-          <h3 id="wr-slide-title">This Week at a Glance</h3>
-          <div class="chip-row" style="margin:0;">
-            <span class="small-muted" id="wr-slide-counter">1 / 7</span>
-            <button class="btn ghost small" id="wr-prev">&#8592; Prev</button>
-            <button class="btn small" id="wr-next">Next &#8594;</button>
+      <div class="ppt-stage">
+        <div class="ppt-slide" id="wr-panel">
+          <div class="ppt-slide-head">
+            <div class="ppt-eyebrow">Weekly Business Review &middot; Shuklagandaki Branch</div>
+            <h2 id="wr-slide-title">This Week at a Glance</h2>
+            <div class="ppt-slide-no" id="wr-slide-counter">1 / 7</div>
           </div>
+          <div class="ppt-slide-body" id="wr-slide-body"></div>
+          <div class="ppt-slide-foot"><span id="wr-slide-week-label"></span><span>Worldlink Communications</span></div>
         </div>
-        <div id="wr-slide-body" style="min-height:340px;"></div>
-        <div class="chip-row" id="wr-dots" style="justify-content:center;margin-top:14px;"></div>
+      </div>
+      <div class="ppt-nav">
+        <button class="btn ghost small" id="wr-prev">&#8592; Prev</button>
+        <div class="chip-row" id="wr-dots" style="margin:0;"></div>
+        <button class="btn small" id="wr-next">Next &#8594;</button>
       </div>
     </div>
 
     <!-- ===================== MONTHLY REVIEW ===================== -->
     <div class="section" id="sec-monthlyreview">
-      <div class="note">Monthly business review format for the selected month/OLT scope above. Sections 1&ndash;3 are computed from your data; Sections 4&ndash;5 are your team's written review, saved per month.</div>
-
-      <div class="panel">
-        <div class="flex-between">
-          <h3>1. Monthly Executive Summary</h3>
-          <div id="mr-status-picker"></div>
+      <div class="note">Monthly Business Review deck &mdash; present slide by slide. Sections 1&ndash;3 are computed from your data; Sections 4&ndash;5 are your team's written review, saved per month.</div>
+      <div class="ppt-stage">
+        <div class="ppt-slide" id="mr-panel">
+          <div class="ppt-slide-head">
+            <div class="ppt-eyebrow">Monthly Business Review &middot; Shuklagandaki Branch</div>
+            <h2 id="mr-slide-title">1. Monthly Executive Summary</h2>
+            <div class="ppt-slide-no" id="mr-slide-counter">1 / 5</div>
+          </div>
+          <div class="ppt-slide-body" id="mr-slide-body">
+            <div class="mr-slide-panel" data-slide="0">
+              <div class="flex-between" style="margin-bottom:10px;"><span class="small-muted">Status:</span><div id="mr-status-picker"></div></div>
+              <div id="mr-exec-summary"></div>
+            </div>
+            <div class="mr-slide-panel" data-slide="1">
+              <div class="tbl-wrap"><table id="mr-trend-table"><thead></thead><tbody></tbody></table></div>
+            </div>
+            <div class="mr-slide-panel" data-slide="2">
+              <div class="tbl-wrap"><table id="mr-olt-table"><thead></thead><tbody></tbody></table></div>
+            </div>
+            <div class="mr-slide-panel" data-slide="3">
+              <div class="tbl-wrap"><table id="mr-risk-table"><thead></thead><tbody></tbody></table></div>
+            </div>
+            <div class="mr-slide-panel" data-slide="4">
+              <div id="mr-final-review"></div>
+            </div>
+          </div>
+          <div class="ppt-slide-foot"><span id="mr-slide-month-label"></span><span>Worldlink Communications</span></div>
         </div>
-        <div id="mr-exec-summary"></div>
       </div>
-
-      <div class="panel">
-        <h3>2. Month-wise Business Trend</h3>
-        <div class="tbl-wrap"><table id="mr-trend-table"><thead></thead><tbody></tbody></table></div>
-      </div>
-
-      <div class="panel">
-        <h3>3. OLT-wise Performance</h3>
-        <div class="tbl-wrap"><table id="mr-olt-table"><thead></thead><tbody></tbody></table></div>
-      </div>
-
-      <div class="panel">
-        <h3>4. Business Risk &amp; Opportunity</h3>
-        <div class="tbl-wrap"><table id="mr-risk-table"><thead></thead><tbody></tbody></table></div>
-      </div>
-
-      <div class="panel">
-        <h3>5. Final Management Review</h3>
-        <div id="mr-final-review"></div>
+      <div class="ppt-nav">
+        <button class="btn ghost small" id="mr-prev">&#8592; Prev</button>
+        <div class="chip-row" id="mr-dots" style="margin:0;"></div>
+        <button class="btn small" id="mr-next">Next &#8594;</button>
       </div>
     </div>
 
@@ -524,6 +569,67 @@ canvas{max-width:100%;}
       </div>
     </div>
 
+    <!-- ===================== TECHNICAL DATA ===================== -->
+    <div class="section" id="sec-technical">
+      <div class="note">Delayed ticket (&gt;20 min solve time) tracking &mdash; imported from the Technical Data ticket log. OLT/date filters below apply only within this tab.</div>
+      <div class="controls" style="margin-bottom:14px;flex-wrap:wrap;">
+        <select id="techOltFilter">
+          <option value="ALL">All OLT</option>
+          <option value="SKGD01">SKGD01</option>
+          <option value="VMAD01">VMAD01</option>
+          <option value="RISH01">RISH01</option>
+        </select>
+        <select id="techSolvedFilter"><option value="ALL">All Solved Medium</option></select>
+        <select id="techProblemFilter"><option value="ALL">All Problem Types</option></select>
+        <input type="date" id="techDateFrom" title="From date">
+        <input type="date" id="techDateTo" title="To date">
+        <button id="techResetBtn">Reset Filters</button>
+      </div>
+      <div class="grid kpi-grid" id="tech-kpis"></div>
+
+      <div class="three-col">
+        <div class="panel">
+          <h3>Tickets by OLT</h3>
+          <div class="chart-box"><canvas id="chart-tech-olt"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>Solve Time Distribution</h3>
+          <div class="chart-box"><canvas id="chart-tech-bucket"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>Avg Solve Time by OLT (hrs)</h3>
+          <div class="chart-box"><canvas id="chart-tech-avgolt"></canvas></div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3>Ticket Trend (by Issued Date)</h3>
+          <div class="chart-box"><canvas id="chart-tech-trend"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>Tickets by Problem Type</h3>
+          <div class="chart-box"><canvas id="chart-tech-problem"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Staff / Solved-By Performance</h3>
+        <div class="chart-box" style="height:260px;"><canvas id="chart-tech-staff"></canvas></div>
+      </div>
+
+      <div class="panel">
+        <h3>Top 5 Longest Cases</h3>
+        <div id="tech-top5"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Ticket Log <span class="small-muted" id="tech-tbl-count"></span></h3>
+        <input type="text" id="techSearchBox" placeholder="Search subscriber, ticket ID, solution..." style="margin-bottom:10px;width:100%;max-width:420px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;">
+        <div class="tbl-wrap"><table id="tech-ticket-table"></table></div>
+      </div>
+    </div>
+
     <!-- ===================== DATA IMPORT ===================== -->
     <div class="section" id="sec-import">
       <div class="note">Har mahina yehi bata naya Excel import garnus. Import garda BS month/FY select garnu parxa (jaha applicable huncha) &mdash; tyo tag lagayera dashboard le sabai mahina ko data accumulate garxa, year-round use ko lagi.</div>
@@ -593,6 +699,7 @@ function blankStore(){
     accrualRevenue: [],
     paymentBehaviour: [],
     sixG: [],
+    technicalData: [],
     forecast: {},           // { "Bhadra|2083/84": [rows] }
     importLog: []
   };
@@ -626,7 +733,7 @@ function adDateToBsMonth(dateVal){
 function loadStore(){
   let raw = localStorage.getItem(LS_KEY);
   if(raw){
-    try{ const parsed = JSON.parse(raw); if(!parsed.sixG) parsed.sixG=[]; return parsed; }catch(e){ console.warn("store parse failed", e); }
+    try{ const parsed = JSON.parse(raw); if(!parsed.sixG) parsed.sixG=[]; if(!parsed.technicalData) parsed.technicalData=[]; return parsed; }catch(e){ console.warn("store parse failed", e); }
   }
   // seed from initial uploaded files, tagged as current month/FY
   let s = blankStore();
@@ -656,6 +763,7 @@ let STORE = loadStore();
 let TARGETS = loadTargets();
 
 let STATE = { olt: "ALL", month: "Bhadra", fy: "2083/84", tab: "overview", showPct: false };
+let TECH_FILTER = { olt: "ALL", solved: "ALL", problem: "ALL", dateFrom: "", dateTo: "", search: "" };
 
 // ---------- helpers ----------
 // Defensive numeric coercion for any value pulled from an imported row. Excel
@@ -1065,6 +1173,13 @@ function renderOverview(){
   html += kpiCard("Retention", beh.forecastDueMTD? fmtPct(beh.retentionPct) : "-", beh.forecastDueMTD?`${beh.counts.RET} of ${beh.forecastDueMTD} forecast due`:undefined, true);
   html += kpiCard("Winback %", fmtPct(beh.winbackPct), `${beh.counts.WIN} winback / ${beh.forecastDueMTD} forecast due`, beh.winbackPct<=15);
   html += kpiCard("NS (unmatched)", beh.forecastDueMTD? fmtPct(beh.nsPct) : "-", `${beh.counts.NS} of ${beh.forecastDueMTD} forecast due`, beh.counts.NS===0);
+  const sixG = sixGMetricsFor(olt, STATE.month, STATE.fy);
+  const tSixG = TARGETS.sixGMonthly ? TARGETS.sixGMonthly[monthIdx(STATE.month)] : null;
+  html += kpiTargetOrPct("6G Sales (MTD)", sixG.upgrades, tSixG, false);
+  const techRows = STATE.month===ALL_MONTHS_VALUE ? STORE.technicalData.filter(r=> r.bsFY===STATE.fy && (olt==="ALL"||r.OLT===olt)) : STORE.technicalData.filter(r=> r.bsMonth===STATE.month && r.bsFY===STATE.fy && (olt==="ALL"||r.OLT===olt));
+  const techHrs = techRows.map(r=>r.solveHours).filter(v=>v!==null&&v!==undefined&&!isNaN(v));
+  const techAvg = techHrs.length ? techHrs.reduce((a,b)=>a+b,0)/techHrs.length : 0;
+  html += kpiCard("Technical Tickets (Delayed)", fmtNum(techRows.length), techHrs.length?(techAvg.toFixed(1)+" hrs avg solve"):"no data this month", techAvg<=8);
   document.getElementById("ov-kpis").innerHTML = html;
   const warnEl = document.getElementById("ov-date-warning");
   if(warnEl) warnEl.style.display = beh.dateParseIssue ? "block" : "none";
@@ -1130,14 +1245,38 @@ function renderOverview(){
     options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{color:'#6b7290', font:{size:10.5}, boxWidth:10}}}}
   });
 
+  // 6G sales trend
+  const sixGMonths = BS_MONTHS.filter(m => sixGRowsFor(olt, m, STATE.fy).length>0);
+  const sixGSeries = sixGMonths.map(m=>sixGMetricsFor(olt, m, STATE.fy).upgrades);
+  const sixGTgtSeries = sixGMonths.map(m=> TARGETS.sixGMonthly ? TARGETS.sixGMonthly[monthIdx(m)] : null);
+  renderChart('ov-sixg', document.getElementById('chart-ov-sixg'), {
+    type:'line',
+    data:{labels: sixGMonths, datasets:[
+      {label:'Upgrades', data:sixGSeries, borderColor:'#33d69f', backgroundColor:'#33d69f33', tension:.3, fill:true},
+      {label:'Target', data:sixGTgtSeries, borderColor:'#ffb84d', borderDash:[5,4], tension:.2, pointRadius:0}
+    ]},
+    options: baseChartOpts()
+  });
+
+  // technical ticket volume trend
+  const techMonths = BS_MONTHS.filter(m => STORE.technicalData.some(r=>r.bsMonth===m && r.bsFY===STATE.fy && (olt==="ALL"||r.OLT===olt)));
+  const techSeries = techMonths.map(m=> STORE.technicalData.filter(r=>r.bsMonth===m && r.bsFY===STATE.fy && (olt==="ALL"||r.OLT===olt)).length);
+  renderChart('ov-tech', document.getElementById('chart-ov-tech'), {
+    type:'bar',
+    data:{labels: techMonths, datasets:[{label:'Delayed Tickets', data:techSeries, backgroundColor:'#ff6b6b99', borderRadius:5}]},
+    options: baseChartOpts()
+  });
+
   // OLT snapshot table
-  let thead = "<tr><th>OLT</th><th>Installation</th><th>Growth</th><th>Churn</th><th>Active</th><th>Revenue</th><th>Retention%</th><th>Winback%</th></tr>";
+  let thead = "<tr><th>OLT</th><th>Installation</th><th>Growth</th><th>Churn</th><th>Active</th><th>Revenue</th><th>Retention%</th><th>Winback%</th><th>6G Upgrades</th><th>Delayed Tickets</th></tr>";
   let tbody = "";
   OLTS.forEach(o=>{
     const g = growthMetricsFor(o);
     const r = revenueForState(o);
     const b = classifyBehaviour(o);
-    tbody += `<tr><td><span class="badge-olt">${o}</span></td><td>${fmtNum(g.installation)}</td><td>${fmtNum(g.growth)}</td><td>${fmtNum(g.churn)}</td><td>${fmtNum(g.active)}</td><td>${fmtMoney(r.total)}</td><td>${b.forecastDueMTD?fmtPct(b.retentionPct):'-'}</td><td>${fmtPct(b.winbackPct)}</td></tr>`;
+    const sg = sixGMetricsFor(o, STATE.month, STATE.fy);
+    const tr = STATE.month===ALL_MONTHS_VALUE ? STORE.technicalData.filter(x=>x.bsFY===STATE.fy && x.OLT===o) : STORE.technicalData.filter(x=>x.bsMonth===STATE.month && x.bsFY===STATE.fy && x.OLT===o);
+    tbody += `<tr><td><span class="badge-olt">${o}</span></td><td>${fmtNum(g.installation)}</td><td>${fmtNum(g.growth)}</td><td>${fmtNum(g.churn)}</td><td>${fmtNum(g.active)}</td><td>${fmtMoney(r.total)}</td><td>${b.forecastDueMTD?fmtPct(b.retentionPct):'-'}</td><td>${fmtPct(b.winbackPct)}</td><td>${fmtNum(sg.upgrades)}</td><td>${fmtNum(tr.length)}</td></tr>`;
   });
   document.getElementById("ov-olt-table").innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
 
@@ -1383,6 +1522,132 @@ function renderRevenue(){
   document.getElementById("rev-type-table").innerHTML = `<thead>${tthead}</thead><tbody>${ttbody}</tbody>`;
 }
 
+// ---------- TECHNICAL DATA (delayed ticket / SLA tracking) ----------
+function techFilteredRows(){
+  const f = TECH_FILTER;
+  let from = f.dateFrom ? new Date(f.dateFrom+"T00:00:00") : null;
+  let to = f.dateTo ? new Date(f.dateTo+"T23:59:59") : null;
+  return STORE.technicalData.filter(r=>{
+    if(f.olt!=="ALL" && r.OLT!==f.olt) return false;
+    if(f.solved!=="ALL" && r["SOLVED MEDIUM"]!==f.solved) return false;
+    if(f.problem!=="ALL" && r.PROBLEM!==f.problem) return false;
+    const d = parseFlexDate(r["ISSUED DATE"]);
+    if(from && (!d || d<from)) return false;
+    if(to && (!d || d>to)) return false;
+    return true;
+  });
+}
+function techSearchedRows(rows){
+  const q = (TECH_FILTER.search||"").trim().toLowerCase();
+  if(!q) return rows;
+  return rows.filter(r=> [r["TICKET ID"],r.USERNAME,r.SOLUTION,r["SOLVED BY"]].some(v=> (v||"").toString().toLowerCase().includes(q)));
+}
+function median(arr){
+  if(!arr.length) return 0;
+  const s = arr.slice().sort((a,b)=>a-b);
+  const mid = Math.floor(s.length/2);
+  return s.length%2 ? s[mid] : (s[mid-1]+s[mid])/2;
+}
+function renderTechnical(){
+  // populate filter dropdowns from the full dataset (not the already-filtered rows)
+  const allRows = STORE.technicalData;
+  const solvedOpts = [...new Set(allRows.map(r=>r["SOLVED MEDIUM"]).filter(Boolean))].sort();
+  const solvedSel = document.getElementById("techSolvedFilter");
+  solvedSel.innerHTML = '<option value="ALL">All Solved Medium</option>' + solvedOpts.map(o=>`<option value="${o}" ${TECH_FILTER.solved===o?'selected':''}>${o}</option>`).join("");
+  const problemOpts = [...new Set(allRows.map(r=>r.PROBLEM).filter(Boolean))].sort();
+  const problemSel = document.getElementById("techProblemFilter");
+  problemSel.innerHTML = '<option value="ALL">All Problem Types</option>' + problemOpts.map(o=>`<option value="${o}" ${TECH_FILTER.problem===o?'selected':''}>${o}</option>`).join("");
+
+  const rows = techFilteredRows();
+  const hoursArr = rows.map(r=>r.solveHours).filter(v=> v!==null && v!==undefined && !isNaN(v));
+  const total = rows.length;
+  const avg = hoursArr.length ? hoursArr.reduce((a,b)=>a+b,0)/hoursArr.length : 0;
+  const med = median(hoursArr);
+  const max = hoursArr.length ? Math.max(...hoursArr) : 0;
+  const over24 = hoursArr.filter(h=>h>24).length;
+  const oltAvg = {};
+  OLTS.forEach(o=>{ const hs = rows.filter(r=>r.OLT===o).map(r=>r.solveHours).filter(v=>v!==null&&v!==undefined&&!isNaN(v)); oltAvg[o] = hs.length ? hs.reduce((a,b)=>a+b,0)/hs.length : 0; });
+  const worstOlt = OLTS.reduce((w,o)=> (oltAvg[o]>(oltAvg[w]||0)) ? o : w, OLTS[0]);
+
+  let html = "";
+  html += kpiCard("Total Tickets", fmtNum(total), ">20 min solve, filtered scope");
+  html += kpiCard("Avg Solve Time", hoursArr.length?avg.toFixed(1)+" hrs":"-");
+  html += kpiCard("Median Solve Time", hoursArr.length?med.toFixed(1)+" hrs":"-");
+  html += kpiCard("Longest Case", hoursArr.length?max.toFixed(1)+" hrs":"-", "needs escalation review", false);
+  html += kpiCard(">24 Hr Cases", fmtNum(over24));
+  html += kpiCard("Worst OLT (avg)", total?worstOlt:"-", total?(oltAvg[worstOlt].toFixed(1)+" hrs avg"):undefined, false);
+  document.getElementById("tech-kpis").innerHTML = html;
+
+  // tickets by OLT
+  renderChart('tech-olt', document.getElementById('chart-tech-olt'), {
+    type:'bar',
+    data:{ labels: OLTS, datasets:[{label:'Tickets', data: OLTS.map(o=>rows.filter(r=>r.OLT===o).length), backgroundColor:['#3ba7ff99','#7c5cff99','#33d69f99'], borderRadius:6}]},
+    options: baseChartOpts()
+  });
+
+  // solve time distribution buckets
+  const buckets = [["<1h",0,1],["1-4h",1,4],["4-8h",4,8],["8-24h",8,24],[">24h",24,Infinity]];
+  const bucketCounts = buckets.map(([label,lo,hi])=> hoursArr.filter(h=>h>=lo && h<hi).length);
+  renderChart('tech-bucket', document.getElementById('chart-tech-bucket'), {
+    type:'bar',
+    data:{ labels: buckets.map(b=>b[0]), datasets:[{label:'Tickets', data: bucketCounts, backgroundColor:'#ffb84d99', borderRadius:6}]},
+    options: baseChartOpts()
+  });
+
+  // avg solve time by OLT
+  renderChart('tech-avgolt', document.getElementById('chart-tech-avgolt'), {
+    type:'bar',
+    data:{ labels: OLTS, datasets:[{label:'Avg Hours', data: OLTS.map(o=>+oltAvg[o].toFixed(1)), backgroundColor:'#ff6b6b99', borderRadius:6}]},
+    options: baseChartOpts()
+  });
+
+  // trend by issued date (grouped by day)
+  const dayMap = {};
+  rows.forEach(r=>{ const d=parseFlexDate(r["ISSUED DATE"]); if(!d) return; const k=d.toISOString().slice(0,10); dayMap[k]=(dayMap[k]||0)+1; });
+  const days = Object.keys(dayMap).sort();
+  renderChart('tech-trend', document.getElementById('chart-tech-trend'), {
+    type:'line',
+    data:{ labels: days, datasets:[{label:'Tickets Issued', data: days.map(d=>dayMap[d]), borderColor:'#3ba7ff', backgroundColor:'#3ba7ff33', fill:true, tension:.3}]},
+    options: baseChartOpts()
+  });
+
+  // by problem type
+  const probCounts = groupCount(rows, "PROBLEM").slice(0,8);
+  renderChart('tech-problem', document.getElementById('chart-tech-problem'), {
+    type:'bar',
+    data:{ labels: probCounts.map(p=>p[0]), datasets:[{label:'Tickets', data: probCounts.map(p=>p[1]), backgroundColor:'#7c5cff99', borderRadius:6}]},
+    options: {...baseChartOpts(), indexAxis:'y'}
+  });
+
+  // staff / solved-by performance
+  const staffCounts = groupCount(rows, "SOLVED BY").slice(0,10);
+  renderChart('tech-staff', document.getElementById('chart-tech-staff'), {
+    type:'bar',
+    data:{ labels: staffCounts.map(s=>s[0]), datasets:[{label:'Tickets Solved', data: staffCounts.map(s=>s[1]), backgroundColor:'#33d69f99', borderRadius:6}]},
+    options: {...baseChartOpts(), indexAxis:'y'}
+  });
+
+  // top 5 longest cases
+  const top5 = rows.filter(r=>r.solveHours!==null && r.solveHours!==undefined).sort((a,b)=>b.solveHours-a.solveHours).slice(0,5);
+  document.getElementById("tech-top5").innerHTML = top5.length ? top5.map(r=>
+    `<div class="progress-row"><div class="name">${r["TICKET ID"]} &middot; ${r.USERNAME||''} <span class="badge-olt">${r.OLT||''}</span></div><div style="flex:1;">${r.PROBLEM||''}</div><div><b>${r.solveHours.toFixed(1)} hrs</b></div></div>`
+  ).join("") : `<div class="small-muted" style="padding:14px;">No data for the current filters.</div>`;
+
+  renderTechnicalTable();
+}
+function renderTechnicalTable(){
+  const rows = techSearchedRows(techFilteredRows()).slice().sort((a,b)=>{
+    const da=parseFlexDate(a["ISSUED DATE"]), db=parseFlexDate(b["ISSUED DATE"]);
+    return (db?db.getTime():0) - (da?da.getTime():0);
+  });
+  document.getElementById("tech-tbl-count").textContent = fmtNum(rows.length) + " rows";
+  let thead = "<tr><th>Ticket ID</th><th>Username</th><th>OLT</th><th>Issued</th><th>Solved</th><th>Solve Time</th><th>Problem</th><th>Solved Medium</th><th>Solved By</th></tr>";
+  let tbody = rows.slice(0,500).map(r=>
+    `<tr><td>${r["TICKET ID"]||''}</td><td>${r.USERNAME||''}</td><td><span class="badge-olt">${r.OLT||''}</span></td><td>${r["ISSUED DATE"]||''}</td><td>${r["SOLVED DATE"]||''}</td><td>${(r.solveHours!==null&&r.solveHours!==undefined)?r.solveHours.toFixed(1)+' hrs':'-'}</td><td>${r.PROBLEM||''}</td><td>${r["SOLVED MEDIUM"]||''}</td><td>${r["SOLVED BY"]||''}</td></tr>`
+  ).join("") || `<tr><td colspan="9" class="small-muted" style="padding:14px;">No Technical Data imported yet. Go to Data Import &rarr; Technical Data to import the delayed-ticket export.</td></tr>`;
+  document.getElementById("tech-ticket-table").innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
+}
+
 // ---------- EXECUTIVE SUMMARY ----------
 function renderSummary(){
   const olt = STATE.olt;
@@ -1545,6 +1810,7 @@ function niSelect(notesObj, path, options){
 
 // ---------- WEEKLY REVIEW (7-section business review deck) ----------
 let WR_SLIDE = 0;
+let MR_SLIDE = 0;
 function defaultWeekStart(){ const y = new Date().getFullYear(); return new Date(y,7,17); } // Aug 17 default per user's first week
 function defaultWeekEnd(){ const y = new Date().getFullYear(); const d = new Date(y,7,21); d.setHours(23,59,59,999); return d; }
 let WR_WEEK_START = defaultWeekStart();
@@ -1733,6 +1999,8 @@ function renderWeekly(){
   const [title, fn] = slides[WR_SLIDE];
   document.getElementById("wr-slide-title").textContent = title;
   document.getElementById("wr-slide-counter").textContent = (WR_SLIDE+1)+" / "+slides.length;
+  const range = weekRange(0);
+  document.getElementById("wr-slide-week-label").textContent = range.start.toDateString()+" \u2013 "+range.end.toDateString()+" \u00b7 "+(olt==="ALL"?"All OLT":olt);
   const body = document.getElementById("wr-slide-body");
   body.innerHTML = fn();
   bindNoteInputs(body, getWeeklyNotes());
@@ -1740,7 +2008,7 @@ function renderWeekly(){
   if(addIssueBtn) addIssueBtn.addEventListener("click", ()=>{ getWeeklyNotes().issues.push({priority:"\uD83D\uDD34"}); saveStore(STORE); renderWeekly(); });
   body.querySelectorAll(".wr-del-issue").forEach(b=> b.addEventListener("click", ()=>{ getWeeklyNotes().issues.splice(parseInt(b.dataset.idx),1); saveStore(STORE); renderWeekly(); }));
   document.getElementById("wr-dots").innerHTML = slides.map((s,i)=>`<button class="wr-dot ${i===WR_SLIDE?'active':''}" data-idx="${i}"></button>`).join("");
-  document.querySelectorAll(".wr-dot").forEach(b=> b.addEventListener("click", ()=>{ WR_SLIDE=parseInt(b.dataset.idx); renderWeekly(); }));
+  document.querySelectorAll("#wr-dots .wr-dot").forEach(b=> b.addEventListener("click", ()=>{ WR_SLIDE=parseInt(b.dataset.idx); renderWeekly(); }));
   document.getElementById("wr-prev").disabled = WR_SLIDE===0;
   document.getElementById("wr-next").textContent = WR_SLIDE===slides.length-1 ? "Restart \u21BA" : "Next \u2192";
 }
@@ -1815,6 +2083,19 @@ function renderMonthlyReview(){
   ).join("");
 
   [document.getElementById("mr-status-picker"), document.getElementById("mr-exec-summary"), document.getElementById("mr-trend-table"), document.getElementById("mr-olt-table"), document.getElementById("mr-risk-table"), document.getElementById("mr-final-review")].forEach(el=> bindNoteInputs(el, notes));
+
+  // slide navigation shell
+  const mrTitles = ["1. Monthly Executive Summary","2. Month-wise Business Trend","3. OLT-wise Performance","4. Business Risk & Opportunity","5. Final Management Review"];
+  if(MR_SLIDE<0) MR_SLIDE=0;
+  if(MR_SLIDE>=mrTitles.length) MR_SLIDE=mrTitles.length-1;
+  document.getElementById("mr-slide-title").textContent = mrTitles[MR_SLIDE];
+  document.getElementById("mr-slide-counter").textContent = (MR_SLIDE+1)+" / "+mrTitles.length;
+  document.getElementById("mr-slide-month-label").textContent = (STATE.month===ALL_MONTHS_VALUE?"All Months":STATE.month)+" "+STATE.fy+" \u00b7 "+(olt==="ALL"?"All OLT":olt);
+  document.querySelectorAll("#mr-slide-body .mr-slide-panel").forEach(p=> p.classList.toggle("active", parseInt(p.dataset.slide)===MR_SLIDE));
+  document.getElementById("mr-dots").innerHTML = mrTitles.map((t,i)=>`<button class="wr-dot ${i===MR_SLIDE?'active':''}" data-idx="${i}"></button>`).join("");
+  document.querySelectorAll("#mr-dots .wr-dot").forEach(b=> b.addEventListener("click", ()=>{ MR_SLIDE=parseInt(b.dataset.idx); renderMonthlyReview(); }));
+  document.getElementById("mr-prev").disabled = MR_SLIDE===0;
+  document.getElementById("mr-next").textContent = MR_SLIDE===mrTitles.length-1 ? "Restart \u21BA" : "Next \u2192";
 }
 
 
@@ -1833,6 +2114,8 @@ const IMPORT_TYPES = [
     signature:["Olt","Amount","Accrued month"], needsMonth:false, store:"accrualRevenue" },
   { id:"sixG", title:"6G / WiFi 6", desc:"6G Task Details export (TICKET ID, USERNAME, OLT, ISSUED DATE, PROBLEM, SOLVED MEDIUM, SOLUTION...) — BS month is auto-detected per ticket from its Issued Date.",
     signature:["TICKET ID","PROBLEM","OLT"], needsMonth:false, store:"sixG" },
+  { id:"technicalData", title:"Technical Data", desc:"Delayed Ticket (>20 min) export (TICKET ID, USERNAME, OLT, ISSUED DATE, SOLVED DATE, PROBLEM, SOLVED MEDIUM, SOLUTION, SOLVED BY...) — BS month is auto-detected per ticket from its Issued Date.",
+    signature:["TICKET ID","ISSUED DATE","SOLVED DATE"], needsMonth:false, store:"technicalData" },
 ];
 
 function renderImportCards(){
@@ -1980,6 +2263,13 @@ function doImport(cfg, raw, month, fy){
     detectedLabel = rows.length + " tickets, spanning " + [...new Set(rows.map(r=>r.bsMonth+" "+r.bsFY))].join(", ");
     STORE.sixG = STORE.sixG.filter(r=> !ids.has(r["TICKET ID"]));
     STORE.sixG = STORE.sixG.concat(rows);
+  } else if(cfg.id==="technicalData"){
+    // Same per-row BS-month auto-tagging + Ticket ID dedupe as the 6G import.
+    rows = rows.map(r=>{ const bm = adDateToBsMonth(r["ISSUED DATE"]); const sD=parseFlexDate(r["ISSUED DATE"]), fD=parseFlexDate(r["SOLVED DATE"]); const solveHrs = (sD&&fD) ? Math.max(0,(fD-sD)/36e5) : null; return {...r, bsMonth: bm?bm.month:null, bsFY: bm?bm.fy:null, solveHours: solveHrs}; });
+    const ids2 = new Set(rows.map(r=>r["TICKET ID"]));
+    detectedLabel = rows.length + " tickets, spanning " + [...new Set(rows.map(r=>r.bsMonth+" "+r.bsFY))].join(", ");
+    STORE.technicalData = STORE.technicalData.filter(r=> !ids2.has(r["TICKET ID"]));
+    STORE.technicalData = STORE.technicalData.concat(rows);
   } else {
     rows = rows.map(r=>({...r, bsMonth:month, bsFY:fy}));
     STORE[cfg.store] = STORE[cfg.store].filter(r=> !(r.bsMonth===month && r.bsFY===fy));
@@ -2004,6 +2294,8 @@ function doImport(cfg, raw, month, fy){
     pushPromise = fbSaveMeta("accrualRevenue", { rows: STORE.accrualRevenue });
   } else if(cfg.id==="sixG"){
     pushPromise = fbSaveMeta("sixG", { rows: STORE.sixG });
+  } else if(cfg.id==="technicalData"){
+    pushPromise = fbSaveMeta("technicalData", { rows: STORE.technicalData });
   } else {
     const batchRows = STORE[cfg.store].filter(r=> r.bsMonth===month && r.bsFY===fy);
     pushPromise = fbSaveBatch(cfg.id, month, fy, batchRows);
@@ -2161,12 +2453,14 @@ async function fbFetchAllRaw(){
     const accrualSnap = await window.__fb.getDoc(window.__fb.doc(window.__fb.db, FB_META_COL, "accrualRevenue"));
     const forecastSnap = await window.__fb.getDoc(window.__fb.doc(window.__fb.db, FB_META_COL, "forecast"));
     const sixGSnap = await window.__fb.getDoc(window.__fb.doc(window.__fb.db, FB_META_COL, "sixG"));
+    const technicalDataSnap = await window.__fb.getDoc(window.__fb.doc(window.__fb.db, FB_META_COL, "technicalData"));
     return {
       batches,
       targets: targetsSnap.exists() ? targetsSnap.data().data : null,
       accrualRevenue: accrualSnap.exists() ? (accrualSnap.data().rows||[]) : null,
       forecast: forecastSnap.exists() ? (forecastSnap.data().data||{}) : null,
-      sixG: sixGSnap.exists() ? (sixGSnap.data().rows||[]) : null
+      sixG: sixGSnap.exists() ? (sixGSnap.data().rows||[]) : null,
+      technicalData: technicalDataSnap.exists() ? (technicalDataSnap.data().rows||[]) : null
     };
   }catch(err){
     console.warn("fbFetchAllRaw failed", err);
@@ -2243,6 +2537,15 @@ async function fbReconcile(silent){
     const ok = await fbSaveMeta("sixG", {rows: STORE.sixG}); ok?pushed++:failed++;
   } else if(cloud.sixG.length > STORE.sixG.length){
     STORE.sixG = cloud.sixG; pulled++;
+  }
+
+  // technicalData: same whole-array strategy.
+  if(cloud.technicalData===null || cloud.technicalData===undefined){
+    if(STORE.technicalData.length){ const ok = await fbSaveMeta("technicalData", {rows: STORE.technicalData}); ok?pushed++:failed++; }
+  } else if(STORE.technicalData.length > cloud.technicalData.length){
+    const ok = await fbSaveMeta("technicalData", {rows: STORE.technicalData}); ok?pushed++:failed++;
+  } else if(cloud.technicalData.length > STORE.technicalData.length){
+    STORE.technicalData = cloud.technicalData; pulled++;
   }
 
   // forecast: keyed by "Month|FY" — merge missing keys either direction, richer key wins on conflict.
@@ -2344,11 +2647,12 @@ function switchTab(tab){
     behaviour:["Customer Behaviour","OLT-wise billing behaviour, renewal gap analysis, and forecast comparison"],
     growth:["Sales & Customer Growth","Installation, sales, growth, churn and active customer movement"],
     revenue:["Revenue & Business Performance","Accrual revenue, ARPU, and target vs achievement"],
+    technical:["Technical Data","Delayed-ticket (>20 min solve) tracking, SLA and staff performance"],
     import:["Data Import","Import monthly Excel exports to keep the dashboard current"],
     targets:["Manage Targets","Edit the annual M1–M12 target table used for Target vs Achievement"]};
   document.getElementById("pageTitle").textContent = titles[tab][0];
   document.getElementById("pageSub").textContent = titles[tab][1];
-  document.querySelector(".controls").style.display = (tab==="import"||tab==="targets") ? "none" : "flex";
+  document.querySelector(".controls").style.display = (tab==="import"||tab==="targets"||tab==="technical") ? "none" : "flex";
   renderAll();
 }
 
@@ -2360,6 +2664,7 @@ function renderAll(){
   else if(STATE.tab==="behaviour") renderBehaviour();
   else if(STATE.tab==="growth") renderGrowth();
   else if(STATE.tab==="revenue") renderRevenue();
+  else if(STATE.tab==="technical") renderTechnical();
   else if(STATE.tab==="targets") renderTargetsTable();
 }
 
@@ -2391,6 +2696,23 @@ function init(){
   document.getElementById("beh-search").addEventListener("input", renderBehDetail);
   document.querySelectorAll("#ov-quick-actions button").forEach(b=> b.addEventListener("click", ()=>switchTab(b.dataset.tab)));
 
+  document.getElementById("techOltFilter").addEventListener("change", (e)=>{ TECH_FILTER.olt=e.target.value; renderTechnical(); });
+  document.getElementById("techSolvedFilter").addEventListener("change", (e)=>{ TECH_FILTER.solved=e.target.value; renderTechnical(); });
+  document.getElementById("techProblemFilter").addEventListener("change", (e)=>{ TECH_FILTER.problem=e.target.value; renderTechnical(); });
+  document.getElementById("techDateFrom").addEventListener("change", (e)=>{ TECH_FILTER.dateFrom=e.target.value; renderTechnical(); });
+  document.getElementById("techDateTo").addEventListener("change", (e)=>{ TECH_FILTER.dateTo=e.target.value; renderTechnical(); });
+  document.getElementById("techSearchBox").addEventListener("input", (e)=>{ TECH_FILTER.search=e.target.value; renderTechnicalTable(); });
+  document.getElementById("techResetBtn").addEventListener("click", ()=>{
+    TECH_FILTER = { olt:"ALL", solved:"ALL", problem:"ALL", dateFrom:"", dateTo:"", search:"" };
+    document.getElementById("techOltFilter").value="ALL";
+    document.getElementById("techSolvedFilter").value="ALL";
+    document.getElementById("techProblemFilter").value="ALL";
+    document.getElementById("techDateFrom").value="";
+    document.getElementById("techDateTo").value="";
+    document.getElementById("techSearchBox").value="";
+    renderTechnical();
+  });
+
   document.getElementById("btn-export").addEventListener("click", exportBackup);
   document.getElementById("restore-file").addEventListener("change", (e)=>{ if(e.target.files.length) restoreBackup(e.target.files[0]); });
   document.getElementById("btn-clear-all").addEventListener("click", clearAllData);
@@ -2404,6 +2726,8 @@ function init(){
   document.getElementById("btn-print-summary").addEventListener("click", ()=>{ switchTab("summary"); setTimeout(()=>window.print(), 100); });
   document.getElementById("wr-prev").addEventListener("click", ()=>{ if(WR_SLIDE>0){ WR_SLIDE--; renderWeekly(); } });
   document.getElementById("wr-next").addEventListener("click", ()=>{ WR_SLIDE = (WR_SLIDE>=6) ? 0 : WR_SLIDE+1; renderWeekly(); });
+  document.getElementById("mr-prev").addEventListener("click", ()=>{ if(MR_SLIDE>0){ MR_SLIDE--; renderMonthlyReview(); } });
+  document.getElementById("mr-next").addEventListener("click", ()=>{ MR_SLIDE = (MR_SLIDE>=4) ? 0 : MR_SLIDE+1; renderMonthlyReview(); });
   document.getElementById("wr-apply-week").addEventListener("click", ()=>{
     const s = document.getElementById("wr-week-start").value;
     const e = document.getElementById("wr-week-end").value;
