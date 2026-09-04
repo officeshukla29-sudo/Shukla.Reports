@@ -681,6 +681,26 @@ canvas{max-width:100%;}
           <button class="btn ghost" id="btn-clear-all">Clear ALL imported data</button>
         </div>
       </div>
+
+      <div class="panel" style="margin-top:16px;">
+        <div class="flex-between">
+          <h3>Month-wise Export / Import (JSON)</h3>
+        </div>
+        <div class="hint">Ek mahina ko sabai data type (installation, paid sales, growth&amp;churn, accrual revenue, payment behaviour, forecast, 6G, technical data &mdash; jun jun tyo mahina ko lagi import bhaisakeko chha) euta JSON file ma export garnus, ra tyahi file arू browser/computer ma euta click ma import garnus. Full backup jasto sabai mahina hoina &mdash; ek choti ma euta mahina matra.</div>
+        <div class="chip-row">
+          <select id="monthExportSel"></select>
+          <select id="monthExportFySel">
+            <option value="2083/84">2083/84</option>
+            <option value="2082/83">2082/83</option>
+          </select>
+          <button class="btn" id="btn-export-month">Export This Month (JSON)</button>
+        </div>
+        <div class="chip-row" style="margin-top:8px;">
+          <input type="file" id="monthImportFile" accept=".json" style="max-width:220px;">
+          <button class="btn ghost" id="btn-import-month">Import Month JSON</button>
+        </div>
+        <div class="hint" id="monthImportResult" style="display:none;margin-top:6px;"></div>
+      </div>
     </div>
 
     <!-- ===================== TARGETS ===================== -->
@@ -2637,6 +2657,93 @@ function populateMonthSelect(){
   sel.innerHTML = `<option value="${ALL_MONTHS_VALUE}" ${STATE.month===ALL_MONTHS_VALUE?'selected':''}>All Months (${months.length})</option>` + optHtml;
   if(STATE.month!==ALL_MONTHS_VALUE && !months.includes(STATE.month)) STATE.month = months[months.length-1];
   sel.value = STATE.month;
+  const exportSel = document.getElementById("monthExportSel");
+  if(exportSel){
+    exportSel.innerHTML = months.map(m=>`<option value="${m}" ${m===STATE.month?'selected':''}>${m}</option>`).join("");
+  }
+  const exportFySel = document.getElementById("monthExportFySel");
+  if(exportFySel) exportFySel.value = STATE.fy;
+}
+
+// ---------- Month-wise export / import (bundles every data type for one BS month into one JSON) ----------
+function monthDataBundle(month, fy){
+  const flow = (arr)=> arr.filter(r=> r.bsMonth===month && r.bsFY===fy);
+  const accrual = STORE.accrualRevenue.filter(r=> String(r["Accrued month"]).toLowerCase()===String(month).toLowerCase() && normFY(r["Accrued Fy Year"])===fy);
+  const forecastRows = STORE.forecast[forecastKey(month,fy)] || [];
+  return {
+    month, fy, exportedAt: new Date().toISOString(),
+    installations: flow(STORE.installations),
+    paidSales: flow(STORE.paidSales),
+    growthChurn: flow(STORE.growthChurn),
+    paymentBehaviour: flow(STORE.paymentBehaviour),
+    accrualRevenue: accrual,
+    forecast: forecastRows,
+    sixG: flow(STORE.sixG),
+    technicalData: flow(STORE.technicalData),
+  };
+}
+function exportMonthData(month, fy){
+  const bundle = monthDataBundle(month, fy);
+  const totalRows = bundle.installations.length+bundle.paidSales.length+bundle.growthChurn.length+bundle.paymentBehaviour.length+bundle.accrualRevenue.length+bundle.forecast.length+bundle.sixG.length+bundle.technicalData.length;
+  if(totalRows===0){ alert("No data found for "+month+" "+fy+" yet \u2014 nothing to export."); return; }
+  downloadJSON(bundle, "shuklagandaki_"+String(month).toLowerCase()+"_"+String(fy).replace("/","-")+".json");
+}
+function showMonthImportResult(ok, msg){
+  const el = document.getElementById("monthImportResult");
+  if(!el) return;
+  el.style.display = "block";
+  el.style.color = ok ? "" : "var(--red)";
+  el.textContent = msg;
+}
+function importMonthJSON(file){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    let data;
+    try{ data = JSON.parse(e.target.result); }catch(err){ showMonthImportResult(false, "Invalid JSON file."); return; }
+    if(!data.month || !data.fy){ showMonthImportResult(false, "This doesn't look like a month-export file (missing month/fy)."); return; }
+    const month = data.month, fy = data.fy;
+    let counts = [];
+    if(data.installations && data.installations.length){
+      STORE.installations = STORE.installations.filter(r=> !(r.bsMonth===month && r.bsFY===fy)).concat(data.installations);
+      counts.push("Installation: "+data.installations.length);
+    }
+    if(data.paidSales && data.paidSales.length){
+      STORE.paidSales = STORE.paidSales.filter(r=> !(r.bsMonth===month && r.bsFY===fy)).concat(data.paidSales);
+      counts.push("Paid Sales: "+data.paidSales.length);
+    }
+    if(data.growthChurn && data.growthChurn.length){
+      STORE.growthChurn = STORE.growthChurn.filter(r=> !(r.bsMonth===month && r.bsFY===fy)).concat(data.growthChurn);
+      counts.push("Growth & Churn: "+data.growthChurn.length);
+    }
+    if(data.paymentBehaviour && data.paymentBehaviour.length){
+      STORE.paymentBehaviour = STORE.paymentBehaviour.filter(r=> !(r.bsMonth===month && r.bsFY===fy)).concat(data.paymentBehaviour);
+      counts.push("Payment Behaviour: "+data.paymentBehaviour.length);
+    }
+    if(data.accrualRevenue && data.accrualRevenue.length){
+      STORE.accrualRevenue = STORE.accrualRevenue.filter(r=> !(String(r["Accrued month"]).toLowerCase()===String(month).toLowerCase() && normFY(r["Accrued Fy Year"])===fy)).concat(data.accrualRevenue);
+      counts.push("Accrual Revenue: "+data.accrualRevenue.length);
+    }
+    if(data.forecast && data.forecast.length){
+      STORE.forecast[forecastKey(month,fy)] = data.forecast;
+      counts.push("Forecast: "+data.forecast.length);
+    }
+    if(data.sixG && data.sixG.length){
+      const ids = new Set(data.sixG.map(r=>r["TICKET ID"]));
+      STORE.sixG = STORE.sixG.filter(r=> !ids.has(r["TICKET ID"])).concat(data.sixG);
+      counts.push("6G: "+data.sixG.length);
+    }
+    if(data.technicalData && data.technicalData.length){
+      const ids2 = new Set(data.technicalData.map(r=>r["TICKET ID"]));
+      STORE.technicalData = STORE.technicalData.filter(r=> !ids2.has(r["TICKET ID"])).concat(data.technicalData);
+      counts.push("Technical Data: "+data.technicalData.length);
+    }
+    if(!counts.length){ showMonthImportResult(false, "File had no rows for any known data type."); return; }
+    STORE.importLog.push({type:"Month Import ("+month+" "+fy+")", month, fy, rows: counts.length, at: new Date().toISOString()});
+    saveStore(STORE);
+    populateMonthSelect(); renderImportCards(); renderAll();
+    showMonthImportResult(true, "Imported "+month+" "+fy+": "+counts.join(", ")+".");
+  };
+  reader.readAsText(file);
 }
 
 // ---------- Backup / restore / clear ----------
@@ -3015,6 +3122,16 @@ function init(){
   document.getElementById("btn-export").addEventListener("click", exportBackup);
   document.getElementById("restore-file").addEventListener("change", (e)=>{ if(e.target.files.length) restoreBackup(e.target.files[0]); });
   document.getElementById("btn-clear-all").addEventListener("click", clearAllData);
+  document.getElementById("btn-export-month").addEventListener("click", ()=>{
+    const m = document.getElementById("monthExportSel").value;
+    const f = document.getElementById("monthExportFySel").value;
+    exportMonthData(m, f);
+  });
+  document.getElementById("btn-import-month").addEventListener("click", ()=>{
+    const f = document.getElementById("monthImportFile").files[0];
+    if(!f){ showMonthImportResult(false, "Select a JSON file first."); return; }
+    importMonthJSON(f);
+  });
   document.getElementById("btn-fb-push").addEventListener("click", fbPushEverythingNow);
   document.getElementById("btn-fb-pull").addEventListener("click", fbPullNow);
   document.querySelector("#importToast .toast-close-btn").addEventListener("click", ()=>{ document.getElementById("importToast").classList.remove("show"); });
