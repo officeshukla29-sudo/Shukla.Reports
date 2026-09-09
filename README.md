@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shuklagandaki Business Executive Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script>
 function _loadLib(urls, checkFn, onDone){
   var i = 0;
@@ -96,7 +99,7 @@ async function importWithFallback(urls){
   --radius:16px;
 }
 *{box-sizing:border-box;}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;}
 body{min-height:100vh;}
 ::-webkit-scrollbar{width:8px;height:8px;}
 ::-webkit-scrollbar-thumb{background:#d7dcf2;border-radius:4px;}
@@ -113,7 +116,7 @@ body{min-height:100vh;}
 .nav-ico{width:20px;text-align:center;font-size:14px;}
 .main{flex:1;min-width:0;padding:22px 28px 60px;}
 .topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
-.topbar h1{font-size:21px;margin:0;font-weight:800;color:var(--txt);}
+.topbar h1{font-size:22px;margin:0;font-weight:800;color:var(--txt);letter-spacing:-.4px;}
 .topbar .sub{color:var(--txt3);font-size:12.5px;margin-top:2px;}
 .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 .pill-tabs{display:flex;gap:6px;background:var(--panel);padding:4px;border-radius:11px;border:1px solid var(--border);flex-wrap:wrap;box-shadow:0 2px 10px #6d5bf60d;}
@@ -127,17 +130,20 @@ select:focus,input:focus{outline:1px solid var(--accent);}
 .btn:hover{filter:brightness(1.06);}
 .grid{display:grid;gap:14px;}
 .kpi-grid{grid-template-columns:repeat(auto-fit,minmax(178px,1fr));}
-.kpi{background:var(--grad1);color:#fff;border:none;border-radius:var(--radius);padding:17px;position:relative;overflow:hidden;box-shadow:0 10px 24px #4e5eea26;}
-.kpi:nth-child(3n+2){background:linear-gradient(135deg,#4e8dff,#6d5bf6);}
-.kpi:nth-child(3n+3){background:linear-gradient(135deg,#8a63f2,#c15be0);}
-.kpi .lbl{color:#ffffffcc;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
-.kpi .val{font-size:24px;font-weight:800;color:#fff;}
-.kpi .delta{font-size:11.5px;margin-top:6px;font-weight:600;color:#ffffffdd;}
-.kpi .delta.up{color:#d8ffe9;} .kpi .delta.down{color:#ffe0e6;}
-.kpi .bar{height:5px;border-radius:3px;background:#ffffff33;margin-top:10px;overflow:hidden;}
-.kpi .bar i{display:block;height:100%;background:#fff;}
-.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;box-shadow:0 4px 18px #6d5bf60d;}
-.panel h3{margin:0 0 4px;font-size:14.5px;color:var(--txt);}
+.kpi{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--accent-c,#6d5bf6);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden;box-shadow:0 2px 10px #1b21400a;transition:box-shadow .15s,transform .15s;}
+.kpi:hover{box-shadow:0 10px 26px #1b214016;transform:translateY(-2px);}
+.kpi .lbl{color:var(--txt2);font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;font-weight:800;}
+.kpi .val{font-size:23px;font-weight:800;color:var(--txt);font-variant-numeric:tabular-nums;letter-spacing:-.3px;}
+.kpi .delta{font-size:11.5px;margin-top:6px;font-weight:600;color:var(--txt2);}
+.kpi .delta.up{color:var(--green);} .kpi .delta.down{color:var(--red);}
+.kpi .bar{height:4px;border-radius:3px;background:var(--bg);margin-top:10px;overflow:hidden;}
+.kpi .bar i{display:block;height:100%;background:var(--accent-c,#6d5bf6);border-radius:3px;}
+.kpi-indigo{--accent-c:#6d5bf6;} .kpi-blue{--accent-c:#4e8dff;} .kpi-teal{--accent-c:#17b8a6;}
+.kpi-green{--accent-c:#22c48d;} .kpi-rose{--accent-c:#ff5c7c;} .kpi-purple{--accent-c:#a855f7;}
+.kpi-amber{--accent-c:#ffab3d;} .kpi-slate{--accent-c:#8890b5;} .kpi-orange{--accent-c:#ff8a3d;}
+.kpi-cyan{--accent-c:#22b8cf;}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin-bottom:16px;box-shadow:0 2px 14px #1b21400a;}
+.panel h3{margin:0 0 4px;font-size:14.5px;color:var(--txt);letter-spacing:-.1px;}
 .panel .hint{color:var(--txt3);font-size:11.5px;margin-bottom:14px;}
 .two-col{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
 .three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
@@ -172,7 +178,34 @@ canvas{max-width:100%;}
 .note{background:#f1eeff;border-left:3px solid var(--accent);padding:10px 14px;border-radius:10px;font-size:12px;color:#4b3f99;margin-bottom:14px;}
 .editable-tbl input{width:70px;background:#fff;border:1px solid var(--border);color:var(--txt);padding:4px 6px;border-radius:6px;font-size:11.5px;}
 .section{display:none;}
-.section.active{display:block;}
+.section.active{display:block;animation:fadeSlideUp .35s ease both;}
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@keyframes popIn{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:scale(1);}}
+@keyframes softPulse{0%,100%{box-shadow:0 2px 10px #1b21400a;}50%{box-shadow:0 2px 14px #ff5c7c33;}}
+.kpi{animation:fadeSlideUp .4s ease both;}
+.kpi-grid .kpi:nth-child(1){animation-delay:.02s;} .kpi-grid .kpi:nth-child(2){animation-delay:.06s;}
+.kpi-grid .kpi:nth-child(3){animation-delay:.10s;} .kpi-grid .kpi:nth-child(4){animation-delay:.14s;}
+.kpi-grid .kpi:nth-child(5){animation-delay:.18s;} .kpi-grid .kpi:nth-child(6){animation-delay:.22s;}
+.kpi-grid .kpi:nth-child(7){animation-delay:.26s;} .kpi-grid .kpi:nth-child(8){animation-delay:.30s;}
+.kpi .val{animation:popIn .3s ease both .1s;}
+.panel{animation:fadeSlideUp .35s ease both;transition:box-shadow .2s,transform .2s;}
+.panel:hover{box-shadow:0 6px 20px #1b214012;}
+.chart-box{animation:fadeSlideUp .4s ease both .05s;}
+.ov-alert-strip{animation:fadeSlideUp .3s ease both,softPulse 2.4s ease-in-out infinite;}
+.ov-alert-ok{animation:fadeSlideUp .3s ease both;}
+.nav-btn{transition:background .18s,color .18s,transform .12s;}
+.nav-btn:active{transform:scale(.97);}
+.nav-btn.active{animation:popIn .25s ease;}
+.btn,.btn.ghost,.btn.small{transition:filter .15s,transform .1s;}
+.btn:active{transform:scale(.97);}
+.pill-tabs button{transition:background .15s,color .15s;}
+.badge-olt{transition:transform .12s;}
+.tbl-wrap table tbody tr{transition:background .12s;}
+.tbl-wrap table tbody tr:hover{background:var(--panel2);}
+@media (prefers-reduced-motion: reduce){
+  .section.active,.kpi,.kpi .val,.panel,.chart-box,.ov-alert-strip,.ov-alert-ok,.nav-btn.active{animation:none!important;}
+  *{transition-duration:.01ms!important;}
+}
 .footer-note{color:var(--txt3);font-size:11px;text-align:center;margin-top:30px;}
 .flex-between{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
 .small-muted{color:var(--txt3);font-size:11px;}
@@ -202,6 +235,15 @@ canvas{max-width:100%;}
 .quick-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
 .quick-actions button{flex:1;min-width:140px;background:var(--grad1);color:#fff;border:none;padding:12px 14px;border-radius:12px;font-size:12.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px #6d5bf62e;}
 .quick-actions button:nth-child(2){background:linear-gradient(135deg,#4e8dff,#6d5bf6);}
+
+/* ---------- Decision-first alert strip ---------- */
+.ov-alert-strip{background:#fff;border:1px solid var(--border);border-left:4px solid var(--red);border-radius:10px;padding:12px 16px;margin-bottom:14px;}
+.ov-alert-title{font-weight:800;font-size:12.5px;margin-bottom:6px;color:var(--txt);}
+.ov-alert-row{font-size:12.5px;padding:5px 0;border-top:1px dashed var(--border);}
+.ov-alert-row:first-of-type{border-top:none;}
+.ov-alert-row.red{color:var(--red);font-weight:600;}
+.ov-alert-row.amber{color:#a56a00;font-weight:600;}
+.ov-alert-ok{background:#f0fbf6;border:1px solid #b9ecd7;border-left:4px solid var(--green);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:12.5px;color:#0d7a4f;font-weight:700;}
 
 /* ---------- PPT-style slide deck (Weekly / Monthly Review) ---------- */
 .ppt-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
@@ -255,15 +297,15 @@ canvas{max-width:100%;}
     <div class="nav-group-label">Overview</div>
     <button class="nav-btn active" data-tab="overview"><span class="nav-ico">&#9733;</span> Executive Overview</button>
     <button class="nav-btn" data-tab="summary"><span class="nav-ico">&#128203;</span> Executive Summary</button>
-    <button class="nav-btn" data-tab="weekly"><span class="nav-ico">&#128197;</span> Weekly Review</button>
-    <button class="nav-btn" data-tab="monthlyreview"><span class="nav-ico">&#128198;</span> Monthly Review</button>
+    <button class="nav-btn" data-tab="weekly" style="display:none;"><span class="nav-ico">&#128197;</span> Weekly Review</button>
+    <button class="nav-btn" data-tab="monthlyreview" style="display:none;"><span class="nav-ico">&#128198;</span> Monthly Review</button>
     <button class="nav-btn" data-tab="oltperf"><span class="nav-ico">&#128225;</span> OLT Performance</button>
     <div class="nav-group-label">Analysis</div>
     <button class="nav-btn" data-tab="behaviour"><span class="nav-ico">&#128100;</span> Customer Behaviour</button>
     <button class="nav-btn" data-tab="growth"><span class="nav-ico">&#128200;</span> Sales &amp; Growth</button>
     <button class="nav-btn" data-tab="revenue"><span class="nav-ico">&#128176;</span> Revenue &amp; Performance</button>
     <button class="nav-btn" data-tab="technical"><span class="nav-ico">&#128295;</span> Technical Data</button>
-    <div class="nav-group-label">Admin</div>
+    <div class="nav-group-label">Data Management</div>
     <button class="nav-btn" data-tab="import"><span class="nav-ico">&#8593;</span> Data Import</button>
     <button class="nav-btn" data-tab="targets"><span class="nav-ico">&#127919;</span> Manage Targets</button>
     <div class="nav-group-label">Fiscal Year</div>
@@ -300,9 +342,20 @@ canvas{max-width:100%;}
 
     <!-- ===================== OVERVIEW ===================== -->
     <div class="section active" id="sec-overview">
-      <div class="note">Yo overview le Target &rarr; Sales &rarr; New Customer &rarr; Billing &rarr; Retention &rarr; Winback &rarr; NS &rarr; Churn &rarr; Active &rarr; Revenue &rarr; Forecast &rarr; 6G &rarr; Technical Tickets sabai connect garera dekhauxa, selected BS month ra OLT ko lagi.</div>
+      <div class="flex-between" style="margin-bottom:6px;">
+        <div class="note" style="margin:0;flex:1;">Yo overview le Target &rarr; Sales &rarr; New Customer &rarr; Billing &rarr; Retention &rarr; Winback &rarr; NS &rarr; Churn &rarr; Active &rarr; Revenue &rarr; Forecast &rarr; 6G &rarr; Technical Tickets sabai connect garera dekhauxa, selected BS month ra OLT ko lagi.</div>
+        <div class="small-muted" id="ov-last-synced" style="white-space:nowrap;margin-left:10px;"></div>
+      </div>
       <div class="note" id="ov-date-warning" style="display:none;border-left-color:var(--red);">&#9888; Could not read the expiry dates in this month's forecast file (unrecognized date format), so Retention/Winback/NS% are shown against the full forecast total instead of just what's due so far. Re-check the date column format in that import if this persists.</div>
+
+      <div id="ov-alerts"></div>
+
       <div class="grid kpi-grid" id="ov-kpis"></div>
+
+      <div class="flex-between" style="margin:18px 0 6px;">
+        <span class="small-muted" style="font-weight:700;letter-spacing:.3px;">MORE METRICS</span>
+      </div>
+      <div class="grid kpi-grid" id="ov-kpis-secondary" style="opacity:.88;"></div>
 
       <div class="two-col" style="margin-top:16px;">
         <div class="panel">
@@ -473,22 +526,62 @@ canvas{max-width:100%;}
 
     <!-- ===================== OLT PERFORMANCE ===================== -->
     <div class="section" id="sec-oltperf">
-      <div class="note">OLT-wise comparison deck for the selected month/FY above (top OLT filter doesn't apply here \u2014 this deck always compares all three OLTs side by side).</div>
-      <div class="ppt-stage">
-        <div class="ppt-slide" id="op-panel">
-          <div class="ppt-slide-head">
-            <div class="ppt-eyebrow">OLT Performance &middot; Shuklagandaki Branch</div>
-            <h2 id="op-slide-title">1. OLT-wise KPI Summary</h2>
-            <div class="ppt-slide-no" id="op-slide-counter">1 / 10</div>
-          </div>
-          <div class="ppt-slide-body" id="op-slide-body"></div>
-          <div class="ppt-slide-foot"><span id="op-slide-month-label"></span><span>Worldlink Communications</span></div>
-        </div>
+      <div class="note">OLT-wise comparison dashboard for the selected month/FY above (top OLT filter doesn't apply here \u2014 this always compares all three OLTs side by side). Each KPI below has its own chart and detail table.</div>
+
+      <div class="panel">
+        <h3>1. OLT-wise KPI Summary</h3>
+        <div id="op-body-1"></div>
       </div>
-      <div class="ppt-nav">
-        <button class="btn ghost small" id="op-prev">&#8592; Prev</button>
-        <div class="chip-row" id="op-dots" style="margin:0;"></div>
-        <button class="btn small" id="op-next">Next &#8594;</button>
+      <div class="panel">
+        <h3>2. OLT-wise New Sales</h3>
+        <div class="chart-box"><canvas id="chart-op-newsales"></canvas></div>
+        <div id="op-body-2"></div>
+      </div>
+      <div class="panel">
+        <h3>3. OLT-wise Active Customer</h3>
+        <div class="chart-box"><canvas id="chart-op-active"></canvas></div>
+        <div id="op-body-3"></div>
+      </div>
+      <div class="panel">
+        <h3>4. OLT-wise Installation</h3>
+        <div class="chart-box"><canvas id="chart-op-installation"></canvas></div>
+        <div id="op-body-4"></div>
+      </div>
+      <div class="panel">
+        <h3>5. OLT-wise Paid Growth</h3>
+        <div class="chart-box"><canvas id="chart-op-growth"></canvas></div>
+        <div id="op-body-5"></div>
+      </div>
+      <div class="panel">
+        <h3>6. OLT-wise Retention &amp; Churn</h3>
+        <div class="two-col">
+          <div class="chart-box"><canvas id="chart-op-retention"></canvas></div>
+          <div class="chart-box"><canvas id="chart-op-churnrate"></canvas></div>
+        </div>
+        <div id="op-body-6"></div>
+      </div>
+      <div class="panel">
+        <h3>7. OLT-wise Win-back</h3>
+        <div class="chart-box"><canvas id="chart-op-winback"></canvas></div>
+        <div id="op-body-7"></div>
+      </div>
+      <div class="panel">
+        <h3>8. OLT-wise Accrual Revenue</h3>
+        <div class="chart-box"><canvas id="chart-op-revenue"></canvas></div>
+        <div id="op-body-8"></div>
+      </div>
+      <div class="panel">
+        <h3>9. OLT-wise ASD + 6G</h3>
+        <div class="two-col">
+          <div class="chart-box"><canvas id="chart-op-asd"></canvas></div>
+          <div class="chart-box"><canvas id="chart-op-sixg"></canvas></div>
+        </div>
+        <div id="op-body-9"></div>
+      </div>
+      <div class="panel">
+        <h3>OLT Performance Ranking</h3>
+        <div class="chart-box"><canvas id="chart-op-ranking"></canvas></div>
+        <div id="op-body-10"></div>
       </div>
     </div>
 
@@ -1194,8 +1287,26 @@ function renderChart(id, canvas, config){
   CHARTS[id] = new Chart(canvas, config);
 }
 
+// Infers a semantic accent color from the KPI's own label so every metric family reads
+// consistently everywhere it appears (Overview, Behaviour, Growth, Revenue, Technical, OLT
+// Performance) without having to thread a color argument through dozens of call sites.
+function kpiAccent(label){
+  const l = label.toLowerCase();
+  if(l.includes("revenue")) return "indigo";
+  if(l.includes("active")) return "blue";
+  if(l.includes("install")) return "teal";
+  if(l.includes("retention")) return "green";
+  if(l.includes("churn")) return "rose";
+  if(l.includes("6g")) return "purple";
+  if(l.includes("winback")) return "amber";
+  if(l.includes("ns (")||l.includes("ns%")||l.includes("unmatched")) return "slate";
+  if(l.includes("technical")||l.includes("ticket")||l.includes("asd")) return "orange";
+  if(l.includes("growth")||l.includes("paid")) return "cyan";
+  return "indigo";
+}
 function kpiCard(label, val, deltaTxt, deltaUp, barPct){
-  return `<div class="kpi">
+  const accent = kpiAccent(label);
+  return `<div class="kpi kpi-${accent}">
     <div class="lbl">${label}</div>
     <div class="val">${val}</div>
     ${deltaTxt!==undefined ? `<div class="delta ${deltaUp?'up':'down'}">${deltaTxt}</div>` : ''}
@@ -1224,6 +1335,54 @@ function kpiTargetOrPct(label, actual, target, isMoney){
   return kpiCard(label, fmt(actual), target?("Target "+fmt(target)):undefined, target? actual>=target : true, target?p:undefined);
 }
 
+// ---------- Decision-first alert strip (Phase 1 of dashboard restructuring) ----------
+// Surfaces only genuinely actionable problems (cap breaches, SLA breaches, high unmatched%)
+// rather than every metric that's simply behind its full-month target \u2014 avoids alert fatigue
+// from normal early-month lag on count-based targets.
+function computeOverviewAlerts(oltFilter){
+  const alerts = [];
+  const olts = oltFilter==="ALL" ? OLTS : [oltFilter];
+  const asdTarget = (typeof ASD_TARGET_HRS!=="undefined") ? ASD_TARGET_HRS : 6;
+  olts.forEach(o=>{
+    const d = opOltData(o);
+    if(d.tChurn!==null && d.tChurn!==undefined && d.g.churn>d.tChurn){
+      alerts.push({sev:"red", text: `${o}: churn ${fmtNum(d.g.churn)} has exceeded the monthly cap of ${fmtNum(d.tChurn)}`});
+    }
+    if(d.asd!==null && d.asd>asdTarget){
+      alerts.push({sev: d.asd>asdTarget*1.5 ? "red":"amber", text: `${o}: avg ticket solve time is ${d.asd.toFixed(1)}hrs, above the ${asdTarget}hr target`});
+    }
+    if(d.b.forecastDueMTD && d.b.nsPct>10){
+      alerts.push({sev: d.b.nsPct>20?"red":"amber", text: `${o}: ${fmtPct(d.b.nsPct)} of due customers are unmatched (NS) \u2014 ${d.b.counts.NS} customers to reconcile`});
+    }
+  });
+  const beh = classifyBehaviour(oltFilter);
+  if(beh.forecastDueMTD && beh.winbackPct>15){
+    alerts.push({sev:"amber", text: `Winback rate at ${fmtPct(beh.winbackPct)} of due customers \u2014 worth reviewing the overdue call list`});
+  }
+  const sevOrder = {red:0, amber:1};
+  alerts.sort((a,b)=> sevOrder[a.sev]-sevOrder[b.sev]);
+  return alerts.slice(0,4);
+}
+function renderOverviewAlerts(olt){
+  const el = document.getElementById("ov-alerts");
+  if(!el) return;
+  const alerts = computeOverviewAlerts(olt);
+  if(!alerts.length){
+    el.innerHTML = `<div class="ov-alert-ok">&#9989; No urgent flags for this scope \u2014 churn cap, SLA (${(typeof ASD_TARGET_HRS!=="undefined"?ASD_TARGET_HRS:6)}hr), and NS% are all within range.</div>`;
+    return;
+  }
+  el.innerHTML = `<div class="ov-alert-strip"><div class="ov-alert-title">&#9888;&#65039; Needs Attention</div>${alerts.map(a=>`<div class="ov-alert-row ${a.sev}">${a.text}</div>`).join("")}</div>`;
+}
+function renderLastSynced(){
+  const el = document.getElementById("ov-last-synced");
+  if(!el) return;
+  const log = STORE.importLog;
+  if(!log || !log.length){ el.textContent = ""; return; }
+  const latest = log.reduce((a,b)=> new Date(b.at)>new Date(a.at) ? b : a, log[0]);
+  const d = new Date(latest.at);
+  el.textContent = "Data last updated: " + d.toLocaleDateString();
+}
+
 function renderOverview(){
   const olt = STATE.olt;
   const gm = growthMetricsFor(olt);
@@ -1235,25 +1394,35 @@ function renderOverview(){
   const tGrowth = targetSumFor(olt, STATE.month, "growth");
   const tChurn = targetSumFor(olt, STATE.month, "churn");
 
-  let html = "";
-  html += kpiTargetOrPct("New Installation", gm.installation, tInstall, false);
-  html += kpiTargetOrPct("Accrual Revenue (MTD)", rev.total, tRevenue, true);
-  html += kpiTargetOrPct("Active Customers", gm.active, tActive, false);
-  html += kpiTargetOrPct("Growth (MTD)", gm.growth, tGrowth, false);
-  html += kpiTargetOrPct("Churn (MTD)", gm.churn, tChurn, false);
-  html += kpiCard("Retention", beh.forecastDueMTD? fmtPct(beh.retentionPct) : "-", beh.forecastDueMTD?`${beh.counts.RET} of ${beh.forecastDueMTD} forecast due`:undefined, true);
-  html += kpiCard("Winback %", fmtPct(beh.winbackPct), `${beh.counts.WIN} winback / ${beh.forecastDueMTD} forecast due`, beh.winbackPct<=15);
-  html += kpiCard("NS (unmatched)", beh.forecastDueMTD? fmtPct(beh.nsPct) : "-", `${beh.counts.NS} of ${beh.forecastDueMTD} forecast due`, beh.counts.NS===0);
   const sixG = sixGMetricsFor(olt, STATE.month, STATE.fy);
   const tSixG = TARGETS.sixGMonthly ? TARGETS.sixGMonthly[monthIdx(STATE.month)] : null;
-  html += kpiTargetOrPct("6G Sales (MTD)", sixG.upgrades, tSixG, false);
   const techRows = STATE.month===ALL_MONTHS_VALUE ? STORE.technicalData.filter(r=> r.bsFY===STATE.fy && (olt==="ALL"||r.OLT===olt)) : STORE.technicalData.filter(r=> r.bsMonth===STATE.month && r.bsFY===STATE.fy && (olt==="ALL"||r.OLT===olt));
   const techHrs = techRows.map(r=>r.solveHours).filter(v=>v!==null&&v!==undefined&&!isNaN(v));
   const techAvg = techHrs.length ? techHrs.reduce((a,b)=>a+b,0)/techHrs.length : 0;
-  html += kpiCard("Technical Tickets (Delayed)", fmtNum(techRows.length), techHrs.length?(techAvg.toFixed(1)+" hrs avg solve"):"no data this month", techAvg<=8);
-  document.getElementById("ov-kpis").innerHTML = html;
+
+  // Primary strip: the 6 numbers a branch manager needs in the first 3 seconds.
+  let primary = "";
+  primary += kpiTargetOrPct("Accrual Revenue (MTD)", rev.total, tRevenue, true);
+  primary += kpiTargetOrPct("Active Customers", gm.active, tActive, false);
+  primary += kpiTargetOrPct("New Installation", gm.installation, tInstall, false);
+  primary += kpiCard("Retention", beh.forecastDueMTD? fmtPct(beh.retentionPct) : "-", beh.forecastDueMTD?`${beh.counts.RET} of ${beh.forecastDueMTD} forecast due`:undefined, true);
+  primary += kpiTargetOrPct("Churn (MTD, vs cap)", gm.churn, tChurn, false);
+  primary += kpiTargetOrPct("6G Sales (MTD)", sixG.upgrades, tSixG, false);
+  document.getElementById("ov-kpis").innerHTML = primary;
+
+  // Secondary strip: everything else, still real, just not competing for first attention.
+  let secondary = "";
+  secondary += kpiTargetOrPct("Growth (MTD)", gm.growth, tGrowth, false);
+  secondary += kpiCard("Winback %", fmtPct(beh.winbackPct), `${beh.counts.WIN} winback / ${beh.forecastDueMTD} forecast due`, beh.winbackPct<=15);
+  secondary += kpiCard("NS (unmatched)", beh.forecastDueMTD? fmtPct(beh.nsPct) : "-", `${beh.counts.NS} of ${beh.forecastDueMTD} forecast due`, beh.counts.NS===0);
+  secondary += kpiCard("Technical Tickets (Delayed)", fmtNum(techRows.length), techHrs.length?(techAvg.toFixed(1)+" hrs avg solve"):"no data this month", techAvg<=8);
+  document.getElementById("ov-kpis-secondary").innerHTML = secondary;
+
   const warnEl = document.getElementById("ov-date-warning");
   if(warnEl) warnEl.style.display = beh.dateParseIssue ? "block" : "none";
+
+  renderOverviewAlerts(olt);
+  renderLastSynced();
 
   // target progress bars
   const metrics = [["Installation","installation",gm.installation],["Growth","growth",gm.growth],["Active Customers","active",gm.active],["Revenue","revenue",rev.total]];
@@ -2196,14 +2365,60 @@ function opOltData(o){
   const tRev = targetSumFor(o, STATE.month, "revenue");
   return {olt:o, g, b, r, sg, asd, techCount: techRows.length, winCount: winRows.length, winRevenue, churnRate, tInst, tRev};
 }
+const ASD_TARGET_HRS = 6;
+function fmtLakh(n){ if(n===undefined||n===null||isNaN(n)) return "-"; return (n/100000).toFixed(1)+"L"; }
+function achvColor(p){ if(p===null||p===undefined||isNaN(p)) return "var(--txt3)"; return p>=95 ? "var(--green)" : (p>=75 ? "var(--amber)" : "var(--red)"); }
+function achvPctSpan(p){ return `<span style="color:${achvColor(p)};font-weight:700;">${p===null||p===undefined||isNaN(p)?'-':Math.round(p)+'%'}</span>`; }
 function opSection1(){
-  const data = OLTS.map(opOltData);
-  let thead = "<tr><th>OLT</th><th>Active Customer</th><th>New Sales</th><th>Installation</th><th>Paid Growth</th><th>Retention%</th><th>Win-back</th><th>Churn</th><th>Revenue</th></tr>";
-  let tbody = data.map(d=>`<tr><td><span class="badge-olt">${d.olt}</span></td><td>${fmtNum(d.g.active)}</td><td>${fmtNum(d.g.paidSales)}</td><td>${fmtNum(d.g.installation)}</td><td>${fmtNum(d.g.growth)}</td><td>${d.b.forecastDueMTD?fmtPct(d.b.retentionPct):'-'}</td><td>${fmtNum(d.b.counts.WIN)}</td><td>${fmtNum(d.g.churn)}</td><td>${fmtMoney(d.r.total)}</td></tr>`).join("");
-  const totalActive=data.reduce((s,d)=>s+d.g.active,0), totalSales=data.reduce((s,d)=>s+d.g.paidSales,0), totalInst=data.reduce((s,d)=>s+d.g.installation,0), totalGrowth=data.reduce((s,d)=>s+d.g.growth,0), totalWin=data.reduce((s,d)=>s+d.b.counts.WIN,0), totalChurn=data.reduce((s,d)=>s+d.g.churn,0), totalRev=data.reduce((s,d)=>s+d.r.total,0);
-  const totalDue = data.reduce((s,d)=>s+d.b.forecastDueMTD,0), totalRet = data.reduce((s,d)=>s+d.b.counts.RET,0);
-  tbody += `<tr style="font-weight:800;background:#f7f8ff;"><td>Branch Total</td><td>${fmtNum(totalActive)}</td><td>${fmtNum(totalSales)}</td><td>${fmtNum(totalInst)}</td><td>${fmtNum(totalGrowth)}</td><td>${totalDue?fmtPct(pct(totalRet,totalDue)):'-'}</td><td>${fmtNum(totalWin)}</td><td>${fmtNum(totalChurn)}</td><td>${fmtMoney(totalRev)}</td></tr>`;
-  return `<div class="tbl-wrap"><table>${thead}<tbody>${tbody}</tbody></table></div><p class="hint" style="margin-top:12px;">Scope: ${STATE.month===ALL_MONTHS_VALUE?'All Months':STATE.month} ${STATE.fy}. Retention% is against forecast customers due as of yesterday.</p>`;
+  const data = OLTS.map(o=>{
+    const d = opOltData(o);
+    const tGrowth = targetSumFor(o, STATE.month, "growth");
+    const tChurn = targetSumFor(o, STATE.month, "churn");
+    const tActive = targetSumFor(o, STATE.month, "active");
+    const tRetention = targetFor(o, STATE.month===ALL_MONTHS_VALUE ? activeMonthsList()[activeMonthsList().length-1] : STATE.month, "retention");
+    const tWinbackCount = targetSumFor(o, STATE.month, "winback");
+    const tWinbackPct = d.b.forecastDueMTD ? pct(tWinbackCount, d.b.forecastDueMTD) : null;
+    return {...d, tGrowth, tChurn, tActive, tRetention, tWinbackPct};
+  });
+  let thead = `<tr><th>OLT</th><th>Install<br>Act/Tgt</th><th>Growth<br>Act/Tgt</th><th>Churn<br>Act (cap)</th><th>Active<br>Act/Tgt</th><th>Revenue<br>Act/Tgt</th><th>Retention (MTD)<br>Act vs Tgt</th><th>Winback (MTD)<br>Act vs Tgt</th><th>Delayed<br>Tickets</th></tr>`;
+  let tbody = data.map(d=>{
+    const instAchv = d.tInst ? pct(d.g.installation, d.tInst) : null;
+    const growthAchv = d.tGrowth ? pct(d.g.growth, d.tGrowth) : null;
+    const activeAchv = d.tActive ? pct(d.g.active, d.tActive) : null;
+    const revAchv = d.tRev ? pct(d.r.total, d.tRev) : null;
+    const churnOk = d.tChurn===null || d.tChurn===undefined || d.g.churn<=d.tChurn;
+    const retDelta = (d.tRetention!==null && d.tRetention!==undefined && d.b.forecastDueMTD) ? d.b.retentionPct-d.tRetention : null;
+    const retAchv = d.tRetention ? pct(d.b.retentionPct, d.tRetention) : null;
+    const winDelta = (d.tWinbackPct!==null && d.tWinbackPct!==undefined) ? d.b.winbackPct-d.tWinbackPct : null;
+    const winAchv = d.tWinbackPct ? pct(d.b.winbackPct, d.tWinbackPct) : null;
+    const asdOk = d.asd===null || d.asd<=ASD_TARGET_HRS;
+    return `<tr>
+      <td><b>${d.olt}</b></td>
+      <td>${fmtNum(d.g.installation)} / ${d.tInst?fmtNum(d.tInst):'-'}<br>${achvPctSpan(instAchv)}</td>
+      <td>${fmtNum(d.g.growth)} / ${d.tGrowth?fmtNum(d.tGrowth):'-'}<br>${achvPctSpan(growthAchv)}</td>
+      <td style="color:${churnOk?'var(--green)':'var(--red)'};font-weight:700;">${fmtNum(d.g.churn)} (${d.tChurn!==null&&d.tChurn!==undefined?fmtNum(d.tChurn):'-'})</td>
+      <td>${fmtNum(d.g.active)} / ${d.tActive?fmtNum(d.tActive):'-'}<br>${achvPctSpan(activeAchv)}</td>
+      <td>${fmtLakh(d.r.total)} / ${d.tRev?fmtLakh(d.tRev):'-'}<br>${achvPctSpan(revAchv)}</td>
+      <td>${d.b.forecastDueMTD?fmtPct(d.b.retentionPct):'-'}<br><span style="color:${achvColor(retAchv)};font-weight:700;">${retDelta!==null?(retDelta>=0?'+':'')+retDelta.toFixed(1)+'pt':'-'}</span></td>
+      <td>${fmtPct(d.b.winbackPct)}<br><span style="color:${achvColor(winAchv)};font-weight:700;">${winDelta!==null?(winDelta>=0?'+':'')+winDelta.toFixed(1)+'pt':'-'}</span></td>
+      <td>${fmtNum(d.techCount)}<br><span style="color:${asdOk?'var(--green)':'var(--red)'};font-weight:700;">${d.asd!==null?d.asd.toFixed(1)+' hr avg':'-'}</span></td>
+    </tr>`;
+  }).join("");
+  const totalInst=data.reduce((s,d)=>s+d.g.installation,0), tTotalInst=data.reduce((s,d)=>s+(d.tInst||0),0);
+  const totalGrowth=data.reduce((s,d)=>s+d.g.growth,0), tTotalGrowth=data.reduce((s,d)=>s+(d.tGrowth||0),0);
+  const totalChurn=data.reduce((s,d)=>s+d.g.churn,0), tTotalChurn=data.reduce((s,d)=>s+(d.tChurn||0),0);
+  const totalActive=data.reduce((s,d)=>s+d.g.active,0), tTotalActive=data.reduce((s,d)=>s+(d.tActive||0),0);
+  const totalRev=data.reduce((s,d)=>s+d.r.total,0), tTotalRev=data.reduce((s,d)=>s+(d.tRev||0),0);
+  const branchBar = `<div style="background:#0f1a3d;color:#fff;border-radius:10px;padding:12px 18px;margin-top:14px;font-size:12px;display:flex;gap:22px;flex-wrap:wrap;align-items:center;">
+    <span style="font-weight:800;letter-spacing:.5px;color:#8fd6ff;">BRANCH TOTAL</span>
+    <span>Install ${fmtNum(totalInst)}/${fmtNum(tTotalInst)} (${tTotalInst?Math.round(pct(totalInst,tTotalInst)):'-'}%)</span>
+    <span>Growth ${fmtNum(totalGrowth)}/${fmtNum(tTotalGrowth)} (${tTotalGrowth?Math.round(pct(totalGrowth,tTotalGrowth)):'-'}%)</span>
+    <span>Churn ${fmtNum(totalChurn)} (cap ${fmtNum(tTotalChurn)})</span>
+    <span>Active ${fmtNum(totalActive)}/${fmtNum(tTotalActive)} (${tTotalActive?Math.round(pct(totalActive,tTotalActive)):'-'}%)</span>
+    <span>Revenue ${fmtLakh(totalRev)}/${fmtLakh(tTotalRev)} (${tTotalRev?Math.round(pct(totalRev,tTotalRev)):'-'}%)</span>
+  </div>`;
+  return `<div class="tbl-wrap"><table>${thead}<tbody>${tbody}</tbody></table></div>${branchBar}
+    <p class="hint" style="margin-top:12px;">Green \u226595% of target. Amber 75\u201394%. Red &lt;75%. Churn shown as actual net churn vs the monthly cap (green = within cap, red = exceeded). ASD target: ${ASD_TARGET_HRS} hrs (green = at/under target, red = over). Scope: ${STATE.month===ALL_MONTHS_VALUE?'All Months':STATE.month} ${STATE.fy}.</p>`;
 }
 function opSection2(){
   const data = OLTS.map(opOltData);
@@ -2316,30 +2531,78 @@ function opSection10(){
     </div>
     <p class="hint" style="margin-top:12px;">Overall Score = average of Sales, Growth, Retention, Revenue and Customer Health (Retention% \u2212 Churn Rate), each normalized 0\u2013100 relative to the other OLTs for this scope. High Churn/Attention is flagged separately by churn rate (only when genuinely positive), even when it isn't the lowest overall scorer.</p>`;
 }
+// OLT Performance is a plain scrollable dashboard (not a slide deck): every KPI gets its
+// own chart + table, all visible at once, rather than one section at a time behind Next/Prev.
 function renderOltPerf(){
-  const slides = [
-    ["1. OLT-wise KPI Summary", opSection1],
-    ["2. OLT-wise New Sales", opSection2],
-    ["3. OLT-wise Active Customer", opSection3],
-    ["4. OLT-wise Installation", opSection4],
-    ["5. OLT-wise Paid Growth", opSection5],
-    ["6. OLT-wise Retention & Churn", opSection6],
-    ["7. OLT-wise Win-back", opSection7],
-    ["8. OLT-wise Accrual Revenue", opSection8],
-    ["9. OLT-wise ASD + 6G", opSection9],
-    ["10. OLT Performance Ranking", opSection10],
-  ];
-  if(OP_SLIDE<0) OP_SLIDE=0;
-  if(OP_SLIDE>=slides.length) OP_SLIDE=slides.length-1;
-  const [title, fn] = slides[OP_SLIDE];
-  document.getElementById("op-slide-title").textContent = title;
-  document.getElementById("op-slide-counter").textContent = (OP_SLIDE+1)+" / "+slides.length;
-  document.getElementById("op-slide-month-label").textContent = (STATE.month===ALL_MONTHS_VALUE?"All Months":STATE.month)+" "+STATE.fy+" \u00b7 All OLT compared";
-  document.getElementById("op-slide-body").innerHTML = fn();
-  document.getElementById("op-dots").innerHTML = slides.map((s,i)=>`<button class="wr-dot ${i===OP_SLIDE?'active':''}" data-idx="${i}"></button>`).join("");
-  document.querySelectorAll("#op-dots .wr-dot").forEach(b=> b.addEventListener("click", ()=>{ OP_SLIDE=parseInt(b.dataset.idx); renderOltPerf(); }));
-  document.getElementById("op-prev").disabled = OP_SLIDE===0;
-  document.getElementById("op-next").textContent = OP_SLIDE===slides.length-1 ? "Restart \u21BA" : "Next \u2192";
+  document.getElementById("op-body-1").innerHTML = opSection1();
+  document.getElementById("op-body-2").innerHTML = opSection2();
+  document.getElementById("op-body-3").innerHTML = opSection3();
+  document.getElementById("op-body-4").innerHTML = opSection4();
+  document.getElementById("op-body-5").innerHTML = opSection5();
+  document.getElementById("op-body-6").innerHTML = opSection6();
+  document.getElementById("op-body-7").innerHTML = opSection7();
+  document.getElementById("op-body-8").innerHTML = opSection8();
+  document.getElementById("op-body-9").innerHTML = opSection9();
+  document.getElementById("op-body-10").innerHTML = opSection10();
+
+  const data = OLTS.map(opOltData);
+  const labels = OLTS;
+  const barColors = ["#6d5bf699","#4e8dff99","#22c48d99"];
+
+  renderChart('op-newsales', document.getElementById('chart-op-newsales'), {
+    type:'bar', data:{labels, datasets:[{label:'New Sales', data:data.map(d=>d.g.paidSales), backgroundColor:barColors, borderRadius:6}]},
+    options: baseChartOpts()
+  });
+  renderChart('op-active', document.getElementById('chart-op-active'), {
+    type:'bar', data:{labels, datasets:[{label:'Active Customers', data:data.map(d=>d.g.active), backgroundColor:barColors, borderRadius:6}]},
+    options: baseChartOpts()
+  });
+  renderChart('op-installation', document.getElementById('chart-op-installation'), {
+    type:'bar', data:{labels, datasets:[
+      {label:'Actual', data:data.map(d=>d.g.installation), backgroundColor:'#6d5bf699', borderRadius:6},
+      {label:'Target', data:data.map(d=>d.tInst||0), backgroundColor:'#d8d4fb', borderRadius:6}
+    ]}, options: baseChartOpts()
+  });
+  renderChart('op-growth', document.getElementById('chart-op-growth'), {
+    type:'bar', data:{labels, datasets:[{label:'Paid Growth', data:data.map(d=>d.g.growth), backgroundColor:barColors, borderRadius:6}]},
+    options: baseChartOpts()
+  });
+  renderChart('op-retention', document.getElementById('chart-op-retention'), {
+    type:'bar', data:{labels, datasets:[{label:'Retention %', data:data.map(d=>+d.b.retentionPct.toFixed(1)), backgroundColor:'#22c48d99', borderRadius:6}]},
+    options: baseChartOpts()
+  });
+  renderChart('op-churnrate', document.getElementById('chart-op-churnrate'), {
+    type:'bar', data:{labels, datasets:[{label:'Churn Rate %', data:data.map(d=>+d.churnRate.toFixed(2)), backgroundColor:'#ff5c7c99', borderRadius:6}]},
+    options: baseChartOpts()
+  });
+  renderChart('op-winback', document.getElementById('chart-op-winback'), {
+    type:'bar', data:{labels, datasets:[{label:'Win-back Customers', data:data.map(d=>d.winCount), backgroundColor:'#ffab3d99', borderRadius:6}]},
+    options: baseChartOpts()
+  });
+  renderChart('op-revenue', document.getElementById('chart-op-revenue'), {
+    type:'bar', data:{labels, datasets:[{label:'Accrual Revenue', data:data.map(d=>d.r.total), backgroundColor:barColors, borderRadius:6}]},
+    options: {...baseChartOpts(), plugins:{...(baseChartOpts().plugins||{}), tooltip:{callbacks:{label:(ctx)=>fmtMoney(ctx.parsed.y)}}}}
+  });
+  renderChart('op-asd', document.getElementById('chart-op-asd'), {
+    type:'bar', data:{labels, datasets:[{label:'ASD (hrs)', data:data.map(d=>d.asd!==null?+d.asd.toFixed(1):0), backgroundColor:'#ff8a3d99', borderRadius:6}]},
+    options: baseChartOpts()
+  });
+  renderChart('op-sixg', document.getElementById('chart-op-sixg'), {
+    type:'bar', data:{labels, datasets:[{label:'6G Upgrades', data:data.map(d=>d.sg.upgrades), backgroundColor:'#a855f799', borderRadius:6}]},
+    options: baseChartOpts()
+  });
+
+  // ranking chart mirrors opSection10's own scoring so the visual and table always agree
+  function norm(vals, v){ const mn=Math.min(...vals), mx=Math.max(...vals); return mx===mn ? 100 : ((v-mn)/(mx-mn))*100; }
+  const salesVals = data.map(d=>d.g.paidSales), growthVals = data.map(d=>d.g.growth), retVals = data.map(d=>d.b.retentionPct), revVals = data.map(d=>d.r.total), healthVals = data.map(d=>d.b.retentionPct-d.churnRate);
+  const scored = data.map(d=>{
+    const s = (norm(salesVals,d.g.paidSales)+norm(growthVals,d.g.growth)+norm(retVals,d.b.retentionPct)+norm(revVals,d.r.total)+norm(healthVals,d.b.retentionPct-d.churnRate))/5;
+    return {olt:d.olt, score:+s.toFixed(1)};
+  }).sort((a,b)=>b.score-a.score);
+  renderChart('op-ranking', document.getElementById('chart-op-ranking'), {
+    type:'bar', data:{labels:scored.map(s=>s.olt), datasets:[{label:'Overall Score', data:scored.map(s=>s.score), backgroundColor:['#22c48d99','#4e8dff99','#ff5c7c99'], borderRadius:6}]},
+    options: {...baseChartOpts(), indexAxis:'y'}
+  });
 }
 
 
@@ -3144,8 +3407,6 @@ function init(){
   document.getElementById("wr-next").addEventListener("click", ()=>{ WR_SLIDE = (WR_SLIDE>=6) ? 0 : WR_SLIDE+1; renderWeekly(); });
   document.getElementById("mr-prev").addEventListener("click", ()=>{ if(MR_SLIDE>0){ MR_SLIDE--; renderMonthlyReview(); } });
   document.getElementById("mr-next").addEventListener("click", ()=>{ MR_SLIDE = (MR_SLIDE>=4) ? 0 : MR_SLIDE+1; renderMonthlyReview(); });
-  document.getElementById("op-prev").addEventListener("click", ()=>{ if(OP_SLIDE>0){ OP_SLIDE--; renderOltPerf(); } });
-  document.getElementById("op-next").addEventListener("click", ()=>{ OP_SLIDE = (OP_SLIDE>=9) ? 0 : OP_SLIDE+1; renderOltPerf(); });
   document.getElementById("wr-apply-week").addEventListener("click", ()=>{
     const s = document.getElementById("wr-week-start").value;
     const e = document.getElementById("wr-week-end").value;
