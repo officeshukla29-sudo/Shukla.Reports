@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4630b8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%234630b8'/%3E%3Ctext x='50' y='68' font-size='52' font-family='Arial,sans-serif' font-weight='800' fill='white' text-anchor='middle'%3ESG%3C/text%3E%3C/svg%3E">
 <title>Shuklagandaki Business Executive Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -104,6 +106,27 @@ body{min-height:100vh;}
 ::-webkit-scrollbar{width:8px;height:8px;}
 ::-webkit-scrollbar-thumb{background:#d7dcf2;border-radius:4px;}
 .app{display:flex;min-height:100vh;}
+.sidebar-toggle{display:none;}
+.sidebar-overlay{display:none;}
+@media(max-width:860px){
+  .app{flex-direction:column;}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:60;transform:translateX(-100%);transition:transform .25s ease;width:260px;}
+  .sidebar.open{transform:translateX(0);box-shadow:0 0 40px #00000055;}
+  .sidebar-toggle{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:9px 14px;font-weight:700;font-size:13px;color:var(--txt);cursor:pointer;margin-bottom:14px;box-shadow:0 2px 10px #1b21400a;}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:#0f1a3d66;z-index:55;}
+  .sidebar-overlay.open{display:block;}
+  .main{padding:16px 14px 50px;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)!important;}
+  .topbar{flex-direction:column;align-items:flex-start;}
+  .controls{width:100%;}
+  .pill-tabs{width:100%;}
+}
+@media(max-width:480px){
+  .kpi-grid{grid-template-columns:1fr!important;}
+}
+.skip-link{position:absolute;left:-999px;top:0;background:#fff;color:var(--txt);padding:10px 16px;border-radius:0 0 8px 0;z-index:100;font-weight:700;}
+.skip-link:focus{left:0;}
+:focus-visible{outline:2px solid var(--accent2);outline-offset:2px;}
 .sidebar{width:250px;flex-shrink:0;background:var(--grad-side);border-right:none;padding:20px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;color:#fff;}
 .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 20px 8px;border-bottom:1px solid #ffffff2b;margin-bottom:16px;}
 .brand-badge{width:38px;height:38px;border-radius:11px;background:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:800;color:#5c4bdb;box-shadow:0 4px 14px #00000030;}
@@ -269,17 +292,18 @@ canvas{max-width:100%;}
 .quick-actions button:nth-child(4){background:linear-gradient(135deg,#9a5be0,#c15be0);}
 .quick-actions button:nth-child(5){background:linear-gradient(135deg,#e0605b,#ea7a5b);}
 @media print{
-  .sidebar, .topbar .controls, .quick-actions, #btn-print-summary, .footer-note{display:none!important;}
+  .sidebar, .sidebar-toggle, .sidebar-overlay, .topbar .controls, .quick-actions, #btn-print-summary, .footer-note, .skip-link{display:none!important;}
   body{background:#fff;}
   .main{padding:0;}
   .panel{box-shadow:none;border:1px solid #ccc;break-inside:avoid;}
   .section{display:none!important;}
-  .section#sec-summary{display:block!important;}
+  .section.active{display:block!important;}
 }
 </style>
 </head>
 <body>
 
+<a href="#main-content" class="skip-link">Skip to main content</a>
 <div class="app">
   <div class="toast" id="importToast">
     <div class="toast-title">Imported</div>
@@ -289,7 +313,8 @@ canvas{max-width:100%;}
       <button class="btn ghost small toast-close-btn">Close</button>
     </div>
   </div>
-  <div class="sidebar">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
     <div class="brand">
       <div class="brand-badge">SG</div>
       <div class="brand-text"><b>Shuklagandaki</b><span>Business Executive Dashboard</span></div>
@@ -318,7 +343,8 @@ canvas{max-width:100%;}
     <div class="footer-note" style="text-align:left;padding:10px 8px;color:#c8c2f7;">Data syncs to Firebase automatically on import. Also cached locally in this browser as offline backup.</div>
   </div>
 
-  <div class="main">
+  <div class="main" id="main-content" role="main">
+    <button class="sidebar-toggle" id="sidebarToggleBtn" aria-label="Open navigation menu" aria-expanded="false"><span>&#9776;</span> Menu</button>
     <div class="topbar">
       <div>
         <h1 id="pageTitle">Executive Overview</h1>
@@ -348,7 +374,7 @@ canvas{max-width:100%;}
       </div>
       <div class="note" id="ov-date-warning" style="display:none;border-left-color:var(--red);">&#9888; Could not read the expiry dates in this month's forecast file (unrecognized date format), so Retention/Winback/NS% are shown against the full forecast total instead of just what's due so far. Re-check the date column format in that import if this persists.</div>
 
-      <div id="ov-alerts"></div>
+      <div id="ov-alerts" role="alert" aria-live="polite"></div>
 
       <div class="grid kpi-grid" id="ov-kpis"></div>
 
@@ -356,6 +382,13 @@ canvas{max-width:100%;}
         <span class="small-muted" style="font-weight:700;letter-spacing:.3px;">MORE METRICS</span>
       </div>
       <div class="grid kpi-grid" id="ov-kpis-secondary" style="opacity:.88;"></div>
+
+      <details style="margin-top:16px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <summary style="cursor:pointer;font-weight:700;font-size:12.5px;color:var(--txt2);">&#128161; Glossary &mdash; what the abbreviations mean</summary>
+        <div class="small-muted" style="margin-top:10px;line-height:1.7;font-size:12px;">
+          <b>MTD</b> = Month to Date (so far this month). &nbsp; <b>OLT</b> = the fiber node/OLT (SKGD01/VMAD01/RISH01) a customer is connected through. &nbsp; <b>ARPU</b> = Average Revenue Per User, (&Sigma;Amount&divide;&Sigma;Max Days)&times;days in month. &nbsp; <b>NS</b> = No-Show/unmatched (forecasted-due customers with no matching payment record yet). &nbsp; <b>ASD</b> = Average Solve Duration for delayed technical tickets. &nbsp; <b>6G</b> = WiFi 6 upgrade tickets/sales. &nbsp; <b>Winback</b> = a customer who paid 30+ days after their due date (recovered, not counted as new).
+        </div>
+      </details>
 
       <div class="two-col" style="margin-top:16px;">
         <div class="panel">
@@ -1216,6 +1249,33 @@ function revenueFor(month, fy, oltFilter){
   const total = rows.reduce((s,r)=> s + toNum(r.Amount), 0);
   return {total, count: rows.length};
 }
+// Real calendar length of a BS month, derived from the same boundaries adDateToBsMonth()
+// uses, so this stays consistent with how the app buckets AD dates into BS months elsewhere.
+function daysInBsMonth(month, fy){
+  const boundaries = [[7,17],[8,17],[9,17],[10,18],[11,17],[12,16],[1,15],[2,13],[3,15],[4,14],[5,15],[6,15]];
+  const idx = monthIdx(month);
+  if(idx<0) return 30;
+  const bsYearStart = parseInt(String(fy).split("/")[0], 10);
+  const fyStartYear = bsYearStart - 57;
+  const [bm,bd] = boundaries[idx];
+  const boundYear = (bm>=7) ? fyStartYear : fyStartYear+1;
+  const boundDate = new Date(boundYear, bm-1, bd);
+  const [nbm,nbd] = boundaries[(idx+1)%12];
+  const nextYear = (nbm>=7) ? fyStartYear : fyStartYear+1;
+  const nextBoundDate = new Date(nextYear, nbm-1, nbd);
+  const d = Math.round((nextBoundDate-boundDate)/86400000);
+  return (d>0 && d<40) ? d : 30;
+}
+// ARPU = (Sum of Amount / Sum of Max Days) * Total days in that specific month.
+function arpuFor(month, fy, oltFilter){
+  const rows = (month===ALL_MONTHS_VALUE)
+    ? activeMonthsList().flatMap(m=>accrualRowsFor(m, fy, oltFilter))
+    : accrualRowsFor(month, fy, oltFilter);
+  const sumAmount = rows.reduce((s,r)=>s+toNum(r.Amount),0);
+  const sumMaxDays = rows.reduce((s,r)=>s+toNum(r["Max Days"]),0);
+  const days = (month===ALL_MONTHS_VALUE) ? 30 : daysInBsMonth(month, fy);
+  return sumMaxDays ? (sumAmount/sumMaxDays)*days : 0;
+}
 // Revenue for whatever is currently selected in the month dropdown — handles "All Months"
 // by summing every month that actually has data, instead of just STATE.month directly.
 function revenueForState(oltFilter){
@@ -1304,9 +1364,25 @@ function kpiAccent(label){
   if(l.includes("growth")||l.includes("paid")) return "cyan";
   return "indigo";
 }
+function kpiTooltip(label){
+  const l = label.toLowerCase();
+  if(l.includes("revenue")) return "Accrual revenue recognized this scope, from the Accrual Revenue import.";
+  if(l.includes("active")) return "Customers currently active on this OLT/scope, from the latest Growth & Churn snapshot.";
+  if(l.includes("install")) return "New physical installations completed in this scope.";
+  if(l.includes("retention")) return "Renewed customers \u00f7 customers whose forecast was due as of yesterday (MTD).";
+  if(l.includes("churn")) return "Net customer loss this month, compared against the monthly churn cap.";
+  if(l.includes("6g")) return "WiFi 6 upgrade tickets resolved as upgraded, from the 6G ticket log.";
+  if(l.includes("winback")) return "Customers who paid 30+ days after their due date \u2014 recovered, not new.";
+  if(l.includes("unmatched")) return "Forecast-due customers with no matching payment record yet (need follow-up).";
+  if(l.includes("technical")||l.includes("ticket")) return "Support tickets that took over 20 minutes to solve.";
+  if(l.includes("growth")) return "Additional paying customers gained this scope.";
+  if(l.includes("arpu")) return "Average Revenue Per User: (\u03a3Amount \u00f7 \u03a3Max Days) \u00d7 days in this month.";
+  return "";
+}
 function kpiCard(label, val, deltaTxt, deltaUp, barPct){
   const accent = kpiAccent(label);
-  return `<div class="kpi kpi-${accent}">
+  const tip = kpiTooltip(label);
+  return `<div class="kpi kpi-${accent}"${tip?` title="${tip}"`:''}>
     <div class="lbl">${label}</div>
     <div class="val">${val}</div>
     ${deltaTxt!==undefined ? `<div class="delta ${deltaUp?'up':'down'}">${deltaTxt}</div>` : ''}
@@ -1704,7 +1780,7 @@ function renderRevenue(){
   const olt = STATE.olt;
   const rev = revenueForState(olt);
   const gm = growthMetricsFor(olt);
-  const arpu = gm.active ? rev.total/gm.active : 0;
+  const arpu = arpuFor(STATE.month, STATE.fy, olt);
   const tRevenue = targetSumFor(olt, STATE.month, "revenue");
   const ytd = ytdRevenue(olt);
   const monthsWithRevData = BS_MONTHS.filter(m => accrualRowsFor(m, STATE.fy, olt).length>0);
@@ -1746,7 +1822,7 @@ function renderRevenue(){
     const r = revenueForState(o);
     const g = growthMetricsFor(o);
     const t = targetSumFor(o, STATE.month, "revenue");
-    const a = g.active ? r.total/g.active : 0;
+    const a = arpuFor(STATE.month, STATE.fy, o);
     const y = ytdRevenue(o);
     return `<tr><td><span class="badge-olt">${o}</span></td><td>${fmtMoney(r.total)}</td><td>${t?fmtMoney(t):'-'}</td><td>${t?fmtPct(pct(r.total,t)):'-'}</td><td>${fmtMoney(a)}</td><td>${fmtMoney(y)}</td></tr>`;
   }).join("");
@@ -1899,7 +1975,7 @@ function renderSummary(){
   const beh = classifyBehaviour(olt);
   const tInstall = targetSumFor(olt, STATE.month, "installation");
   const tRevenue = targetSumFor(olt, STATE.month, "revenue");
-  const arpu = gm.active ? rev.total/gm.active : 0;
+  const arpu = arpuFor(STATE.month, STATE.fy, olt);
 
   const installLine = tInstall
     ? `${fmtNum(gm.installation)} new installations against a target of ${fmtNum(tInstall)} (${fmtPct(pct(gm.installation,tInstall))} achieved)`
@@ -2265,7 +2341,7 @@ function renderMonthlyReview(){
   const tGrowth = targetSumFor(olt, STATE.month, "growth");
   const tRevenue = targetSumFor(olt, STATE.month, "revenue");
   const tWinbackPct = targetSumFor(olt, STATE.month, "winback");
-  const arpu = gm.active ? rev.total/gm.active : 0;
+  const arpu = arpuFor(STATE.month, STATE.fy, olt);
   const churnPct = gm.active ? pct(gm.churn, gm.active+gm.churn) : 0;
 
   // Section 1
@@ -3282,7 +3358,7 @@ function renderTargetsTable(){
   const metrics = [["installation","Installation"],["growth","Growth"],["churn","Churn"],["active","Active Customer"],["revenue","A Revenue"],["retention","Retention %"],["winback","Winback %"]];
   let thead = "<tr><th>Metric</th>" + BS_MONTHS.map(m=>`<th>${m.slice(0,4)}</th>`).join("") + "</tr>";
   let tbody = metrics.map(([key,label])=>{
-    const cells = t[key].map((v,i)=>`<td><input type="text" data-metric="${key}" data-idx="${i}" value="${v}"></td>`).join("");
+    const cells = t[key].map((v,i)=>`<td><input type="number" min="0" step="any" data-metric="${key}" data-idx="${i}" value="${v}" aria-label="${label} target for month ${i+1}"></td>`).join("");
     return `<tr><td>${label}</td>${cells}</tr>`;
   }).join("");
   document.getElementById("tgt-table").innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
@@ -3292,7 +3368,7 @@ function saveTargetsFromTable(){
   document.querySelectorAll("#tgt-table input").forEach(inp=>{
     const metric = inp.dataset.metric, idx = parseInt(inp.dataset.idx);
     const v = parseFloat(inp.value);
-    if(!isNaN(v)) t[metric][idx] = v;
+    if(!isNaN(v)) t[metric][idx] = Math.max(0, v);
   });
   saveTargets(TARGETS);
   renderAll();
@@ -3341,7 +3417,16 @@ function init(){
   populateMonthSelect();
   renderImportCards();
 
-  document.querySelectorAll(".nav-btn").forEach(b=> b.addEventListener("click", ()=>switchTab(b.dataset.tab)));
+  document.querySelectorAll(".nav-btn").forEach(b=> b.addEventListener("click", ()=>{ switchTab(b.dataset.tab); closeMobileSidebar(); }));
+
+  // Mobile sidebar drawer (below 860px the sidebar is off-canvas until toggled)
+  const sidebarEl = document.getElementById("sidebar");
+  const overlayEl = document.getElementById("sidebarOverlay");
+  const toggleBtn = document.getElementById("sidebarToggleBtn");
+  function openMobileSidebar(){ sidebarEl.classList.add("open"); overlayEl.classList.add("open"); toggleBtn.setAttribute("aria-expanded","true"); }
+  window.closeMobileSidebar = function(){ sidebarEl.classList.remove("open"); overlayEl.classList.remove("open"); toggleBtn.setAttribute("aria-expanded","false"); };
+  toggleBtn.addEventListener("click", ()=>{ sidebarEl.classList.contains("open") ? window.closeMobileSidebar() : openMobileSidebar(); });
+  overlayEl.addEventListener("click", window.closeMobileSidebar);
   document.querySelectorAll("#oltTabs button").forEach(b=> b.addEventListener("click", ()=>{
     document.querySelectorAll("#oltTabs button").forEach(x=>x.classList.remove("active"));
     b.classList.add("active");
