@@ -368,6 +368,34 @@ canvas{max-width:100%;}
 
     <!-- ===================== OVERVIEW ===================== -->
     <div class="section active" id="sec-overview">
+      <div class="panel" style="background:linear-gradient(135deg,#0f1a3d,#1c2a5e);color:#fff;border:none;">
+        <div class="ppt-eyebrow" style="color:#8fd6ff;">Executive Control Tower</div>
+        <h2 style="margin:4px 0 16px;font-size:19px;">Shuklagandaki Branch &mdash; at a glance</h2>
+        <div class="two-col" style="align-items:start;">
+          <div style="display:flex;gap:20px;align-items:center;">
+            <div class="chart-box" style="width:120px;height:120px;flex-shrink:0;"><canvas id="chart-health-gauge" role="img" aria-label="Branch health score gauge"></canvas></div>
+            <div style="flex:1;">
+              <div style="font-size:11px;color:#a9b4e0;text-transform:uppercase;letter-spacing:.6px;font-weight:800;">Branch Health Score</div>
+              <div id="health-score-num" style="font-size:38px;font-weight:800;line-height:1.1;"></div>
+              <div id="health-score-sub" style="font-size:11.5px;color:#c8d0f5;margin-top:4px;"></div>
+            </div>
+          </div>
+          <div id="health-subscores" style="font-size:12px;"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>&#128680; Action Required / Red Flags</h3>
+        <div class="hint">Only genuinely actionable items (churn cap breach, SLA breach, high unmatched%, winback backlog) &mdash; not routine early-month lag.</div>
+        <div class="tbl-wrap"><table id="action-required-table"><thead></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="panel">
+        <h3>OLT Health</h3>
+        <div class="hint">Quick status per OLT per metric &mdash; &#128994; on track, &#128993; watch, &#128308; needs attention.</div>
+        <div id="olt-health-grid"></div>
+      </div>
+
       <div class="flex-between" style="margin-bottom:6px;">
         <div class="note" style="margin:0;flex:1;">Yo overview le Target &rarr; Sales &rarr; New Customer &rarr; Billing &rarr; Retention &rarr; Winback &rarr; NS &rarr; Churn &rarr; Active &rarr; Revenue &rarr; Forecast &rarr; 6G &rarr; Technical Tickets sabai connect garera dekhauxa, selected BS month ra OLT ko lagi.</div>
         <div class="small-muted" id="ov-last-synced" style="white-space:nowrap;margin-left:10px;"></div>
@@ -678,12 +706,26 @@ canvas{max-width:100%;}
 
       <div class="two-col">
         <div class="panel">
-          <h3>Marketing Executive / Staff-wise</h3>
+          <h3>Staff Scorecard</h3>
           <div class="tbl-wrap"><table id="gr-staff-table"><thead></thead><tbody></tbody></table></div>
+          <div class="hint" id="gr-staff-note" style="margin-top:8px;"></div>
         </div>
         <div class="panel">
           <h3>Entry Source-wise</h3>
           <div class="tbl-wrap"><table id="gr-source-table"><thead></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3>Package Mix</h3>
+          <div class="hint">From Paid Sales plan names \u2014 users, revenue, ARPU per package this scope.</div>
+          <div class="tbl-wrap"><table id="gr-package-table"><thead></thead><tbody></tbody></table></div>
+        </div>
+        <div class="panel">
+          <h3>Installation Pipeline</h3>
+          <div class="hint">Paid vs Not-Paid status of installations created this scope (from the Installation import's Payment Status field).</div>
+          <div id="gr-pipeline-body"></div>
         </div>
       </div>
 
@@ -717,6 +759,20 @@ canvas{max-width:100%;}
       <div class="panel">
         <h3>Revenue by Transaction Type (New / Renew / etc.)</h3>
         <div class="tbl-wrap"><table id="rev-type-table"><thead></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="panel" style="border:2px dashed var(--amber);">
+        <div class="flex-between">
+          <h3 style="margin:0;">Opex &amp; Fuel Consumption</h3>
+          <span style="background:var(--amber);color:#5a3c00;font-weight:800;font-size:10.5px;padding:4px 10px;border-radius:20px;">&#9888;&#65039; SAMPLE DATA &mdash; NOT REAL</span>
+        </div>
+        <div class="hint">No Opex/Fuel export has been imported yet. The numbers below are placeholders showing the intended layout only &mdash; replace with a real import to make this section live.</div>
+        <div class="tbl-wrap"><table><tr><th>Category</th><th>Budget</th><th>Actual</th><th>Variance</th></tr>
+          <tr><td>Vehicle</td><td>Rs 1,50,000</td><td>Rs 1,90,000</td><td style="color:var(--red);">+Rs 40,000</td></tr>
+          <tr><td>Maintenance</td><td>Rs 2,00,000</td><td>Rs 2,40,000</td><td style="color:var(--red);">+Rs 40,000</td></tr>
+          <tr><td>Commission</td><td>Rs 5,00,000</td><td>Rs 5,60,000</td><td style="color:var(--red);">+Rs 60,000</td></tr>
+          <tr><td>Fuel</td><td>Rs 1,20,000</td><td>Rs 1,55,000</td><td style="color:var(--red);">+Rs 35,000</td></tr>
+        </table></div>
       </div>
     </div>
 
@@ -772,6 +828,12 @@ canvas{max-width:100%;}
       <div class="panel">
         <h3>Top 5 Longest Cases</h3>
         <div id="tech-top5"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Repeat Complaints</h3>
+        <div class="hint">Customers with 2+ tickets in the current filtered scope &mdash; a "solved" ticket doesn't mean the underlying issue is actually fixed if the same customer keeps coming back.</div>
+        <div id="tech-repeat-body"></div>
       </div>
 
       <div class="panel">
@@ -1476,8 +1538,128 @@ function renderLastSynced(){
   el.textContent = "Data last updated: " + d.toLocaleDateString();
 }
 
+// ---------- Executive Control Tower: Branch Health Score, Action Required, OLT Health ----------
+// Every number here is computed from real imported data only. Sub-scores that have no
+// underlying data source (Customer Service, Opex) are intentionally left out rather than
+// invented, and that's stated in the UI rather than hidden.
+function computeBranchHealth(){
+  const olt = "ALL";
+  const gm = growthMetricsFor(olt);
+  const rev = revenueForState(olt);
+  const beh = classifyBehaviour(olt);
+  const tInstall = targetSumFor(olt, STATE.month, "installation");
+  const tGrowth = targetSumFor(olt, STATE.month, "growth");
+  const tRevenue = targetSumFor(olt, STATE.month, "revenue");
+  const salesScore = tInstall ? Math.min(100, pct(gm.installation, tInstall)) : null;
+  const growthScore = tGrowth ? Math.min(100, pct(gm.growth, tGrowth)) : null;
+  const retentionScore = beh.forecastDueMTD ? beh.retentionPct : null;
+  const revenueScore = tRevenue ? Math.min(100, pct(rev.total, tRevenue)) : null;
+  const techRows = STATE.month===ALL_MONTHS_VALUE ? STORE.technicalData.filter(r=>r.bsFY===STATE.fy) : STORE.technicalData.filter(r=>r.bsMonth===STATE.month && r.bsFY===STATE.fy);
+  const techHrs = techRows.map(r=>r.solveHours).filter(v=>v!==null&&v!==undefined&&!isNaN(v));
+  const asd = techHrs.length ? techHrs.reduce((a,b)=>a+b,0)/techHrs.length : null;
+  const asdTarget = (typeof ASD_TARGET_HRS!=="undefined")?ASD_TARGET_HRS:6;
+  const technicalScore = asd!==null ? Math.max(0, Math.min(100, 100 - Math.max(0,(asd-asdTarget))/asdTarget*100)) : null;
+  const subs = [
+    {label:"Sales", value: salesScore},
+    {label:"Growth", value: growthScore},
+    {label:"Retention", value: retentionScore},
+    {label:"Revenue", value: revenueScore},
+    {label:"Technical", value: technicalScore},
+  ];
+  const available = subs.filter(s=>s.value!==null);
+  const overall = available.length ? available.reduce((s,x)=>s+x.value,0)/available.length : null;
+  return {subs, overall};
+}
+function renderBranchHealth(){
+  const h = computeBranchHealth();
+  const numEl = document.getElementById("health-score-num");
+  const subEl = document.getElementById("health-score-sub");
+  if(!numEl) return;
+  numEl.textContent = h.overall!==null ? Math.round(h.overall)+" / 100" : "-";
+  const statusLabel = h.overall===null ? "Not enough data yet" : h.overall>=80?"\uD83D\uDFE2 Good":h.overall>=60?"\uD83D\uDFE1 Watch":"\uD83D\uDD34 Needs Attention";
+  subEl.textContent = statusLabel + " \u00b7 Sales/Growth/Retention/Revenue/Technical only (Customer Service & Opex not available \u2014 no data source imported yet)";
+  document.getElementById("health-subscores").innerHTML = h.subs.map(s=>{
+    const v = s.value;
+    const pctv = v===null?0:Math.max(0,Math.min(100,v));
+    const color = v===null?"#ffffff55":v>=80?"var(--green)":v>=60?"var(--amber)":"var(--red)";
+    return `<div class="progress-row"><div class="name" style="color:#e4e8ff;">${s.label}</div><div style="flex:1;"><div style="background:#ffffff22;height:6px;border-radius:4px;overflow:hidden;"><i style="display:block;height:100%;width:${pctv}%;background:${color};"></i></div></div><div style="width:44px;text-align:right;color:#fff;font-weight:700;">${v===null?'-':Math.round(v)}</div></div>`;
+  }).join("");
+  const c = h.overall===null?'#8890b5':(h.overall>=80?'#22c48d':h.overall>=60?'#ffab3d':'#ff5c7c');
+  renderChart('health-gauge', document.getElementById('chart-health-gauge'), {
+    type:'doughnut',
+    data:{ labels:['Score','Remaining'], datasets:[{data:[h.overall||0, 100-(h.overall||0)], backgroundColor:[c,'#ffffff22'], borderWidth:0}]},
+    options:{cutout:'72%', plugins:{legend:{display:false}, tooltip:{enabled:false}}, animation:false, responsive:true, maintainAspectRatio:false}
+  });
+}
+function computeActionRequired(){
+  const rows = [];
+  const asdTarget = (typeof ASD_TARGET_HRS!=="undefined")?ASD_TARGET_HRS:6;
+  OLTS.forEach(o=>{
+    const d = opOltData(o);
+    if(d.tChurn!==null && d.tChurn!==undefined && d.g.churn>d.tChurn){
+      rows.push({issue:o+" Churn", current:fmtNum(d.g.churn), target:"\u2264 "+fmtNum(d.tChurn), status:"red", action:"Winback team follow-up"});
+    }
+    if(d.asd!==null && d.asd>asdTarget){
+      rows.push({issue:o+" ASD (ticket solve time)", current:d.asd.toFixed(1)+" hr", target:"< "+asdTarget+" hr", status: d.asd>asdTarget*1.5?"red":"amber", action:"Technical escalation"});
+    }
+    if(d.b.forecastDueMTD && d.b.nsPct>10){
+      rows.push({issue:o+" NS (unmatched)", current:fmtPct(d.b.nsPct), target:"< 10%", status: d.b.nsPct>20?"red":"amber", action:"Billing reconciliation"});
+    }
+  });
+  const beh = classifyBehaviour("ALL");
+  if(beh.forecastDueMTD && beh.winbackPct>15){
+    rows.push({issue:"Branch Winback Rate", current:fmtPct(beh.winbackPct), target:"< 15%", status:"amber", action:"Call high-risk / overdue list"});
+  }
+  const sevOrder = {red:0, amber:1};
+  rows.sort((a,b)=>sevOrder[a.status]-sevOrder[b.status]);
+  return rows;
+}
+function renderActionRequiredTable(){
+  const el = document.getElementById("action-required-table");
+  if(!el) return;
+  const rows = computeActionRequired();
+  const thead = "<tr><th>#</th><th>Issue</th><th>Current</th><th>Target</th><th>Status</th><th>Suggested Action</th></tr>";
+  let tbody;
+  if(!rows.length){
+    tbody = `<tr><td colspan="6" style="padding:16px;text-align:center;color:var(--green);font-weight:700;">\u2705 No red flags right now \u2014 all tracked thresholds are within range.</td></tr>`;
+  } else {
+    tbody = rows.map((r,i)=>{
+      const badge = r.status==="red" ? '<span style="color:var(--red);font-weight:800;">\uD83D\uDD34 High</span>' : '<span style="color:#a56a00;font-weight:800;">\uD83D\uDFE1 Watch</span>';
+      return `<tr><td>${i+1}</td><td>${r.issue}</td><td>${r.current}</td><td>${r.target}</td><td>${badge}</td><td>${r.action}</td></tr>`;
+    }).join("");
+  }
+  el.innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
+}
+function renderOltHealthGrid(){
+  const el = document.getElementById("olt-health-grid");
+  if(!el) return;
+  const asdTarget = (typeof ASD_TARGET_HRS!=="undefined")?ASD_TARGET_HRS:6;
+  const rows = OLTS.map(o=>{
+    const d = opOltData(o);
+    const tGrowth = targetSumFor(o, STATE.month, "growth");
+    const revScore = d.tRev ? Math.min(100, pct(d.r.total, d.tRev)) : null;
+    const growthScoreV = tGrowth ? Math.min(100, pct(d.g.growth, tGrowth)) : null;
+    const churnGoodness = (d.tChurn!==null && d.tChurn!==undefined) ? (d.g.churn<=d.tChurn ? 100 : 40) : null;
+    const techGoodness = d.asd!==null ? Math.max(0, Math.min(100, 100 - Math.max(0,(d.asd-asdTarget))/asdTarget*100)) : null;
+    const retScore = d.b.forecastDueMTD ? d.b.retentionPct : null;
+    return {olt:o, revScore, growthScoreV, churnGoodness, techGoodness, retScore};
+  });
+  const dot = (v)=>{
+    if(v===null||v===undefined||isNaN(v)) return '<span class="small-muted">&#9898; n/a</span>';
+    if(v>=80) return '<span style="color:var(--green);font-weight:700;">&#128994; Good</span>';
+    if(v>=60) return '<span style="color:#a56a00;font-weight:700;">&#128993; Watch</span>';
+    return '<span style="color:var(--red);font-weight:700;">&#128308; Attention</span>';
+  };
+  const thead = "<tr><th>OLT</th><th>Revenue</th><th>Growth</th><th>Churn</th><th>Technical</th><th>Retention</th></tr>";
+  const tbody = rows.map(r=>`<tr><td><span class="badge-olt">${r.olt}</span></td><td>${dot(r.revScore)}</td><td>${dot(r.growthScoreV)}</td><td>${dot(r.churnGoodness)}</td><td>${dot(r.techGoodness)}</td><td>${dot(r.retScore)}</td></tr>`).join("");
+  el.innerHTML = `<div class="tbl-wrap"><table>${thead}<tbody>${tbody}</tbody></table></div>`;
+}
+
 function renderOverview(){
   const olt = STATE.olt;
+  renderBranchHealth();
+  renderActionRequiredTable();
+  renderOltHealthGrid();
   const gm = growthMetricsFor(olt);
   const rev = revenueForState(olt);
   const beh = classifyBehaviour(olt);
@@ -1766,16 +1948,27 @@ function renderGrowth(){
   }
   document.getElementById("gr-mom-table").innerHTML = momHtml;
 
-  // staff-wise (installations)
+  // staff-wise scorecard (installations + paid sales + revenue)
   const instRows = filterByMonthOlt(STORE.installations, olt);
   const paidRows = filterByMonthOlt(STORE.paidSales, olt);
   const staffCounts = {};
-  instRows.forEach(r=>{ const k=r["MARKETED BY"]||"(blank)"; staffCounts[k]=staffCounts[k]||{inst:0,paid:0}; staffCounts[k].inst++; });
-  paidRows.forEach(r=>{ const k=r["MARKETED BY"]||"(blank)"; staffCounts[k]=staffCounts[k]||{inst:0,paid:0}; staffCounts[k].paid++; });
+  instRows.forEach(r=>{ const k=r["MARKETED BY"]||"(blank)"; staffCounts[k]=staffCounts[k]||{inst:0,paid:0,revenue:0}; staffCounts[k].inst++; });
+  paidRows.forEach(r=>{ const k=r["MARKETED BY"]||"(blank)"; staffCounts[k]=staffCounts[k]||{inst:0,paid:0,revenue:0}; staffCounts[k].paid++; staffCounts[k].revenue += toNum(r["TOTAL AMT PAID"]); });
   let staffArr = Object.entries(staffCounts).sort((a,b)=>(b[1].inst+b[1].paid)-(a[1].inst+a[1].paid));
-  let sthead = "<tr><th>Staff</th><th>Installation</th><th>Paid Sales</th></tr>";
-  let stbody = staffArr.map(([name,v])=>`<tr><td>${name}</td><td>${v.inst}</td><td>${v.paid}</td></tr>`).join("") || `<tr><td colspan="3" class="small-muted" style="padding:14px;">No data for this month/OLT.</td></tr>`;
+  const maxInst = Math.max(1, ...staffArr.map(([,v])=>v.inst));
+  const maxPaid = Math.max(1, ...staffArr.map(([,v])=>v.paid));
+  const maxRev = Math.max(1, ...staffArr.map(([,v])=>v.revenue));
+  let sthead = "<tr><th>Staff</th><th>Installation</th><th>Paid Sales</th><th>Revenue</th><th>Score</th></tr>";
+  let stbody = staffArr.map(([name,v])=>{
+    const score = Math.round(((v.inst/maxInst)+(v.paid/maxPaid)+(v.revenue/maxRev))/3*100);
+    return `<tr><td>${name}</td><td>${v.inst}</td><td>${v.paid}</td><td>${fmtMoney(v.revenue)}</td><td><b>${score}</b></td></tr>`;
+  }).join("") || `<tr><td colspan="5" class="small-muted" style="padding:14px;">No data for this month/OLT.</td></tr>`;
+  if(staffArr.length){
+    const top = staffArr[0][0];
+    sthead = `<tr><th colspan="5" style="background:#f0fbf6;color:#0d7a4f;font-weight:700;">\uD83C\uDFC6 Top Performer: ${top}</th></tr>` + sthead;
+  }
   document.getElementById("gr-staff-table").innerHTML = `<thead>${sthead}</thead><tbody>${stbody}</tbody>`;
+  document.getElementById("gr-staff-note").textContent = "Score = average of (Installation, Paid Sales, Revenue) each relative to this scope's top performer, 0\u2013100. Renewal%/Winback aren't attributable to individual staff in the current data imports.";
 
   // entry source-wise
   const srcCounts = {};
@@ -1793,6 +1986,29 @@ function renderGrowth(){
     return `<tr><td><span class="badge-olt">${o}</span></td><td>${g.installation}</td><td>${g.paidSales}</td><td>${g.growth}</td><td>${g.churn}</td><td>${g.active}</td><td>${b.counts.RET}</td><td>${b.counts.WIN}</td><td>${b.counts.NS}</td></tr>`;
   }).join("");
   document.getElementById("gr-olt-table").innerHTML = `<thead>${othead}</thead><tbody>${otbody}</tbody>`;
+
+  // Package Mix (from Paid Sales plan names)
+  const pkgMap = {};
+  paidRows.forEach(r=>{
+    const k = r.PLAN || "(blank)";
+    pkgMap[k] = pkgMap[k] || {users:0, revenue:0};
+    pkgMap[k].users++; pkgMap[k].revenue += toNum(r["TOTAL AMT PAID"]);
+  });
+  const pkgArr = Object.entries(pkgMap).sort((a,b)=>b[1].revenue-a[1].revenue);
+  let pkgThead = "<tr><th>Package</th><th>Users</th><th>Revenue</th><th>ARPU</th></tr>";
+  let pkgBody = pkgArr.map(([name,v])=>`<tr><td>${name}</td><td>${v.users}</td><td>${fmtMoney(v.revenue)}</td><td>${fmtMoney(v.users?v.revenue/v.users:0)}</td></tr>`).join("") || `<tr><td colspan="4" class="small-muted" style="padding:14px;">No paid sales for this scope.</td></tr>`;
+  document.getElementById("gr-package-table").innerHTML = `<thead>${pkgThead}</thead><tbody>${pkgBody}</tbody>`;
+
+  // Installation Pipeline (Paid vs Not Paid, from installations' own Payment Status field)
+  const paidCount = instRows.filter(r=>String(r["PAYMENT STATUS"]||"").toUpperCase()==="PAID").length;
+  const notPaidCount = instRows.filter(r=>String(r["PAYMENT STATUS"]||"").toUpperCase()==="NOT PAID").length;
+  const otherCount = instRows.length - paidCount - notPaidCount;
+  const totalInstRows = instRows.length || 1;
+  document.getElementById("gr-pipeline-body").innerHTML = instRows.length ? `
+    <div class="progress-row"><div class="name">Paid</div><div style="flex:1;"><div class="bar" style="background:var(--bg);height:8px;border-radius:4px;overflow:hidden;"><i style="display:block;height:100%;width:${pct(paidCount,totalInstRows)}%;background:var(--green);"></i></div></div><div style="width:80px;text-align:right;">${paidCount} (${fmtPct(pct(paidCount,totalInstRows))})</div></div>
+    <div class="progress-row"><div class="name">Not Paid</div><div style="flex:1;"><div class="bar" style="background:var(--bg);height:8px;border-radius:4px;overflow:hidden;"><i style="display:block;height:100%;width:${pct(notPaidCount,totalInstRows)}%;background:var(--red);"></i></div></div><div style="width:80px;text-align:right;">${notPaidCount} (${fmtPct(pct(notPaidCount,totalInstRows))})</div></div>
+    ${otherCount>0?`<div class="progress-row"><div class="name">Other/Blank</div><div style="flex:1;"><div class="bar" style="background:var(--bg);height:8px;border-radius:4px;overflow:hidden;"><i style="display:block;height:100%;width:${pct(otherCount,totalInstRows)}%;background:var(--txt3);"></i></div></div><div style="width:80px;text-align:right;">${otherCount}</div></div>`:''}
+  ` : `<div class="small-muted" style="padding:14px;">No installations for this scope.</div>`;
 }
 
 function renderRevenue(){
@@ -1968,6 +2184,16 @@ function renderTechnical(){
   document.getElementById("tech-top5").innerHTML = top5.length ? top5.map(r=>
     `<div class="progress-row"><div class="name">${r["TICKET ID"]} &middot; ${r.USERNAME||''} <span class="badge-olt">${r.OLT||''}</span></div><div style="flex:1;">${r.PROBLEM||''}</div><div><b>${r.solveHours.toFixed(1)} hrs</b></div></div>`
   ).join("") : `<div class="small-muted" style="padding:14px;">No data for the current filters.</div>`;
+
+  // repeat complaints (same username, 2+ tickets, in this filtered scope)
+  const byUser = {};
+  rows.forEach(r=>{ const u = r.USERNAME||"(blank)"; byUser[u] = byUser[u] || []; byUser[u].push(r); });
+  const repeaters = Object.entries(byUser).filter(([,list])=>list.length>=2).sort((a,b)=>b[1].length-a[1].length);
+  const repeatPct = rows.length ? pct(repeaters.reduce((s,[,l])=>s+l.length,0), rows.length) : 0;
+  document.getElementById("tech-repeat-body").innerHTML = repeaters.length ? (
+    `<div class="progress-row"><div class="name">Repeat Complaint Rate</div><div style="flex:1;"></div><div><b style="color:${repeatPct>15?'var(--red)':'var(--txt)'};">${fmtPct(repeatPct)}</b> of tickets are from repeat customers</div></div>` +
+    repeaters.slice(0,8).map(([u,list])=>`<div class="progress-row"><div class="name">${u} <span class="badge-olt">${list[0].OLT||''}</span></div><div style="flex:1;">${list.map(x=>x.PROBLEM).filter((v,i,a)=>a.indexOf(v)===i).join(", ")}</div><div><b>${list.length}&times;</b></div></div>`).join("")
+  ) : `<div class="small-muted" style="padding:14px;">No repeat complaints in the current filtered scope.</div>`;
 
   renderTechnicalTable();
 }
