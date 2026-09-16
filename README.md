@@ -350,7 +350,6 @@ canvas{max-width:100%;}
     <button class="nav-btn" data-tab="growth"><span class="nav-ico">&#128200;</span> Sales &amp; Growth</button>
     <button class="nav-btn" data-tab="revenue"><span class="nav-ico">&#128176;</span> Revenue &amp; Performance</button>
     <button class="nav-btn" data-tab="technical"><span class="nav-ico">&#128295;</span> Technical Data</button>
-    <button class="nav-btn" data-tab="strategy"><span class="nav-ico">&#128506;&#65039;</span> Strategy &amp; Review</button>
     <div class="nav-group-label">Data Management</div>
     <button class="nav-btn" data-tab="import"><span class="nav-ico">&#8593;</span> Data Import</button>
     <button class="nav-btn" data-tab="targets"><span class="nav-ico">&#127919;</span> Manage Targets</button>
@@ -430,7 +429,7 @@ canvas{max-width:100%;}
 
       <div id="ov-alerts" role="alert" aria-live="polite"></div>
 
-      <div class="four-col">
+      <div class="three-col">
         <div class="panel">
           <h3>OLT-wise Performance</h3>
           <div class="tbl-wrap"><table id="ov-olt-table"><thead></thead><tbody></tbody></table></div>
@@ -440,28 +439,13 @@ canvas{max-width:100%;}
           <div class="chart-box" style="height:150px;"><canvas id="chart-ov-behaviour" role="img" aria-label="Customer behaviour donut"></canvas></div>
           <div id="ov-behaviour-legend" style="font-size:11.5px;margin-top:8px;"></div>
         </div>
-        <div class="panel sample-panel">
-          <div class="flex-between"><h3 style="margin:0;">Revenue Leakage</h3><span class="sample-badge">SAMPLE</span></div>
-          <div class="tbl-wrap" style="font-size:11px;"><table>
-            <tr><th>Item</th><th>Amt (L)</th><th>%</th></tr>
-            <tr><td>Gross Revenue</td><td>52.0</td><td>100%</td></tr>
-            <tr><td>Discount</td><td>-4.8</td><td>9.2%</td></tr>
-            <tr><td>Churn Loss</td><td>-1.8</td><td>3.5%</td></tr>
-            <tr><td>Late Renewal</td><td>-0.9</td><td>1.7%</td></tr>
-            <tr><td><b>Net Revenue</b></td><td><b>41.2</b></td><td><b>79.2%</b></td></tr>
-          </table></div>
-        </div>
         <div class="panel">
           <h3>Top Problems</h3>
           <div id="ov-top-problems"></div>
         </div>
       </div>
 
-      <div class="five-col">
-        <div class="panel sample-panel">
-          <div class="flex-between"><h3 style="margin:0;">Sales Funnel</h3><span class="sample-badge">SAMPLE</span></div>
-          <div id="ov-funnel-mini" style="font-size:11.5px;"></div>
-        </div>
+      <div class="three-col">
         <div class="panel">
           <h3>Staff Performance (Top 5)</h3>
           <div class="tbl-wrap" style="font-size:11px;"><table id="ov-staff-mini"><thead></thead><tbody></tbody></table></div>
@@ -475,48 +459,12 @@ canvas{max-width:100%;}
           <h3>Installation Pipeline</h3>
           <div id="ov-pipeline-mini" style="font-size:11.5px;"></div>
         </div>
-        <div class="panel sample-panel">
-          <div class="flex-between"><h3 style="margin:0;">Today's Action</h3><span class="sample-badge">SAMPLE</span></div>
-          <div style="font-size:11px;">
-            <div class="progress-row"><div class="name">&#128308; High-risk renewals</div><div style="flex:1;">Sales</div><div>19/33</div></div>
-            <div class="progress-row"><div class="name">&#128308; VMAD growth</div><div style="flex:1;">D2D</div><div>Pending</div></div>
-            <div class="progress-row"><div class="name">&#128993; Delayed tickets</div><div style="flex:1;">Technical</div><div>6/9</div></div>
-            <div class="progress-row"><div class="name">&#128993; Winback users</div><div style="flex:1;">Sales</div><div>8/15</div></div>
-          </div>
-        </div>
       </div>
 
-      <div class="five-col">
+      <div class="two-col">
         <div class="panel">
           <h3>Package Mix</h3>
           <div class="tbl-wrap" style="font-size:11px;"><table id="ov-package-mini"><thead></thead><tbody></tbody></table></div>
-        </div>
-        <div class="panel sample-panel">
-          <div class="flex-between"><h3 style="margin:0;">Expense / Opex</h3><span class="sample-badge">SAMPLE</span></div>
-          <div class="tbl-wrap" style="font-size:11px;"><table>
-            <tr><th>Category</th><th>Budget</th><th>Actual</th></tr>
-            <tr><td>Vehicle</td><td>1.50L</td><td>1.90L</td></tr>
-            <tr><td>Maintenance</td><td>2.00L</td><td>2.40L</td></tr>
-            <tr><td>Fuel</td><td>1.20L</td><td>1.55L</td></tr>
-          </table></div>
-        </div>
-        <div class="panel sample-panel">
-          <div class="flex-between"><h3 style="margin:0;">OLT Capacity</h3><span class="sample-badge">SAMPLE</span></div>
-          <div class="tbl-wrap" style="font-size:11px;"><table>
-            <tr><th>OLT</th><th>Used</th><th>Util%</th></tr>
-            <tr><td><span class="badge-olt">SKGD01</span></td><td>890/1024</td><td style="color:var(--red);">87%</td></tr>
-            <tr><td><span class="badge-olt">VMAD01</span></td><td>710/1024</td><td style="color:var(--amber);">69%</td></tr>
-            <tr><td><span class="badge-olt">RISH01</span></td><td>320/512</td><td style="color:var(--green);">63%</td></tr>
-          </table></div>
-        </div>
-        <div class="panel sample-panel">
-          <div class="flex-between"><h3 style="margin:0;">Market Potential</h3><span class="sample-badge">SAMPLE</span></div>
-          <div class="tbl-wrap" style="font-size:11px;"><table>
-            <tr><th>Area</th><th>HH</th><th>Penetr.</th></tr>
-            <tr><td>Shuklagandaki</td><td>8,500</td><td>55%</td></tr>
-            <tr><td>Vishnumati</td><td>6,200</td><td>31%</td></tr>
-            <tr><td>Rishing</td><td>5,800</td><td>21%</td></tr>
-          </table></div>
         </div>
         <div class="panel">
           <h3>Quick Links</h3>
@@ -809,21 +757,6 @@ canvas{max-width:100%;}
         </div>
       </div>
 
-      <div class="panel sample-panel">
-        <div class="flex-between">
-          <h3 style="margin:0;">Sales Funnel</h3>
-          <span class="sample-badge">&#9888;&#65039; SAMPLE DATA &mdash; NOT REAL</span>
-        </div>
-        <div class="hint">Needs a lead/CRM export with stage tracking (Lead \u2192 Contacted \u2192 Interested \u2192 Installed \u2192 Paid). Not yet imported \u2014 Installation and Paid Sales counts elsewhere on this page ARE real, but the earlier lead/contact stages aren't tracked in any current import.</div>
-        <div id="gr-funnel-body">
-          <div class="progress-row"><div class="name">Lead</div><div style="flex:1;"><div style="background:var(--bg);height:10px;border-radius:5px;"><i style="display:block;height:100%;width:100%;background:#6d5bf6;border-radius:5px;"></i></div></div><div style="width:100px;text-align:right;">500 (100%)</div></div>
-          <div class="progress-row"><div class="name">Contacted</div><div style="flex:1;"><div style="background:var(--bg);height:10px;border-radius:5px;"><i style="display:block;height:100%;width:62%;background:#6d5bf6;border-radius:5px;"></i></div></div><div style="width:100px;text-align:right;">310 (62%)</div></div>
-          <div class="progress-row"><div class="name">Interested</div><div style="flex:1;"><div style="background:var(--bg);height:10px;border-radius:5px;"><i style="display:block;height:100%;width:36%;background:#6d5bf6;border-radius:5px;"></i></div></div><div style="width:100px;text-align:right;">180 (36%)</div></div>
-          <div class="progress-row"><div class="name">Installed</div><div style="flex:1;"><div style="background:var(--bg);height:10px;border-radius:5px;"><i style="display:block;height:100%;width:25%;background:#6d5bf6;border-radius:5px;"></i></div></div><div style="width:100px;text-align:right;">125 (25%)</div></div>
-          <div class="progress-row"><div class="name">Paid Customer</div><div style="flex:1;"><div style="background:var(--bg);height:10px;border-radius:5px;"><i style="display:block;height:100%;width:23%;background:var(--green);border-radius:5px;"></i></div></div><div style="width:100px;text-align:right;font-weight:800;">115 (23%)</div></div>
-        </div>
-      </div>
-
       <div class="panel">
         <h3>OLT-wise Full Breakdown &mdash; selected month</h3>
         <div class="tbl-wrap"><table id="gr-olt-table"><thead></thead><tbody></tbody></table></div>
@@ -854,51 +787,6 @@ canvas{max-width:100%;}
       <div class="panel">
         <h3>Revenue by Transaction Type (New / Renew / etc.)</h3>
         <div class="tbl-wrap"><table id="rev-type-table"><thead></thead><tbody></tbody></table></div>
-      </div>
-
-      <div class="panel sample-panel">
-        <div class="flex-between">
-          <h3 style="margin:0;">Revenue Leakage</h3>
-          <span class="sample-badge">&#9888;&#65039; SAMPLE DATA &mdash; NOT REAL</span>
-        </div>
-        <div class="hint">No discount/write-off export imported yet. Layout only &mdash; replace with a real import (needs standard price, actual price, and write-off reason per transaction) to make this live.</div>
-        <div id="rev-leakage-body">
-          <div class="progress-row"><div class="name">Gross Revenue</div><div style="flex:1;"><div style="background:var(--bg);height:10px;border-radius:5px;"><i style="display:block;height:100%;width:100%;background:var(--indigo,#6d5bf6);border-radius:5px;"></i></div></div><div style="width:90px;text-align:right;">Rs 52.0L</div></div>
-          <div class="progress-row"><div class="name">&nbsp;&nbsp;&#8722; Discount</div><div style="flex:1;"></div><div style="width:90px;text-align:right;color:var(--red);">&minus; Rs 4.8L</div></div>
-          <div class="progress-row"><div class="name">&nbsp;&nbsp;&#8722; BTL Discount</div><div style="flex:1;"></div><div style="width:90px;text-align:right;color:var(--red);">&minus; Rs 2.1L</div></div>
-          <div class="progress-row"><div class="name">&nbsp;&nbsp;&#8722; Free / Extension</div><div style="flex:1;"></div><div style="width:90px;text-align:right;color:var(--red);">&minus; Rs 1.2L</div></div>
-          <div class="progress-row"><div class="name">&nbsp;&nbsp;&#8722; Churn Loss</div><div style="flex:1;"></div><div style="width:90px;text-align:right;color:var(--red);">&minus; Rs 1.8L</div></div>
-          <div class="progress-row"><div class="name">&nbsp;&nbsp;&#8722; Late Renewal</div><div style="flex:1;"></div><div style="width:90px;text-align:right;color:var(--red);">&minus; Rs 0.9L</div></div>
-          <div class="progress-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;"><div class="name" style="font-weight:800;">= Net Revenue</div><div style="flex:1;"><div style="background:var(--bg);height:10px;border-radius:5px;"><i style="display:block;height:100%;width:79%;background:var(--green);border-radius:5px;"></i></div></div><div style="width:90px;text-align:right;font-weight:800;">Rs 41.2L (79%)</div></div>
-        </div>
-      </div>
-
-      <div class="panel sample-panel">
-        <div class="flex-between">
-          <h3 style="margin:0;">Discount Monitoring</h3>
-          <span class="sample-badge">&#9888;&#65039; SAMPLE DATA &mdash; NOT REAL</span>
-        </div>
-        <div class="hint">Needs a per-transaction export with standard price vs actual price. Not yet imported.</div>
-        <div class="tbl-wrap"><table><tr><th>OLT</th><th>Customers on Discount</th><th>Avg Discount %</th><th>Discount Amount</th></tr>
-          <tr><td><span class="badge-olt">SKGD01</span></td><td>210</td><td>12.4%</td><td>Rs 2,10,000</td></tr>
-          <tr><td><span class="badge-olt">VMAD01</span></td><td>165</td><td>15.1%</td><td>Rs 1,85,000</td></tr>
-          <tr><td><span class="badge-olt">RISH01</span></td><td>98</td><td>9.8%</td><td>Rs 85,000</td></tr>
-        </table></div>
-        <div class="hint" style="margin-top:8px;">Top 20 highest-discount customers table would go here once the source file is available.</div>
-      </div>
-
-      <div class="panel sample-panel">
-        <div class="flex-between">
-          <h3 style="margin:0;">Opex &amp; Fuel Consumption</h3>
-          <span class="sample-badge">&#9888;&#65039; SAMPLE DATA &mdash; NOT REAL</span>
-        </div>
-        <div class="hint">No Opex/Fuel export has been imported yet. The numbers below are placeholders showing the intended layout only &mdash; replace with a real import to make this section live.</div>
-        <div class="tbl-wrap"><table><tr><th>Category</th><th>Budget</th><th>Actual</th><th>Variance</th></tr>
-          <tr><td>Vehicle</td><td>Rs 1,50,000</td><td>Rs 1,90,000</td><td style="color:var(--red);">+Rs 40,000</td></tr>
-          <tr><td>Maintenance</td><td>Rs 2,00,000</td><td>Rs 2,40,000</td><td style="color:var(--red);">+Rs 40,000</td></tr>
-          <tr><td>Commission</td><td>Rs 5,00,000</td><td>Rs 5,60,000</td><td style="color:var(--red);">+Rs 60,000</td></tr>
-          <tr><td>Fuel</td><td>Rs 1,20,000</td><td>Rs 1,55,000</td><td style="color:var(--red);">+Rs 35,000</td></tr>
-        </table></div>
       </div>
     </div>
 
@@ -962,69 +850,10 @@ canvas{max-width:100%;}
         <div id="tech-repeat-body"></div>
       </div>
 
-      <div class="panel sample-panel">
-        <div class="flex-between">
-          <h3 style="margin:0;">Power Level / ONU / WiFi Quality</h3>
-          <span class="sample-badge">&#9888;&#65039; SAMPLE DATA &mdash; NOT REAL</span>
-        </div>
-        <div class="hint">Needs an ONU/OLT diagnostics export (power level dBm, ONU status, router health per customer). Not yet imported.</div>
-        <div class="tbl-wrap"><table><tr><th>Quality Band</th><th>Customers</th><th>%</th><th>Status</th></tr>
-          <tr><td>Good Power Level</td><td>4,826</td><td>81%</td><td>&#128994; Good</td></tr>
-          <tr><td>Weak Power Level</td><td>834</td><td>14%</td><td>&#128993; Watch</td></tr>
-          <tr><td>Critical Power Level</td><td>298</td><td>5%</td><td>&#128308; Attention</td></tr>
-        </table></div>
-      </div>
-
       <div class="panel">
         <h3>Ticket Log <span class="small-muted" id="tech-tbl-count"></span></h3>
         <input type="text" id="techSearchBox" placeholder="Search subscriber, ticket ID, solution..." style="margin-bottom:10px;width:100%;max-width:420px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;">
         <div class="tbl-wrap"><table id="tech-ticket-table"></table></div>
-      </div>
-    </div>
-
-    <!-- ===================== STRATEGY & REVIEW ===================== -->
-    <div class="section" id="sec-strategy">
-      <div class="note">This whole tab is placeholder/sample data &mdash; none of these sources have been imported yet. The layout is ready; send the real exports and every panel below goes live with your actual numbers.</div>
-
-      <div class="panel sample-panel">
-        <div class="flex-between">
-          <h3 style="margin:0;">OLT Capacity &amp; Utilization</h3>
-          <span class="sample-badge">&#9888;&#65039; SAMPLE DATA &mdash; NOT REAL</span>
-        </div>
-        <div class="hint">Needs an OLT/splitter port-map export (total ports, used, free per OLT). Not yet imported.</div>
-        <div class="tbl-wrap"><table><tr><th>OLT</th><th>Total Ports</th><th>Used</th><th>Free</th><th>Utilization</th></tr>
-          <tr><td><span class="badge-olt">SKGD01</span></td><td>1,024</td><td>890</td><td>134</td><td style="color:var(--red);font-weight:700;">87% &#128308;</td></tr>
-          <tr><td><span class="badge-olt">VMAD01</span></td><td>1,024</td><td>710</td><td>314</td><td style="color:var(--amber);font-weight:700;">69% &#128993;</td></tr>
-          <tr><td><span class="badge-olt">RISH01</span></td><td>512</td><td>320</td><td>192</td><td style="color:var(--green);font-weight:700;">63% &#128994;</td></tr>
-        </table></div>
-      </div>
-
-      <div class="panel sample-panel">
-        <div class="flex-between">
-          <h3 style="margin:0;">Coverage &amp; Market Potential (TAM / SAM / SOM)</h3>
-          <span class="sample-badge">&#9888;&#65039; SAMPLE DATA &mdash; NOT REAL</span>
-        </div>
-        <div class="hint">Needs household/coverage survey data and competitor subscriber estimates by area. Not yet imported.</div>
-        <div class="tbl-wrap"><table><tr><th>Area</th><th>Households</th><th>Coverage</th><th>Active Users</th><th>Penetration %</th></tr>
-          <tr><td>Shuklagandaki</td><td>8,500</td><td>92%</td><td>4,700</td><td>55%</td></tr>
-          <tr><td>Vishnumati Area</td><td>6,200</td><td>78%</td><td>1,900</td><td>31%</td></tr>
-          <tr><td>Rishing Area</td><td>5,800</td><td>71%</td><td>1,233</td><td>21%</td></tr>
-        </table></div>
-      </div>
-
-      <div class="panel sample-panel">
-        <div class="flex-between">
-          <h3 style="margin:0;">Competitor Intelligence</h3>
-          <span class="sample-badge">&#9888;&#65039; SAMPLE DATA &mdash; NOT REAL</span>
-        </div>
-        <div class="hint">Needs churn-exit survey data (why customers left, which competitor they switched to). Not yet imported.</div>
-        <div class="tbl-wrap"><table><tr><th>Reason Customer Left</th><th>% of Lost Customers</th></tr>
-          <tr><td>Price</td><td>34%</td></tr>
-          <tr><td>Competitor Offer</td><td>28%</td></tr>
-          <tr><td>Service Issue</td><td>18%</td></tr>
-          <tr><td>Technical Issue</td><td>12%</td></tr>
-          <tr><td>Relocation</td><td>8%</td></tr>
-        </table></div>
       </div>
     </div>
 
@@ -1879,9 +1708,6 @@ function renderOverview(){
   let row2 = "";
   row2 += kpiCard("ASD (Avg. Solve Time)", techHrs.length?techAvg.toFixed(1)+" hr":"-", "Target < "+asdTarget+" hr", techAvg<=asdTarget);
   row2 += kpiCard("6G Penetration", fmtPct(sixGPenetration), fmtNum(sixG.upgrades)+" upgrades", true);
-  row2 += kpiCard("Power Level (sample)", "69%", "No ONU export imported yet", null);
-  row2 += kpiCard("Opex (sample)", "Rs 27.8L", "No Opex export imported yet", null);
-  row2 += kpiCard("Fuel Consumption (sample)", "2,340 Ltr", "No Fuel export imported yet", null);
   row2 += kpiTargetOrPct("New Installation", gm.installation, tInstall, false);
   row2 += kpiCard("Technical Tickets (Delayed)", fmtNum(techRows.length), techHrs.length?(techAvg.toFixed(1)+" hrs avg solve"):"no data this month", techAvg<=8);
   row2 += kpiCard("NS (unmatched)", beh.forecastDueMTD? fmtPct(beh.nsPct) : "-", `${beh.counts.NS} of ${beh.forecastDueMTD} forecast due`, beh.counts.NS===0);
@@ -1911,12 +1737,6 @@ function renderOverview(){
   document.getElementById("ov-top-problems").innerHTML = arRows.length ? arRows.slice(0,5).map((r,i)=>
     `<div class="progress-row"><div class="name">${i+1}. ${r.issue}</div><div style="flex:1;"></div><div>${r.status==="red"?"\uD83D\uDD34":"\uD83D\uDFE1"}</div></div>`
   ).join("") : `<div class="small-muted" style="padding:10px;">No active red flags.</div>`;
-
-  // ---- Sales Funnel mini (sample) ----
-  document.getElementById("ov-funnel-mini").innerHTML = `
-    <div class="progress-row"><div class="name">Leads</div><div style="flex:1;"><div style="background:var(--bg);height:6px;border-radius:3px;"><i style="display:block;height:100%;width:100%;background:#6d5bf6;border-radius:3px;"></i></div></div><div>500</div></div>
-    <div class="progress-row"><div class="name">Installed</div><div style="flex:1;"><div style="background:var(--bg);height:6px;border-radius:3px;"><i style="display:block;height:100%;width:25%;background:#6d5bf6;border-radius:3px;"></i></div></div><div>125</div></div>
-    <div class="progress-row"><div class="name">Paid Customer</div><div style="flex:1;"><div style="background:var(--bg);height:6px;border-radius:3px;"><i style="display:block;height:100%;width:23%;background:var(--green);border-radius:3px;"></i></div></div><div><b>115 (23%)</b></div></div>`;
 
   // ---- Staff Performance mini (real, top 5 by activity) ----
   const instRowsOv = filterByMonthOlt(STORE.installations, olt);
@@ -3892,12 +3712,11 @@ function switchTab(tab){
     growth:["Sales & Customer Growth","Installation, sales, growth, churn and active customer movement"],
     revenue:["Revenue & Business Performance","Accrual revenue, ARPU, and target vs achievement"],
     technical:["Technical Data","Delayed-ticket (>20 min solve) tracking, SLA and staff performance"],
-    strategy:["Strategy & Review","OLT capacity, market potential, and competitor intelligence \u2014 currently placeholder layout awaiting real data imports"],
     import:["Data Import","Import monthly Excel exports to keep the dashboard current"],
     targets:["Manage Targets","Edit the annual M1–M12 target table used for Target vs Achievement"]};
   document.getElementById("pageTitle").textContent = titles[tab][0];
   document.getElementById("pageSub").textContent = titles[tab][1];
-  document.querySelector(".controls").style.display = (tab==="import"||tab==="targets"||tab==="technical"||tab==="strategy") ? "none" : "flex";
+  document.querySelector(".controls").style.display = (tab==="import"||tab==="targets"||tab==="technical") ? "none" : "flex";
   document.getElementById("oltTabs").style.display = (tab==="oltperf") ? "none" : "flex";
   renderAll();
 }
