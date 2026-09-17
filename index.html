@@ -508,26 +508,90 @@ canvas{max-width:100%;}
 
     <!-- ===================== EXECUTIVE SUMMARY ===================== -->
     <div class="section" id="sec-summary">
-      <div class="panel" id="es-narrative-panel">
-        <div class="flex-between">
-          <h3>Branch Narrative &mdash; <span id="es-narrative-scope"></span></h3>
-          <button class="btn small" id="btn-print-summary">&#128424; Print / Export Summary</button>
+      <div class="panel" id="es-hero" style="background:linear-gradient(120deg,#0a2a5e 0%,#123a7a 55%,#1a4a9a 100%);color:#fff;border:none;padding:18px 22px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+          <div>
+            <div style="font-size:19px;font-weight:800;letter-spacing:.3px;">SHUKLAGANDAKI BRANCH EXECUTIVE BUSINESS SUMMARY</div>
+            <div id="es-hero-sub" style="font-size:12px;color:#bcd0ff;margin-top:3px;"></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <span style="background:#ffffff20;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:700;">&#128205; SKGD01</span>
+            <span style="background:#ffffff20;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:700;">&#128205; VMAD01</span>
+            <span style="background:#ffffff20;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:700;">&#128205; RISH01</span>
+          </div>
         </div>
+      </div>
+
+      <div class="grid kpi-grid" id="es-kpi-row" style="grid-template-columns:repeat(8,1fr);gap:10px;"></div>
+
+      <div class="three-col" style="margin-top:12px;">
+        <div class="panel">
+          <h3>&#127919; Business Health &mdash; Target vs Actual</h3>
+          <div class="tbl-wrap"><table id="es-health-table"><thead></thead><tbody></tbody></table></div>
+        </div>
+        <div class="panel">
+          <h3>&#128246; OLT Performance Snapshot</h3>
+          <div id="es-olt-snapshot"></div>
+        </div>
+        <div class="panel">
+          <h3>&#128101; Customer Funnel</h3>
+          <div class="hint">From Forecast to Revenue</div>
+          <div id="es-funnel"></div>
+        </div>
+      </div>
+
+      <div class="three-col">
+        <div class="panel">
+          <h3>Customer Behaviour &amp; Billing</h3>
+          <div class="hint">Regular = paid within 5 days of due date.</div>
+          <div class="tbl-wrap" style="font-size:11px;"><table id="es-billing-table"><thead></thead><tbody></tbody></table></div>
+          <div class="chart-box" style="height:120px;margin-top:8px;"><canvas id="chart-es-categories" role="img" aria-label="Customer categories donut"></canvas></div>
+          <div id="es-categories-legend" style="font-size:11px;"></div>
+        </div>
+        <div class="panel">
+          <h3>Revenue &amp; Financials</h3>
+          <div class="chart-box" style="height:140px;"><canvas id="chart-es-revtrend" role="img" aria-label="Revenue trend chart"></canvas></div>
+          <div id="es-financials" style="font-size:11.5px;margin-top:8px;"></div>
+        </div>
+        <div class="panel">
+          <h3>Sales Performance</h3>
+          <div class="tbl-wrap" style="font-size:11px;"><table id="es-staff-perf-table"><thead></thead><tbody></tbody></table></div>
+          <div class="chart-box" style="height:120px;margin-top:8px;"><canvas id="chart-es-acqmix" role="img" aria-label="Acquisition mix donut"></canvas></div>
+          <div id="es-acqmix-legend" style="font-size:11px;"></div>
+        </div>
+      </div>
+
+      <div class="four-col">
+        <div class="panel" style="grid-column:span 2;">
+          <h3>&#128295; Technical &amp; Operations</h3>
+          <div id="es-technical"></div>
+        </div>
+        <div class="panel" style="border-left:4px solid var(--red);">
+          <h3 style="color:var(--red);">&#9888;&#65039; Management Attention</h3>
+          <div id="es-attention" style="font-size:11.5px;"></div>
+        </div>
+        <div class="panel" style="border-left:4px solid var(--green);">
+          <h3 style="color:var(--green);">&#9989; Positive Movement</h3>
+          <div id="es-positive" style="font-size:11.5px;"></div>
+        </div>
+      </div>
+
+      <div class="flex-between" style="margin-top:8px;">
+        <h3 style="margin:0;">Additional Detail</h3>
+        <button class="btn small" id="btn-print-summary">&#128424; Print / Export Summary</button>
+      </div>
+      <div class="panel" style="margin-top:8px;">
+        <h3>Branch Narrative &mdash; <span id="es-narrative-scope"></span></h3>
         <p id="es-narrative" style="font-size:13px;line-height:1.7;color:var(--txt);"></p>
       </div>
-
       <div class="panel">
         <h3>Comprehensive OLT Performance &mdash; selected scope</h3>
-        <div class="hint">Every core metric side by side, per OLT and branch total. This is the single table for a full monthly review.</div>
         <div class="tbl-wrap"><table id="es-olt-full-table"><thead></thead><tbody></tbody></table></div>
       </div>
-
       <div class="panel">
         <h3>Month-wise Trend &mdash; full table</h3>
-        <div class="hint">Every month with data imported so far, selected OLT.</div>
         <div class="tbl-wrap"><table id="es-month-table"><thead></thead><tbody></tbody></table></div>
       </div>
-
       <div class="two-col">
         <div class="panel">
           <h3>Staff Performance Summary</h3>
@@ -538,12 +602,12 @@ canvas{max-width:100%;}
           <div class="tbl-wrap"><table id="es-source-table"><thead></thead><tbody></tbody></table></div>
         </div>
       </div>
-
       <div class="panel">
         <h3>Revenue Composition &mdash; by transaction type, selected scope</h3>
         <div class="tbl-wrap"><table id="es-revtype-table"><thead></thead><tbody></tbody></table></div>
       </div>
     </div>
+
 
     <!-- ===================== WEEKLY REVIEW ===================== -->
     <div class="section" id="sec-weekly">
@@ -2286,8 +2350,213 @@ function renderTechnicalTable(){
 }
 
 // ---------- EXECUTIVE SUMMARY ----------
+// ---------- Executive Business Summary (infographic-style, all real data) ----------
+function withPrevMonth(fn){
+  const cur = fn();
+  if(STATE.month===ALL_MONTHS_VALUE) return [cur, null];
+  const idx = monthIdx(STATE.month);
+  if(idx<=0) return [cur, null];
+  const save = STATE.month;
+  STATE.month = BS_MONTHS[idx-1];
+  const prev = fn();
+  STATE.month = save;
+  return [cur, prev];
+}
+function esGaugeCard(label, icon, actual, target, isMoney, deltaPct, accent){
+  const gap = (target!==null && target!==undefined) ? actual-target : null;
+  const achv = (target!==null && target!==undefined && target!==0) ? pct(actual,target) : null;
+  const fmt = isMoney ? fmtMoney : fmtNum;
+  const achvColorV = achv===null ? "var(--txt3)" : achv>=100 ? "var(--green)" : achv>=90 ? "var(--amber)" : "var(--red)";
+  return `<div class="kpi kpi-${accent}" style="padding:10px 12px;">
+    <div class="lbl">${icon} ${label}</div>
+    <div class="val">${fmt(actual)}</div>
+    <div class="delta" style="font-size:10px;">Target ${target!==null&&target!==undefined?fmt(target):'-'} &nbsp; Gap ${gap!==null?(gap>=0?'+':'')+fmt(gap):'-'}</div>
+    <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
+      <b style="color:${achvColorV};font-size:13px;">${achv!==null?Math.round(achv)+'%':'-'}</b>
+      ${deltaPct!==null?`<span style="font-size:10px;color:${deltaPct>=0?'var(--green)':'var(--red)'};">${deltaPct>=0?'\u25B2':'\u25BC'}${Math.abs(deltaPct).toFixed(0)}% vs prior</span>`:''}
+    </div>
+  </div>`;
+}
+function renderExecutiveHero(){
+  const olt = STATE.olt;
+  document.getElementById("es-hero-sub").textContent = (STATE.month===ALL_MONTHS_VALUE?"All Months":STATE.month) + " " + STATE.fy + " \u00b7 " + (olt==="ALL"?"All OLT":olt);
+
+  const gm = growthMetricsFor(olt);
+  const rev = revenueForState(olt);
+  const beh = classifyBehaviour(olt);
+  const sixG = sixGMetricsFor(olt, STATE.month, STATE.fy);
+  const tActive = targetSumFor(olt, STATE.month, "active");
+  const tInstall = targetSumFor(olt, STATE.month, "installation");
+  const tGrowth = targetSumFor(olt, STATE.month, "growth");
+  const tChurn = targetSumFor(olt, STATE.month, "churn");
+  const tRevenue = targetSumFor(olt, STATE.month, "revenue");
+  const tWinback = targetSumFor(olt, STATE.month, "winback");
+  const tSixG = TARGETS.sixGMonthly ? TARGETS.sixGMonthly[monthIdx(STATE.month)] : null;
+
+  const [, activePrev] = withPrevMonth(()=>growthMetricsFor(olt).active);
+  const [, paidPrev] = withPrevMonth(()=>growthMetricsFor(olt).paidSales);
+  const [, growthPrev] = withPrevMonth(()=>growthMetricsFor(olt).growth);
+  const [, churnPrev] = withPrevMonth(()=>growthMetricsFor(olt).churn);
+  const [, revPrev] = withPrevMonth(()=>revenueForState(olt).total);
+  const [, retPrev] = withPrevMonth(()=>classifyBehaviour(olt).retentionPct);
+  const [, winPrev] = withPrevMonth(()=>classifyBehaviour(olt).counts.WIN);
+  const [, sixGPrev] = withPrevMonth(()=>sixGMetricsFor(olt, STATE.month, STATE.fy).upgrades);
+  const dpct = (cur,prev)=> (prev===null||prev===undefined||prev===0) ? null : pct(cur-prev, Math.abs(prev));
+
+  let kpiHtml = "";
+  kpiHtml += esGaugeCard("Active Customers","\uD83D\uDC65", gm.active, tActive, false, dpct(gm.active,activePrev), "blue");
+  kpiHtml += esGaugeCard("New Sales","\u2795", gm.paidSales, tInstall, false, dpct(gm.paidSales,paidPrev), "teal");
+  kpiHtml += esGaugeCard("Net Growth","\uD83D\uDCC8", gm.growth, tGrowth, false, dpct(gm.growth,growthPrev), "cyan");
+  kpiHtml += esGaugeCard("Churn","\u2B07\uFE0F", gm.churn, tChurn, false, dpct(gm.churn,churnPrev), "rose");
+  kpiHtml += esGaugeCard("Revenue","\uD83D\uDCB0", rev.total, tRevenue, true, dpct(rev.total,revPrev), "indigo");
+  kpiHtml += esGaugeCard("Retention","\uD83D\uDEE1\uFE0F", beh.retentionPct, targetFor(olt, STATE.month===ALL_MONTHS_VALUE?activeMonthsList()[activeMonthsList().length-1]:STATE.month, "retention"), false, dpct(beh.retentionPct,retPrev), "green");
+  kpiHtml += esGaugeCard("Winback","\uD83D\uDD04", beh.counts.WIN, tWinback, false, dpct(beh.counts.WIN,winPrev), "amber");
+  kpiHtml += esGaugeCard("6G Sales","\uD83D\uDCF6", sixG.upgrades, tSixG, false, dpct(sixG.upgrades,sixGPrev), "purple");
+  document.getElementById("es-kpi-row").innerHTML = kpiHtml;
+
+  const healthRows = [
+    ["\uD83D\uDC65 Active Customers", gm.active, tActive, false],
+    ["\uD83D\uDCB0 Revenue", rev.total, tRevenue, true],
+    ["\u2795 New Sales", gm.paidSales, tInstall, false],
+    ["\uD83D\uDEE1\uFE0F Retention", beh.retentionPct, targetFor(olt, STATE.month===ALL_MONTHS_VALUE?activeMonthsList()[activeMonthsList().length-1]:STATE.month, "retention"), false],
+    ["\uD83D\uDD04 Winback", beh.counts.WIN, tWinback, false],
+    ["\u2B07\uFE0F Churn", gm.churn, tChurn, false],
+    ["\uD83D\uDCF6 6G Sales", sixG.upgrades, tSixG, false],
+  ];
+  let htHead = "<tr><th>KPI</th><th>Target</th><th>Actual</th><th>Gap</th><th>Achv%</th><th>Status</th></tr>";
+  let htBody = healthRows.map(([label,actual,target,isMoney])=>{
+    const fmt = isMoney?fmtMoney:fmtNum;
+    const achv = target?pct(actual,target):null;
+    const gap = target!==null&&target!==undefined?actual-target:null;
+    const status = achv===null?"-":achv>=100?'<span style="color:var(--green);font-weight:700;">Ahead</span>':achv>=90?'<span style="color:#a56a00;font-weight:700;">On Track</span>':'<span style="color:var(--red);font-weight:700;">Below</span>';
+    return `<tr><td>${label}</td><td>${target?fmt(target):'-'}</td><td>${fmt(actual)}</td><td>${gap!==null?(gap>=0?'+':'')+fmt(gap):'-'}</td><td>${achv!==null?Math.round(achv)+'%':'-'}</td><td>${status}</td></tr>`;
+  }).join("");
+  document.getElementById("es-health-table").innerHTML = `<thead>${htHead}</thead><tbody>${htBody}</tbody>`;
+
+  document.getElementById("es-olt-snapshot").innerHTML = OLTS.map(o=>{
+    const d = opOltData(o);
+    const needsAttention = (d.b.retentionPct<70) || (d.churnRate>0) || (d.asd!==null && d.asd>((typeof ASD_TARGET_HRS!=="undefined")?ASD_TARGET_HRS:6));
+    return `<div style="border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:11px;">
+      <div style="font-weight:800;margin-bottom:4px;"><span class="badge-olt">${o}</span></div>
+      <div>Active: <b>${fmtNum(d.g.active)}</b> &nbsp; Growth: <b>${fmtNum(d.g.growth)}</b></div>
+      <div>Revenue: <b>${fmtMoney(d.r.total)}</b></div>
+      <div>Retention: <b>${d.b.forecastDueMTD?fmtPct(d.b.retentionPct):'-'}</b> &nbsp; Churn: <b>${fmtNum(d.g.churn)}</b></div>
+      <div style="margin-top:4px;">${needsAttention?'<span style="color:var(--amber);font-weight:700;">\u26A0\uFE0F Needs Attention</span>':'<span style="color:var(--green);font-weight:700;">\u2705 On Track</span>'}</div>
+    </div>`;
+  }).join("");
+
+  const due = beh.forecastDueMTD;
+  const funnelStages = [
+    ["Forecast Due", due, "#4e8dff"],
+    ["Renewed", beh.counts.RET, "#22c48d"],
+    ["Winback", beh.counts.WIN, "#ffab3d"],
+    ["NS / Others", beh.counts.NS, "#8890b5"],
+  ];
+  document.getElementById("es-funnel").innerHTML = funnelStages.map(([label,val,color])=>
+    `<div class="progress-row"><div class="name">${label}</div><div style="flex:1;"><div style="background:var(--bg);height:8px;border-radius:4px;overflow:hidden;"><i style="display:block;height:100%;width:${due?pct(val,due):0}%;background:${color};border-radius:4px;"></i></div></div><div style="width:90px;text-align:right;">${fmtNum(val)} (${due?fmtPct(pct(val,due)):'-'})</div></div>`
+  ).join("");
+
+  const payRows = filterByMonthOlt(STORE.paymentBehaviour, olt);
+  const billingByOlt = {};
+  payRows.forEach(r=>{
+    const o = r.OLT || "(blank)";
+    billingByOlt[o] = billingByOlt[o] || {regular:0, irregular:0};
+    const diff = toNum(r["ACTUAL DIFF"]);
+    if(Math.abs(diff)<=5) billingByOlt[o].regular++; else billingByOlt[o].irregular++;
+  });
+  let bilHead = "<tr><th>OLT</th><th>Regular</th><th>Irregular</th><th>%Regular</th></tr>";
+  let bilBody = Object.entries(billingByOlt).map(([o,v])=>{
+    const t = v.regular+v.irregular;
+    return `<tr><td><span class="badge-olt">${o}</span></td><td>${v.regular}</td><td>${v.irregular}</td><td>${t?fmtPct(pct(v.regular,t)):'-'}</td></tr>`;
+  }).join("") || `<tr><td colspan="4" class="small-muted">No data</td></tr>`;
+  document.getElementById("es-billing-table").innerHTML = `<thead>${bilHead}</thead><tbody>${bilBody}</tbody>`;
+
+  const catColors = {NEW:"#4e8dff", RET:"#22c48d", WIN:"#ffab3d", NS:"#ff5c7c"};
+  const catLabels = {NEW:"New", RET:"Regular (Renewed)", WIN:"Winback", NS:"NS (unmatched)"};
+  renderChart("es-categories", document.getElementById("chart-es-categories"), {
+    type:"doughnut",
+    data:{labels:Object.keys(catColors).map(k=>catLabels[k]), datasets:[{data:Object.keys(catColors).map(k=>beh.counts[k]||0), backgroundColor:Object.values(catColors), borderWidth:0}]},
+    options:{cutout:"60%", plugins:{legend:{display:false}}, animation:false, responsive:true, maintainAspectRatio:false}
+  });
+  const catTotal = Object.values(beh.counts).reduce((s,v)=>s+v,0) || 1;
+  document.getElementById("es-categories-legend").innerHTML = Object.keys(catColors).map(k=>
+    `<div class="progress-row"><div class="name"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${catColors[k]};margin-right:5px;"></span>${catLabels[k]}</div><div style="flex:1;"></div><div>${fmtNum(beh.counts[k]||0)} (${fmtPct(pct(beh.counts[k]||0,catTotal))})</div></div>`
+  ).join("");
+
+  const revMonths = activeMonthsList();
+  const revSeries = revMonths.map(m=>revenueFor(m, STATE.fy, olt).total);
+  const revTargetSeries = revMonths.map(m=>targetSumFor(olt, m, "revenue"));
+  renderChart("es-revtrend", document.getElementById("chart-es-revtrend"), {
+    type:"line",
+    data:{labels:revMonths, datasets:[
+      {label:"Actual", data:revSeries, borderColor:"#4e8dff", backgroundColor:"#4e8dff33", fill:true, tension:.3},
+      {label:"Target", data:revTargetSeries, borderColor:"#ffab3d", borderDash:[5,4], pointRadius:0}
+    ]}, options: baseChartOpts()
+  });
+  const ytdRevenue = revMonths.reduce((s,m)=>s+revenueFor(m, STATE.fy, olt).total, 0);
+  document.getElementById("es-financials").innerHTML = `
+    <div class="progress-row"><div class="name">Retail Revenue (this scope)</div><div style="flex:1;"></div><div><b>${fmtMoney(rev.total)}</b></div></div>
+    <div class="progress-row"><div class="name">ARPU</div><div style="flex:1;"></div><div><b>${fmtMoney(arpuFor(STATE.month, STATE.fy, olt))}</b></div></div>
+    <div class="progress-row"><div class="name">YTD Revenue</div><div style="flex:1;"></div><div><b>${fmtMoney(ytdRevenue)}</b></div></div>
+  `;
+
+  const instRowsEs = filterByMonthOlt(STORE.installations, olt);
+  const paidRowsEs = filterByMonthOlt(STORE.paidSales, olt);
+  const staffMapEs = {};
+  instRowsEs.forEach(r=>{ const k=r["MARKETED BY"]||"(blank)"; staffMapEs[k]=staffMapEs[k]||{inst:0,paid:0,revenue:0}; staffMapEs[k].inst++; });
+  paidRowsEs.forEach(r=>{ const k=r["MARKETED BY"]||"(blank)"; staffMapEs[k]=staffMapEs[k]||{inst:0,paid:0,revenue:0}; staffMapEs[k].paid++; staffMapEs[k].revenue+=toNum(r["TOTAL AMT PAID"]); });
+  const staffArrEs = Object.entries(staffMapEs).sort((a,b)=>(b[1].inst+b[1].paid)-(a[1].inst+a[1].paid)).slice(0,6);
+  document.getElementById("es-staff-perf-table").innerHTML = `<thead><tr><th>Staff</th><th>Sales</th><th>Revenue</th></tr></thead><tbody>` +
+    (staffArrEs.length ? staffArrEs.map(([n,v])=>`<tr><td>${n}</td><td>${v.paid}</td><td>${fmtMoney(v.revenue)}</td></tr>`).join("") : `<tr><td colspan="3" class="small-muted">No data</td></tr>`) + `</tbody>`;
+
+  const acqMap = {};
+  paidRowsEs.forEach(r=>{ const k=r["ENTRY SOURCE"]||"(blank)"; acqMap[k]=(acqMap[k]||0)+1; });
+  const acqEntries = Object.entries(acqMap).sort((a,b)=>b[1]-a[1]);
+  const acqColors = ["#4e8dff","#22c48d","#ffab3d","#a855f7","#ff5c7c","#8890b5"];
+  renderChart("es-acqmix", document.getElementById("chart-es-acqmix"), {
+    type:"doughnut",
+    data:{labels:acqEntries.map(e=>e[0]), datasets:[{data:acqEntries.map(e=>e[1]), backgroundColor:acqColors, borderWidth:0}]},
+    options:{cutout:"60%", plugins:{legend:{display:false}}, animation:false, responsive:true, maintainAspectRatio:false}
+  });
+  const acqTotal = acqEntries.reduce((s,e)=>s+e[1],0) || 1;
+  document.getElementById("es-acqmix-legend").innerHTML = acqEntries.map((e,i)=>
+    `<div class="progress-row"><div class="name"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${acqColors[i%acqColors.length]};margin-right:5px;"></span>${e[0]}</div><div style="flex:1;"></div><div>${e[1]} (${fmtPct(pct(e[1],acqTotal))})</div></div>`
+  ).join("");
+
+  const techRowsEs = STATE.month===ALL_MONTHS_VALUE ? STORE.technicalData.filter(r=>r.bsFY===STATE.fy && (olt==="ALL"||r.OLT===olt)) : STORE.technicalData.filter(r=>r.bsMonth===STATE.month && r.bsFY===STATE.fy && (olt==="ALL"||r.OLT===olt));
+  const techHrsEs = techRowsEs.map(r=>r.solveHours).filter(v=>v!==null&&v!==undefined&&!isNaN(v));
+  const techAvgEs = techHrsEs.length ? techHrsEs.reduce((a,b)=>a+b,0)/techHrsEs.length : 0;
+  const probCounts = groupCount(techRowsEs, "PROBLEM").slice(0,4);
+  document.getElementById("es-technical").innerHTML = `
+    <div class="three-col" style="margin-bottom:10px;">
+      <div class="progress-row"><div class="name">Total Tickets</div><div style="flex:1;"></div><div><b>${fmtNum(techRowsEs.length)}</b></div></div>
+      <div class="progress-row"><div class="name">Avg Resolve Time</div><div style="flex:1;"></div><div><b>${techHrsEs.length?techAvgEs.toFixed(1)+' hr':'-'}</b></div></div>
+      <div class="progress-row"><div class="name">Repeat Complaints</div><div style="flex:1;"></div><div><b>${(()=>{ const byU={}; techRowsEs.forEach(r=>{byU[r.USERNAME||'?']=(byU[r.USERNAME||'?']||0)+1;}); return Object.values(byU).filter(c=>c>=2).length; })()}</b></div></div>
+    </div>
+    <div class="small-muted" style="font-weight:700;margin-bottom:4px;">Top Issue Types</div>
+    ${probCounts.length ? probCounts.map(([p,c])=>`<div class="progress-row"><div class="name">${p}</div><div style="flex:1;"></div><div>${c}</div></div>`).join("") : '<div class="small-muted">No tickets this scope.</div>'}
+  `;
+
+  const arRowsEs = computeActionRequired();
+  document.getElementById("es-attention").innerHTML = arRowsEs.length ? arRowsEs.map(r=>
+    `<div class="progress-row"><div class="name">${r.status==="red"?"\uD83D\uDD34":"\uD83D\uDFE1"} ${r.issue}</div><div style="flex:1;"></div><div>${r.current} (target ${r.target})</div></div>`
+  ).join("") : `<div class="small-muted">No active red flags right now.</div>`;
+
+  const positives = [];
+  healthRows.forEach(([label,actual,target])=>{
+    if(target){ const achv = pct(actual,target); if(achv>=100 && !label.includes("Churn")) positives.push(`${label.replace(/^\S+\s/,'')} at ${Math.round(achv)}% of target`); }
+  });
+  if(dpct(sixG.upgrades,sixGPrev)!==null && dpct(sixG.upgrades,sixGPrev)>1) positives.push(`6G sales up ${dpct(sixG.upgrades,sixGPrev).toFixed(0)}% vs prior month`);
+  if(dpct(rev.total,revPrev)!==null && dpct(rev.total,revPrev)>1) positives.push(`Revenue up ${dpct(rev.total,revPrev).toFixed(0)}% vs prior month`);
+  if(techHrsEs.length && techAvgEs<=((typeof ASD_TARGET_HRS!=="undefined")?ASD_TARGET_HRS:6)) positives.push(`Technical SLA on target (${techAvgEs.toFixed(1)} hr avg solve)`);
+  document.getElementById("es-positive").innerHTML = positives.length ? positives.map(p=>
+    `<div class="progress-row"><div class="name">\u2705 ${p}</div></div>`
+  ).join("") : `<div class="small-muted">No standout positives this scope yet.</div>`;
+}
+
 function renderSummary(){
   const olt = STATE.olt;
+  renderExecutiveHero();
   const scopeLabel = (olt==="ALL"?"All OLT":olt) + " \u00b7 " + (STATE.month===ALL_MONTHS_VALUE ? "All Months" : STATE.month) + " " + STATE.fy;
   document.getElementById("es-narrative-scope").textContent = scopeLabel;
 
