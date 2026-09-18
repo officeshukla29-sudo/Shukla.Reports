@@ -524,6 +524,15 @@ canvas{max-width:100%;}
 
       <div class="grid kpi-grid" id="es-kpi-row" style="grid-template-columns:repeat(8,1fr);gap:10px;"></div>
 
+      <div class="panel">
+        <div class="flex-between">
+          <h3 style="margin:0;">AOP vs Actual &mdash; FY2083/84</h3>
+          <span class="small-muted" id="aop-scope-label"></span>
+        </div>
+        <div class="hint">Branch-wide AOP targets (from the FY83/84 AOP plan) vs real actuals for the selected month. This always compares the whole branch, regardless of the OLT filter above.</div>
+        <div class="tbl-wrap"><table id="aop-vs-actual-table"><thead></thead><tbody></tbody></table></div>
+      </div>
+
       <div class="three-col" style="margin-top:12px;">
         <div class="panel">
           <h3>&#127919; Business Health &mdash; Target vs Actual</h3>
@@ -994,6 +1003,18 @@ canvas{max-width:100%;}
 <script>
 
 const BS_MONTHS = ["Shrawan","Bhadra","Ashoj","Kartik","Mangsir","Poush","Magh","Falgun","Chaitra","Baisakh","Jestha","Ashar"];
+// AOP (Annual Operating Plan) targets for FY2083/84, branch-wide (not per-OLT), from the
+// user's own AOP spreadsheet. Index 0=Shrawan(M1)...11=Ashar(M12), matching BS_MONTHS order.
+const AOP_DATA = {
+  fy: "2083/84",
+  opening:  [5899,5977,6055,6156,6171,6218,6278,6345,6415,6473,6560,6635],
+  addition: [108,110,108,96,100,103,108,100,98,117,106,106],
+  churn:    [30,32,7,81,53,43,41,30,40,30,31,36],
+  closing:  [5977,6055,6156,6171,6218,6278,6345,6415,6473,6560,6635,6705],
+  growth:   [78,78,101,15,47,60,67,70,58,87,75,70],
+  revenue:  [5634245,5646597,5765360,5687185,5687140,5852005,5841303,5999856,6041435,6174536,6282900,6228900],
+  ytd: { opening:5899, addition:1260, churn:454, closing:6705, growth:806, revenue:70840578 }
+};
 const OLTS = ["SKGD01","VMAD01","RISH01"];
 const LS_KEY = "sg_bed_store_v1";
 const LS_TARGETS = "sg_bed_targets_v1";
@@ -2377,7 +2398,52 @@ function esGaugeCard(label, icon, actual, target, isMoney, deltaPct, accent){
     </div>
   </div>`;
 }
+// AOP vs Actual (branch-wide, uses AOP_DATA regardless of the top OLT filter)
+function renderAopVsActual(){
+  const el = document.getElementById("aop-vs-actual-table");
+  if(!el) return;
+  const scopeEl = document.getElementById("aop-scope-label");
+  if(STATE.fy !== AOP_DATA.fy){
+    if(scopeEl) scopeEl.textContent = "AOP data is only available for FY" + AOP_DATA.fy;
+    el.innerHTML = `<tbody><tr><td style="padding:14px;" class="small-muted">No AOP plan loaded for FY${STATE.fy}.</td></tr></tbody>`;
+    return;
+  }
+  const isAll = STATE.month === ALL_MONTHS_VALUE;
+  const idx = isAll ? null : monthIdx(STATE.month);
+  if(scopeEl) scopeEl.textContent = isAll ? "All Months (YTD)" : STATE.month + " " + STATE.fy;
+
+  const gm = growthMetricsFor("ALL");
+  const rev = revenueForState("ALL");
+  const [, gmPrev] = withPrevMonth(()=>growthMetricsFor("ALL"));
+  const [, revPrevObj] = withPrevMonth(()=>revenueForState("ALL"));
+  const dpctSafe = (cur,prev)=> (prev===null||prev===undefined||prev===0) ? null : pct(cur-prev, Math.abs(prev));
+
+  const aopClosing = isAll ? AOP_DATA.ytd.closing : AOP_DATA.closing[idx];
+  const aopAddition = isAll ? AOP_DATA.ytd.addition : AOP_DATA.addition[idx];
+  const aopChurn = isAll ? AOP_DATA.ytd.churn : AOP_DATA.churn[idx];
+  const aopGrowth = isAll ? AOP_DATA.ytd.growth : AOP_DATA.growth[idx];
+  const aopRevenue = isAll ? AOP_DATA.ytd.revenue : AOP_DATA.revenue[idx];
+
+  const rows = [
+    ["Active Customers (Closing)", aopClosing, gm.active, false, dpctSafe(gm.active, gmPrev?gmPrev.active:null)],
+    ["Addition (New Sales)", aopAddition, gm.paidSales, false, dpctSafe(gm.paidSales, gmPrev?gmPrev.paidSales:null)],
+    ["Churn", aopChurn, gm.churn, false, dpctSafe(gm.churn, gmPrev?gmPrev.churn:null)],
+    ["Growth", aopGrowth, gm.growth, false, dpctSafe(gm.growth, gmPrev?gmPrev.growth:null)],
+    ["Revenue (Retail)", aopRevenue, rev.total, true, dpctSafe(rev.total, revPrevObj?revPrevObj.total:null)],
+  ];
+  let thead = "<tr><th>Metric</th><th>AOP Target</th><th>Actual</th><th>Achv%</th><th>%MoM (Actual)</th></tr>";
+  let tbody = rows.map(([label,target,actual,isMoney,mom])=>{
+    const fmt = isMoney ? fmtMoney : fmtNum;
+    const achv = target ? pct(actual,target) : null;
+    const achvColorV = achv===null?"var(--txt3)":achv>=100?"var(--green)":achv>=90?"var(--amber)":"var(--red)";
+    const momTxt = mom===null ? "-" : `<span style="color:${mom>=0?'var(--green)':'var(--red)'};">${mom>=0?'\u25B2':'\u25BC'}${Math.abs(mom).toFixed(1)}%</span>`;
+    return `<tr><td>${label}</td><td>${fmt(target)}</td><td>${fmt(actual)}</td><td><b style="color:${achvColorV};">${achv!==null?Math.round(achv)+'%':'-'}</b></td><td>${momTxt}</td></tr>`;
+  }).join("");
+  el.innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
+}
+
 function renderExecutiveHero(){
+  renderAopVsActual();
   const olt = STATE.olt;
   document.getElementById("es-hero-sub").textContent = (STATE.month===ALL_MONTHS_VALUE?"All Months":STATE.month) + " " + STATE.fy + " \u00b7 " + (olt==="ALL"?"All OLT":olt);
 
