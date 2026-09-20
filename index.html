@@ -988,7 +988,7 @@ canvas{max-width:100%;}
         <div class="flex-between">
           <h3>Annual Targets (M1&ndash;M12) &mdash; <span id="tgt-olt-label">SKGD01</span></h3>
           <div class="chip-row" style="margin:0;">
-            <select id="tgt-olt-select"><option value="SKGD01">SKGD01</option><option value="VMAD01">VMAD01</option><option value="RISH01">RISH01</option></select>
+            <select id="tgt-olt-select"><option value="ALL">All OLT (branch total)</option><option value="SKGD01">SKGD01</option><option value="VMAD01">VMAD01</option><option value="RISH01">RISH01</option></select>
             <button class="btn small" id="btn-save-targets">Save Targets</button>
           </div>
         </div>
@@ -2383,10 +2383,10 @@ function withPrevMonth(fn){
   STATE.month = save;
   return [cur, prev];
 }
-function esGaugeCard(label, icon, actual, target, isMoney, deltaPct, accent){
+function esGaugeCard(label, icon, actual, target, fmtType, deltaPct, accent){
   const gap = (target!==null && target!==undefined) ? actual-target : null;
   const achv = (target!==null && target!==undefined && target!==0) ? pct(actual,target) : null;
-  const fmt = isMoney ? fmtMoney : fmtNum;
+  const fmt = fmtType==="pct" ? fmtPct : fmtType ? fmtMoney : fmtNum;
   const achvColorV = achv===null ? "var(--txt3)" : achv>=100 ? "var(--green)" : achv>=90 ? "var(--amber)" : "var(--red)";
   return `<div class="kpi kpi-${accent}" style="padding:10px 12px;">
     <div class="lbl">${icon} ${label}</div>
@@ -2465,7 +2465,7 @@ function renderExecutiveHero(){
   const [, churnPrev] = withPrevMonth(()=>growthMetricsFor(olt).churn);
   const [, revPrev] = withPrevMonth(()=>revenueForState(olt).total);
   const [, retPrev] = withPrevMonth(()=>classifyBehaviour(olt).retentionPct);
-  const [, winPrev] = withPrevMonth(()=>classifyBehaviour(olt).counts.WIN);
+  const [, winPrev] = withPrevMonth(()=>classifyBehaviour(olt).winbackPct);
   const [, sixGPrev] = withPrevMonth(()=>sixGMetricsFor(olt, STATE.month, STATE.fy).upgrades);
   const dpct = (cur,prev)=> (prev===null||prev===undefined||prev===0) ? null : pct(cur-prev, Math.abs(prev));
 
@@ -2475,8 +2475,9 @@ function renderExecutiveHero(){
   kpiHtml += esGaugeCard("Net Growth","\uD83D\uDCC8", gm.growth, tGrowth, false, dpct(gm.growth,growthPrev), "cyan");
   kpiHtml += esGaugeCard("Churn","\u2B07\uFE0F", gm.churn, tChurn, false, dpct(gm.churn,churnPrev), "rose");
   kpiHtml += esGaugeCard("Revenue","\uD83D\uDCB0", rev.total, tRevenue, true, dpct(rev.total,revPrev), "indigo");
-  kpiHtml += esGaugeCard("Retention","\uD83D\uDEE1\uFE0F", beh.retentionPct, targetFor(olt, STATE.month===ALL_MONTHS_VALUE?activeMonthsList()[activeMonthsList().length-1]:STATE.month, "retention"), false, dpct(beh.retentionPct,retPrev), "green");
-  kpiHtml += esGaugeCard("Winback","\uD83D\uDD04", beh.counts.WIN, tWinback, false, dpct(beh.counts.WIN,winPrev), "amber");
+  const tRetentionAll = targetSumFor(olt, STATE.month===ALL_MONTHS_VALUE?activeMonthsList()[activeMonthsList().length-1]:STATE.month, "retention");
+  kpiHtml += esGaugeCard("Retention","\uD83D\uDEE1\uFE0F", beh.retentionPct, tRetentionAll, "pct", dpct(beh.retentionPct,retPrev), "green");
+  kpiHtml += esGaugeCard("Winback","\uD83D\uDD04", beh.winbackPct, tWinback, "pct", dpct(beh.winbackPct,winPrev), "amber");
   kpiHtml += esGaugeCard("6G Sales","\uD83D\uDCF6", sixG.upgrades, tSixG, false, dpct(sixG.upgrades,sixGPrev), "purple");
   document.getElementById("es-kpi-row").innerHTML = kpiHtml;
 
@@ -2484,14 +2485,14 @@ function renderExecutiveHero(){
     ["\uD83D\uDC65 Active Customers", gm.active, tActive, false],
     ["\uD83D\uDCB0 Revenue", rev.total, tRevenue, true],
     ["\u2795 New Sales", gm.paidSales, tInstall, false],
-    ["\uD83D\uDEE1\uFE0F Retention", beh.retentionPct, targetFor(olt, STATE.month===ALL_MONTHS_VALUE?activeMonthsList()[activeMonthsList().length-1]:STATE.month, "retention"), false],
-    ["\uD83D\uDD04 Winback", beh.counts.WIN, tWinback, false],
+    ["\uD83D\uDEE1\uFE0F Retention", beh.retentionPct, tRetentionAll, "pct"],
+    ["\uD83D\uDD04 Winback", beh.winbackPct, tWinback, "pct"],
     ["\u2B07\uFE0F Churn", gm.churn, tChurn, false],
     ["\uD83D\uDCF6 6G Sales", sixG.upgrades, tSixG, false],
   ];
   let htHead = "<tr><th>KPI</th><th>Target</th><th>Actual</th><th>Gap</th><th>Achv%</th><th>Status</th></tr>";
-  let htBody = healthRows.map(([label,actual,target,isMoney])=>{
-    const fmt = isMoney?fmtMoney:fmtNum;
+  let htBody = healthRows.map(([label,actual,target,fmtType])=>{
+    const fmt = fmtType==="pct" ? fmtPct : fmtType ? fmtMoney : fmtNum;
     const achv = target?pct(actual,target):null;
     const gap = target!==null&&target!==undefined?actual-target:null;
     const status = achv===null?"-":achv>=100?'<span style="color:var(--green);font-weight:700;">Ahead</span>':achv>=90?'<span style="color:#a56a00;font-weight:700;">On Track</span>':'<span style="color:var(--red);font-weight:700;">Below</span>';
@@ -3107,9 +3108,8 @@ function opSection1(){
     const tGrowth = targetSumFor(o, STATE.month, "growth");
     const tChurn = targetSumFor(o, STATE.month, "churn");
     const tActive = targetSumFor(o, STATE.month, "active");
-    const tRetention = targetFor(o, STATE.month===ALL_MONTHS_VALUE ? activeMonthsList()[activeMonthsList().length-1] : STATE.month, "retention");
-    const tWinbackCount = targetSumFor(o, STATE.month, "winback");
-    const tWinbackPct = d.b.forecastDueMTD ? pct(tWinbackCount, d.b.forecastDueMTD) : null;
+    const tRetention = targetSumFor(o, STATE.month===ALL_MONTHS_VALUE ? activeMonthsList()[activeMonthsList().length-1] : STATE.month, "retention");
+    const tWinbackPct = targetSumFor(o, STATE.month, "winback");
     return {...d, tGrowth, tChurn, tActive, tRetention, tWinbackPct};
   });
   let thead = `<tr><th>OLT</th><th>Install<br>Act/Tgt</th><th>Growth<br>Act/Tgt</th><th>Churn<br>Act (cap)</th><th>Active<br>Act/Tgt</th><th>Revenue<br>Act/Tgt</th><th>Retention (MTD)<br>Act vs Tgt</th><th>Winback (MTD)<br>Act vs Tgt</th><th>Delayed<br>Tickets</th></tr>`;
@@ -4009,27 +4009,49 @@ async function fbPullNow(){
 
 let TGT_OLT = "SKGD01";
 function renderTargetsTable(){
-  const t = TARGETS.OLTS[TGT_OLT];
-  document.getElementById("tgt-olt-label").textContent = TGT_OLT;
+  document.getElementById("tgt-olt-label").textContent = TGT_OLT==="ALL" ? "All OLT (branch total)" : TGT_OLT;
   const metrics = [["installation","Installation"],["growth","Growth"],["churn","Churn"],["active","Active Customer"],["revenue","A Revenue"],["retention","Retention %"],["winback","Winback %"]];
+  const isAll = TGT_OLT==="ALL";
   let thead = "<tr><th>Metric</th>" + BS_MONTHS.map(m=>`<th>${m.slice(0,4)}</th>`).join("") + "</tr>";
   let tbody = metrics.map(([key,label])=>{
-    const cells = t[key].map((v,i)=>`<td><input type="number" min="0" step="any" data-metric="${key}" data-idx="${i}" value="${v}" aria-label="${label} target for month ${i+1}"></td>`).join("");
+    let cells;
+    if(isAll){
+      const isRate = (key==="retention"||key==="winback");
+      cells = BS_MONTHS.map((m,i)=>{
+        const vals = OLTS.map(o=>TARGETS.OLTS[o][key][i]);
+        const v = isRate ? (vals.reduce((a,b)=>a+b,0)/vals.length) : vals.reduce((a,b)=>a+b,0);
+        return `<td><input type="text" value="${isRate?v.toFixed(1):v}" disabled title="Branch ${isRate?'average':'total'} \u2014 edit per-OLT to change" style="background:var(--bg);color:var(--txt2);"></td>`;
+      }).join("");
+    } else {
+      const t = TARGETS.OLTS[TGT_OLT];
+      cells = t[key].map((v,i)=>`<td><input type="number" min="0" step="any" data-metric="${key}" data-idx="${i}" value="${v}" aria-label="${label} target for month ${i+1}"></td>`).join("");
+    }
     return `<tr><td>${label}</td>${cells}</tr>`;
   }).join("");
+  // 6G is branch-wide (not tracked per-OLT), so it's always shown and always editable regardless of the OLT selected above.
+  const sixGCells = (TARGETS.sixGMonthly||Array(12).fill(114)).map((v,i)=>`<td><input type="number" min="0" step="any" data-metric="sixG" data-idx="${i}" value="${v}" aria-label="6G Sales target for month ${i+1}"></td>`).join("");
+  tbody += `<tr><td>6G Sales <span class="small-muted">(branch)</span></td>${sixGCells}</tr>`;
   document.getElementById("tgt-table").innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
 }
 function saveTargetsFromTable(){
-  const t = TARGETS.OLTS[TGT_OLT];
-  document.querySelectorAll("#tgt-table input").forEach(inp=>{
-    const metric = inp.dataset.metric, idx = parseInt(inp.dataset.idx);
+  if(TGT_OLT!=="ALL"){
+    const t = TARGETS.OLTS[TGT_OLT];
+    document.querySelectorAll('#tgt-table input[data-metric]:not([data-metric="sixG"])').forEach(inp=>{
+      const metric = inp.dataset.metric, idx = parseInt(inp.dataset.idx);
+      const v = parseFloat(inp.value);
+      if(!isNaN(v)) t[metric][idx] = Math.max(0, v);
+    });
+  }
+  if(!TARGETS.sixGMonthly) TARGETS.sixGMonthly = Array(12).fill(114);
+  document.querySelectorAll('#tgt-table input[data-metric="sixG"]').forEach(inp=>{
+    const idx = parseInt(inp.dataset.idx);
     const v = parseFloat(inp.value);
-    if(!isNaN(v)) t[metric][idx] = Math.max(0, v);
+    if(!isNaN(v)) TARGETS.sixGMonthly[idx] = Math.max(0, v);
   });
   saveTargets(TARGETS);
   renderAll();
   fbSaveMeta("targets", { data: TARGETS }).then(ok=> setSyncStatus(ok?"ok":"off", ok?"targets synced":"targets not synced"));
-  alert("Targets saved for "+TGT_OLT+".");
+  alert(TGT_OLT==="ALL" ? "6G target saved (branch-wide). Per-OLT metrics are read-only in All OLT view \u2014 edit them individually to change." : "Targets saved for "+TGT_OLT+".");
 }
 
 // ---------- Navigation & filters ----------
