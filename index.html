@@ -1412,10 +1412,10 @@ function sixGMetricsInRange(oltFilter, range){
 
 // ---------- REVENUE ENGINE ----------
 function accrualRowsFor(month, fy, oltFilter){
-  const mLower = month.toLowerCase();
+  const mLower = month.trim().toLowerCase();
   const fyNorm = normFY(fy);
   return STORE.accrualRevenue.filter(r=>{
-    const rm = String(r["Accrued month"]||"").toLowerCase();
+    const rm = String(r["Accrued month"]||"").trim().toLowerCase();
     const rfy = normFY(r["Accrued Fy Year"]);
     const oltOk = oltFilter==="ALL" || r.Olt===oltFilter;
     return rm===mLower && rfy===fyNorm && oltOk;
@@ -3536,10 +3536,28 @@ function rowsFromRaw(raw, headerIdx){
   return out;
 }
 
+// Removes exact-duplicate rows within a freshly-parsed import batch (same value in every
+// column, e.g. same username + same date + same amount repeated). Keeps the first occurrence,
+// reports how many were dropped so the import toast can mention it.
+function dedupeExactRows(rows){
+  const seen = new Set();
+  let dropped = 0;
+  const out = [];
+  rows.forEach(r=>{
+    const key = JSON.stringify(r);
+    if(seen.has(key)){ dropped++; return; }
+    seen.add(key);
+    out.push(r);
+  });
+  return {rows: out, dropped};
+}
+
 function doImport(cfg, raw, month, fy){
   const headerIdx = findHeaderRow(raw, cfg.signature);
   if(headerIdx===-1){ alert("Couldn't detect the expected columns in this file for '"+cfg.title+"'. Please check the file is the right export."); return; }
   let rows = rowsFromRaw(raw, headerIdx);
+  const dedupeResult = dedupeExactRows(rows);
+  rows = dedupeResult.rows;
   let detectedLabel = month ? (month+" "+fy) : "";
 
   if(cfg.id==="forecast"){
@@ -3547,9 +3565,9 @@ function doImport(cfg, raw, month, fy){
     STORE.forecast[forecastKey(month,fy)] = rows;
   } else if(cfg.id==="accrualRevenue"){
     // dedupe by (Accrued month, Accrued Fy Year) pairs present in new file
-    const pairs = new Set(rows.map(r=> String(r["Accrued month"]).toLowerCase()+"|"+normFY(r["Accrued Fy Year"])));
+    const pairs = new Set(rows.map(r=> String(r["Accrued month"]).trim().toLowerCase()+"|"+normFY(r["Accrued Fy Year"])));
     detectedLabel = [...pairs].map(p=>{ const [m,f]=p.split("|"); return m+" "+f; }).join(", ");
-    STORE.accrualRevenue = STORE.accrualRevenue.filter(r=> !pairs.has(String(r["Accrued month"]).toLowerCase()+"|"+normFY(r["Accrued Fy Year"])));
+    STORE.accrualRevenue = STORE.accrualRevenue.filter(r=> !pairs.has(String(r["Accrued month"]).trim().toLowerCase()+"|"+normFY(r["Accrued Fy Year"])));
     STORE.accrualRevenue = STORE.accrualRevenue.concat(rows);
   } else if(cfg.id==="sixG"){
     // BS month/FY is derived per-ticket from its own Issued Date, not a single batch month.
@@ -3593,7 +3611,7 @@ function doImport(cfg, raw, month, fy){
   renderImportCards();
   renderAll();
 
-  showImportToast(cfg.title + " imported successfully", detectedLabel + " \u00b7 " + rows.length + " rows saved locally. Pushing to cloud...");
+  showImportToast(cfg.title + " imported successfully", detectedLabel + " \u00b7 " + rows.length + " rows saved locally" + (dedupeResult.dropped ? " (" + dedupeResult.dropped + " exact duplicate row" + (dedupeResult.dropped>1?"s":"") + " skipped)" : "") + ". Pushing to cloud...");
 
   // Push this import to Firebase now. If Firebase isn't connected yet, this fails
   // quietly here but will be automatically picked up and pushed by the startup/realtime
