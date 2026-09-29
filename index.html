@@ -3600,9 +3600,26 @@ function doImport(cfg, raw, month, fy){
     STORE.technicalData = STORE.technicalData.filter(r=> !ids2.has(r["TICKET ID"]));
     STORE.technicalData = STORE.technicalData.concat(rows);
   } else {
+    let gcNotice = "";
+    if(cfg.id==="growthChurn"){
+      // Some exports mix a few branch-wide "total" rows (OLT column blank) in with the real per-OLT
+      // rows for the same dates. Blank-OLT rows can't be attributed to any OLT and would corrupt
+      // per-OLT numbers, so skip just those and keep the valid per-OLT rows.
+      const before = rows.length;
+      rows = rows.filter(r=> r.OLT && String(r.OLT).trim()!=="");
+      const skipped = before - rows.length;
+      const unknownOlts = [...new Set(rows.map(r=>String(r.OLT).trim()).filter(o=>!OLTS.includes(o)))];
+      if(!rows.length){
+        alert("This Growth & Churn file has no rows with an OLT filled in, so nothing could be imported. Please re-export with the per-OLT breakdown included.");
+        return;
+      }
+      if(skipped) gcNotice += " " + skipped + " branch-total row" + (skipped>1?"s":"") + " (no OLT) skipped.";
+      if(unknownOlts.length) gcNotice += " Note: OLT value(s) not among SKGD01/VMAD01/RISH01 found: " + unknownOlts.join(", ") + " \u2014 these won't appear in any per-OLT view.";
+    }
     rows = rows.map(r=>({...r, bsMonth:month, bsFY:fy}));
     STORE[cfg.store] = STORE[cfg.store].filter(r=> !(r.bsMonth===month && r.bsFY===fy));
     STORE[cfg.store] = STORE[cfg.store].concat(rows);
+    if(gcNotice) detectedLabel += gcNotice;
   }
 
   STORE.importLog.push({type:cfg.title, month:month, fy:fy, rows: rows.length, at: new Date().toISOString()});
