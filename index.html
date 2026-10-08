@@ -267,6 +267,18 @@ canvas{max-width:100%;}
 .wr-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;}
 .wr-badge.review{background:#eaf1ff;color:#3568d8;}
 .wr-badge.planning{background:#fff0e6;color:#c2650f;}
+.mm-wrap{position:relative;}
+.mm-btn{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:600;color:var(--txt);cursor:pointer;min-width:140px;}
+.mm-btn:after{content:"\25be";color:var(--txt3);margin-left:auto;font-size:11px;}
+.mm-panel{display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:50;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 14px 40px #1b214022;padding:10px;width:220px;max-height:280px;overflow-y:auto;}
+.mm-panel.open{display:block;}
+.mm-opt{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:7px;font-size:12.5px;color:var(--txt);cursor:pointer;user-select:none;}
+.mm-opt:hover{background:var(--panel2);}
+.mm-opt input{accent-color:var(--accent);width:14px;height:14px;cursor:pointer;}
+.mm-sep{border:none;border-top:1px solid var(--border);margin:6px 0;}
+.mm-actions{display:flex;gap:8px;padding:4px 8px 2px;}
+.mm-actions button{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:7px;padding:5px 0;font-size:11px;font-weight:700;color:var(--txt2);cursor:pointer;}
+.mm-actions button:hover{color:var(--txt);}
 .wr-action-item{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f0f1fa;}
 .wr-action-item:last-child{border-bottom:none;}
 .wr-action-item .wr-num{width:24px;height:24px;border-radius:50%;background:var(--grad1);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -377,7 +389,11 @@ canvas{max-width:100%;}
           <button data-olt="VMAD01">VMAD01</button>
           <button data-olt="RISH01">RISH01</button>
         </div>
-        <select id="monthSelect"></select>
+        <select id="monthSelect" style="display:none;"></select>
+        <div class="mm-wrap" id="mmWrap">
+          <button type="button" class="mm-btn" id="mmBtn">Month</button>
+          <div class="mm-panel" id="mmPanel"></div>
+        </div>
         <label id="pctToggleLabel" style="margin:0;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);border-radius:9px;padding:7px 12px;cursor:pointer;user-select:none;">
           <span class="pct-switch" id="pctSwitch"><i></i></span>
           <span style="font-size:12.5px;color:var(--txt2);font-weight:600;">Show as %</span>
@@ -1121,7 +1137,7 @@ function saveTargets(t){ safeLSSet(LS_TARGETS, JSON.stringify(t)); }
 let STORE = loadStore();
 let TARGETS = loadTargets();
 
-let STATE = { olt: "ALL", month: "Bhadra", fy: "2083/84", tab: "overview", showPct: false };
+let STATE = { olt: "ALL", month: "Bhadra", fy: "2083/84", tab: "overview", showPct: false, selectedMonths: null };
 let TECH_FILTER = { olt: "ALL", solved: "ALL", problem: "ALL", dateFrom: "", dateTo: "", search: "" };
 
 // ---------- helpers ----------
@@ -1208,11 +1224,29 @@ function normFY(s){
   if(m) return m[1]+"/"+m[2].slice(2);
   return s;
 }
+// Common alternate English transliterations/spellings for BS month names,
+// as seen in real source Excel exports (e.g. "Ashoj" exported as "Ashwin").
+const MONTH_ALIASES = {
+  "shrawan":"Shrawan", "shravan":"Shrawan", "saun":"Shrawan",
+  "bhadra":"Bhadra", "bhadau":"Bhadra",
+  "ashoj":"Ashoj", "ashwin":"Ashoj", "aswin":"Ashoj", "asoj":"Ashoj",
+  "kartik":"Kartik", "karthik":"Kartik",
+  "mangsir":"Mangsir", "marga":"Mangsir", "mangshir":"Mangsir",
+  "poush":"Poush", "push":"Poush", "paush":"Poush",
+  "magh":"Magh",
+  "falgun":"Falgun", "phalgun":"Falgun",
+  "chaitra":"Chaitra", "chait":"Chaitra",
+  "baisakh":"Baisakh", "baishakh":"Baisakh", "vaisakh":"Baisakh",
+  "jestha":"Jestha", "jeshtha":"Jestha", "jyestha":"Jestha",
+  "ashar":"Ashar", "asar":"Ashar", "asadh":"Ashar", "ashadh":"Ashar"
+};
 function normMonthName(s){
   if(!s) return "";
   s = String(s).trim().toLowerCase();
   let found = BS_MONTHS.find(m => m.toLowerCase()===s);
-  return found || s;
+  if(found) return found;
+  if(MONTH_ALIASES[s]) return MONTH_ALIASES[s];
+  return s;
 }
 
 function forecastKey(month, fy){ return month+"|"+fy; }
@@ -1302,16 +1336,30 @@ function classifyBehaviour(oltFilter){
 
 // ---------- SALES & GROWTH ENGINE ----------
 const ALL_MONTHS_VALUE = "__ALL__";
-function activeMonthsList(){
+// All BS months that actually have data for the current FY, regardless of the
+// multi-month selection. Use this when populating the month-picker UI itself.
+function allDataMonths(){
   const monthsSet = new Set();
   STORE.installations.forEach(r=>{ if(r.bsFY===STATE.fy) monthsSet.add(r.bsMonth); });
   STORE.paidSales.forEach(r=>{ if(r.bsFY===STATE.fy) monthsSet.add(r.bsMonth); });
   STORE.growthChurn.forEach(r=>{ if(r.bsFY===STATE.fy) monthsSet.add(r.bsMonth); });
   STORE.paymentBehaviour.forEach(r=>{ if(r.bsFY===STATE.fy) monthsSet.add(r.bsMonth); });
   Object.keys(STORE.forecast).forEach(k=>{ const [m,fy]=k.split("|"); if(fy===STATE.fy) monthsSet.add(m); });
-  STORE.accrualRevenue.forEach(r=>{ if(normFY(r["Accrued Fy Year"])===STATE.fy){ const mn = BS_MONTHS.find(m=>m.toLowerCase()===String(r["Accrued month"]||"").toLowerCase()); if(mn) monthsSet.add(mn); } });
+  STORE.accrualRevenue.forEach(r=>{ if(normFY(r["Accrued Fy Year"])===STATE.fy){ const mn = normMonthName(r["Accrued month"]); if(mn && BS_MONTHS.includes(mn)) monthsSet.add(mn); } });
   monthsSet.delete(undefined);
   return BS_MONTHS.filter(m=>monthsSet.has(m));
+}
+// Months actually in scope for the current view: all data-months, narrowed to
+// STATE.selectedMonths when the user has picked a specific subset via the
+// multi-month filter. Every "All Months" aggregation path in the dashboard
+// reads this (indirectly, via its existing calls to activeMonthsList()), so
+// picking a subset narrows every chart/table/export without touching them.
+function activeMonthsList(){
+  const all = allDataMonths();
+  if(Array.isArray(STATE.selectedMonths) && STATE.selectedMonths.length){
+    return all.filter(m=>STATE.selectedMonths.includes(m));
+  }
+  return all;
 }
 
 function latestGrowthChurnRow(olt){
@@ -1412,13 +1460,13 @@ function sixGMetricsInRange(oltFilter, range){
 
 // ---------- REVENUE ENGINE ----------
 function accrualRowsFor(month, fy, oltFilter){
-  const mLower = month.trim().toLowerCase();
+  const mNorm = normMonthName(month);
   const fyNorm = normFY(fy);
   return STORE.accrualRevenue.filter(r=>{
-    const rm = String(r["Accrued month"]||"").trim().toLowerCase();
+    const rm = normMonthName(r["Accrued month"]);
     const rfy = normFY(r["Accrued Fy Year"]);
     const oltOk = oltFilter==="ALL" || r.Olt===oltFilter;
-    return rm===mLower && rfy===fyNorm && oltOk;
+    return rm===mNorm && rfy===fyNorm && oltOk;
   });
 }
 function revenueFor(month, fy, oltFilter){
@@ -3565,9 +3613,9 @@ function doImport(cfg, raw, month, fy){
     STORE.forecast[forecastKey(month,fy)] = rows;
   } else if(cfg.id==="accrualRevenue"){
     // dedupe by (Accrued month, Accrued Fy Year) pairs present in new file
-    const pairs = new Set(rows.map(r=> String(r["Accrued month"]).trim().toLowerCase()+"|"+normFY(r["Accrued Fy Year"])));
+    const pairs = new Set(rows.map(r=> normMonthName(r["Accrued month"])+"|"+normFY(r["Accrued Fy Year"])));
     detectedLabel = [...pairs].map(p=>{ const [m,f]=p.split("|"); return m+" "+f; }).join(", ");
-    STORE.accrualRevenue = STORE.accrualRevenue.filter(r=> !pairs.has(String(r["Accrued month"]).trim().toLowerCase()+"|"+normFY(r["Accrued Fy Year"])));
+    STORE.accrualRevenue = STORE.accrualRevenue.filter(r=> !pairs.has(normMonthName(r["Accrued month"])+"|"+normFY(r["Accrued Fy Year"])));
     STORE.accrualRevenue = STORE.accrualRevenue.concat(rows);
   } else if(cfg.id==="sixG"){
     // BS month/FY is derived per-ticket from its own Issued Date, not a single batch month.
@@ -3698,7 +3746,7 @@ function populateMonthSelect(){
 // ---------- Month-wise export / import (bundles every data type for one BS month into one JSON) ----------
 function monthDataBundle(month, fy){
   const flow = (arr)=> arr.filter(r=> r.bsMonth===month && r.bsFY===fy);
-  const accrual = STORE.accrualRevenue.filter(r=> String(r["Accrued month"]).toLowerCase()===String(month).toLowerCase() && normFY(r["Accrued Fy Year"])===fy);
+  const accrual = STORE.accrualRevenue.filter(r=> normMonthName(r["Accrued month"])===normMonthName(month) && normFY(r["Accrued Fy Year"])===fy);
   const forecastRows = STORE.forecast[forecastKey(month,fy)] || [];
   return {
     month, fy, exportedAt: new Date().toISOString(),
@@ -3750,7 +3798,7 @@ function importMonthJSON(file){
       counts.push("Payment Behaviour: "+data.paymentBehaviour.length);
     }
     if(data.accrualRevenue && data.accrualRevenue.length){
-      STORE.accrualRevenue = STORE.accrualRevenue.filter(r=> !(String(r["Accrued month"]).toLowerCase()===String(month).toLowerCase() && normFY(r["Accrued Fy Year"])===fy)).concat(data.accrualRevenue);
+      STORE.accrualRevenue = STORE.accrualRevenue.filter(r=> !(normMonthName(r["Accrued month"])===normMonthName(month) && normFY(r["Accrued Fy Year"])===fy)).concat(data.accrualRevenue);
       counts.push("Accrual Revenue: "+data.accrualRevenue.length);
     }
     if(data.forecast && data.forecast.length){
