@@ -3728,7 +3728,11 @@ function updateImportToast(success, detail){
 
 
 function populateMonthSelect(){
-  let months = activeMonthsList();
+  // Use allDataMonths() (every month with real data this FY), NOT activeMonthsList()
+  // (which is already narrowed by the current multi-month selection) — otherwise a
+  // narrowed selection would make previously-unchecked months disappear from the
+  // picker itself, and the user could never re-add them.
+  let months = allDataMonths();
   if(!months.length) months = ["Bhadra"];
   const sel = document.getElementById("monthSelect");
   const optHtml = months.map(m=>`<option value="${m}" ${m===STATE.month?'selected':''}>${m}</option>`).join("");
@@ -3741,6 +3745,61 @@ function populateMonthSelect(){
   }
   const exportFySel = document.getElementById("monthExportFySel");
   if(exportFySel) exportFySel.value = STATE.fy;
+
+  renderMonthMulti(months);
+}
+
+// ---------- Multi-month filter (checkbox dropdown) ----------
+// Which months are "checked" right now, derived from STATE. A single month in
+// STATE.month shows just that one checked; ALL_MONTHS_VALUE with no narrowing
+// shows every month checked ("All Months"); ALL_MONTHS_VALUE with
+// STATE.selectedMonths set shows exactly that subset checked.
+function currentMonthSelection(months){
+  if(STATE.month!==ALL_MONTHS_VALUE) return months.includes(STATE.month) ? [STATE.month] : [];
+  if(Array.isArray(STATE.selectedMonths) && STATE.selectedMonths.length){
+    return STATE.selectedMonths.filter(m=>months.includes(m));
+  }
+  return months.slice();
+}
+function monthMultiLabel(months, sel){
+  if(sel.length===0 || sel.length===months.length) return `All Months (${months.length})`;
+  if(sel.length===1) return sel[0];
+  return `${sel.length} Months`;
+}
+function applyMonthChecks(checked, months){
+  if(checked.length===0 || checked.length===months.length){
+    STATE.month = ALL_MONTHS_VALUE; STATE.selectedMonths = null;
+  } else if(checked.length===1){
+    STATE.month = checked[0]; STATE.selectedMonths = null;
+  } else {
+    STATE.month = ALL_MONTHS_VALUE; STATE.selectedMonths = checked;
+  }
+  populateMonthSelect(); renderAll();
+}
+function renderMonthMulti(months){
+  months = months && months.length ? months : (allDataMonths().length ? allDataMonths() : ["Bhadra"]);
+  const sel = currentMonthSelection(months);
+  const btn = document.getElementById("mmBtn");
+  const panel = document.getElementById("mmPanel");
+  if(!btn || !panel) return;
+  btn.textContent = monthMultiLabel(months, sel);
+  const allChecked = sel.length===months.length;
+  let html = `<label class="mm-opt"><input type="checkbox" id="mm-all" ${allChecked?'checked':''}> <b>All Months</b></label><hr class="mm-sep">`;
+  html += months.map(m=>`<label class="mm-opt"><input type="checkbox" class="mm-month-opt" value="${m}" ${sel.includes(m)?'checked':''}> ${m}</label>`).join("");
+  html += `<div class="mm-actions"><button type="button" id="mm-selectall">Select All</button><button type="button" id="mm-done">Done</button></div>`;
+  panel.innerHTML = html;
+
+  document.getElementById("mm-all").addEventListener("change", (e)=>{
+    applyMonthChecks(e.target.checked ? months.slice() : [], months);
+  });
+  document.getElementById("mm-selectall").addEventListener("click", ()=> applyMonthChecks(months.slice(), months));
+  document.getElementById("mm-done").addEventListener("click", ()=> panel.classList.remove("open"));
+  panel.querySelectorAll(".mm-month-opt").forEach(cb=>{
+    cb.addEventListener("change", ()=>{
+      const checked = Array.from(panel.querySelectorAll(".mm-month-opt:checked")).map(x=>x.value);
+      applyMonthChecks(checked, months);
+    });
+  });
 }
 
 // ---------- Month-wise export / import (bundles every data type for one BS month into one JSON) ----------
@@ -4194,8 +4253,16 @@ function init(){
     STATE.olt = b.dataset.olt;
     renderAll();
   }));
-  document.getElementById("monthSelect").addEventListener("change", (e)=>{ STATE.month = e.target.value; renderAll(); });
-  document.getElementById("fySelect").addEventListener("change", (e)=>{ STATE.fy = e.target.value; populateMonthSelect(); renderAll(); });
+  document.getElementById("monthSelect").addEventListener("change", (e)=>{ STATE.month = e.target.value; STATE.selectedMonths = null; populateMonthSelect(); renderAll(); });
+  document.getElementById("fySelect").addEventListener("change", (e)=>{ STATE.fy = e.target.value; STATE.selectedMonths = null; populateMonthSelect(); renderAll(); });
+  document.getElementById("mmBtn").addEventListener("click", (e)=>{
+    e.stopPropagation();
+    document.getElementById("mmPanel").classList.toggle("open");
+  });
+  document.addEventListener("click", (e)=>{
+    const wrap = document.getElementById("mmWrap");
+    if(wrap && !wrap.contains(e.target)) document.getElementById("mmPanel").classList.remove("open");
+  });
   document.getElementById("pctToggle").addEventListener("change", (e)=>{
     STATE.showPct = e.target.checked;
     document.getElementById("pctSwitch").classList.toggle("on", STATE.showPct);
