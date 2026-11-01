@@ -685,6 +685,123 @@ td.enh-bar.neg{background-image:linear-gradient(90deg,#f43f5e 0,#fb923c var(--w,
 .topnav .nav-btn.active,.nav-btn.active{background:linear-gradient(135deg,#6366f1,#8b5cf6)!important;color:#fff!important;box-shadow:0 4px 12px rgba(99,102,241,.35);}
 #subTabs .active,.subtab.active{color:#4338ca;border-bottom-color:#6366f1;}
 h1,.page-title{background:linear-gradient(90deg,#1e1b4b,#4338ca);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+
+/* ===== UNIFIED v5: one brand colour (indigo) + semantic status colours only ===== */
+:root{--brand:#4f46e5;--brand-soft:#eef2ff;--brand-line:#c7d2fe;--ink-main:#1e2347;}
+body{background:#f6f7fb;}
+.kpi{background:#fff;border:1px solid #e6e8f2;border-top:3px solid var(--accent-c,#4f46e5);box-shadow:0 1px 3px rgba(30,35,71,.06);}
+.kpi .val{color:var(--ink-main);}
+.kpi .lbl{color:#5b6285;font-weight:500;}
+.kpi .lbl::before{box-shadow:none;width:8px;height:8px;}
+.kpi .bar{background:#eef0f6;height:4px;}
+.kpi .bar i{background:var(--accent-c,#4f46e5);}
+.kpi.kpi-clickable:hover{border-color:var(--brand-line);box-shadow:0 6px 18px rgba(79,70,229,.14);}
+.panel{border:1px solid #e6e8f2;box-shadow:0 1px 3px rgba(30,35,71,.05);}
+.panel:hover{box-shadow:0 4px 14px rgba(30,35,71,.08);}
+.panel h3::before,.panel:nth-of-type(3n+2) h3::before,.panel:nth-of-type(3n) h3::before{background:var(--brand);width:4px;height:15px;}
+.tbl-wrap thead th{background:#f4f5fb;color:#4b5280;border-bottom:1px solid #dfe2f0;font-weight:650;}
+table tbody tr:nth-child(even) td{background-color:#fafbfe;}
+.tbl-wrap table tbody tr:hover td{background-color:var(--brand-soft);}
+td.enh-bar{background-image:linear-gradient(90deg,#6366f1 0,#6366f1 var(--w,0%),rgba(99,102,241,.10) var(--w,0%))!important;}
+td.enh-bar.neg{background-image:linear-gradient(90deg,#f43f5e 0,#f43f5e var(--w,0%),rgba(244,63,94,.10) var(--w,0%))!important;}
+.topnav{background:#fff;border-bottom:1px solid #e6e8f2;}
+.topnav .nav-btn.active,.nav-btn.active{background:var(--brand-soft)!important;color:var(--brand)!important;box-shadow:none;font-weight:650;}
+h1,.page-title{background:none;-webkit-text-fill-color:currentColor;color:var(--ink-main);}
+.tbl-tools button:hover{background:var(--brand-soft);}
+td.enh-bar{background-size:100% 2px!important;opacity:1;background-image:linear-gradient(90deg,rgba(99,102,241,.45) 0,rgba(99,102,241,.45) var(--w,0%),rgba(99,102,241,.07) var(--w,0%))!important;}
+td.enh-bar.neg{background-image:linear-gradient(90deg,rgba(244,63,94,.5) 0,rgba(244,63,94,.5) var(--w,0%),rgba(244,63,94,.07) var(--w,0%))!important;}
+
+/* ===== GRADIENT v6: colourful, consistent per metric family ===== */
+.kpi-indigo{--g1:#6366f1;--g2:#8b5cf6;--accent-c:#6366f1;}
+.kpi-blue{--g1:#2563eb;--g2:#06b6d4;--accent-c:#2563eb;}
+.kpi-teal{--g1:#0d9488;--g2:#22c55e;--accent-c:#0d9488;}
+.kpi-green{--g1:#059669;--g2:#34d399;--accent-c:#059669;}
+.kpi-rose{--g1:#e11d48;--g2:#fb7185;--accent-c:#e11d48;}
+.kpi-purple{--g1:#9333ea;--g2:#ec4899;--accent-c:#9333ea;}
+.kpi-amber{--g1:#f59e0b;--g2:#f97316;--accent-c:#f59e0b;}
+.kpi-slate{--g1:#475569;--g2:#94a3b8;--accent-c:#475569;}
+.kpi-orange{--g1:#ea580c;--g2:#f43f5e;--accent-c:#ea580c;}
+.kpi-cyan{--g1:#0891b2;--g2:#3b82f6;--accent-c:#0891b2;}
+body{background:linear-gradient(180deg,#eceafe 0,#f6f7fb 380px);background-repeat:no-repeat;background-color:#f6f7fb;}
+.kpi{background:linear-gradient(135deg,var(--g1,#6366f1),var(--g2,#8b5cf6));border:none;color:#fff;box-shadow:0 8px 20px color-mix(in srgb,var(--g1,#6366f1) 35%,transparent);position:relative;overflow:hidden;}
+.kpi::after{content:"";position:absolute;right:-28px;top:-28px;width:96px;height:96px;border-radius:50%;background:rgba(255,255,255,.14);pointer-events:none;}
+.kpi .lbl{color:rgba(255,255,255,.92);font-weight:600;}
+.kpi .lbl::before{background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.25);}
+.kpi .val{color:#fff;}
+.kpi .delta,.kpi .delta.up,.kpi .delta.down,.kpi div[style*="color"]{color:rgba(255,255,255,.92)!important;}
+.kpi .delta.up::before{content:"\25B2 ";font-size:9px;}.kpi .delta.down::before{content:"\25BC ";font-size:9px;}
+.kpi .bar{background:rgba(255,255,255,.28);height:5px;}
+.kpi .bar i{background:#fff;}
+.kpi-drill-hint{color:#fff;}
+.kpi.kpi-clickable:hover{transform:translateY(-3px);border:none;box-shadow:0 14px 30px color-mix(in srgb,var(--g1,#6366f1) 45%,transparent);}
+#es-hero{background:linear-gradient(120deg,#4338ca 0%,#7c3aed 55%,#db2777 120%)!important;box-shadow:0 12px 30px rgba(124,58,237,.3);}
+.panel{border:1px solid #e3e3f8;box-shadow:0 4px 16px rgba(99,102,241,.08);}
+.panel h3::before,.panel:nth-of-type(3n+2) h3::before,.panel:nth-of-type(3n) h3::before{width:5px;height:17px;border-radius:3px;background:linear-gradient(180deg,#6366f1,#ec4899);}
+.panel:nth-of-type(3n+2) h3::before{background:linear-gradient(180deg,#06b6d4,#3b82f6);}
+.panel:nth-of-type(3n) h3::before{background:linear-gradient(180deg,#f59e0b,#f43f5e);}
+.tbl-wrap thead th{background:linear-gradient(180deg,#ece9ff,#f5f3ff);color:#4338ca;border-bottom:2px solid #c7d2fe;}
+td.enh-bar{background-image:linear-gradient(90deg,#6366f1,#ec4899 var(--w,0%),rgba(99,102,241,.08) var(--w,0%))!important;background-size:100% 3px!important;}
+.topnav{background:linear-gradient(90deg,#fff,#f3f0ff);}
+.topnav .nav-btn.active,.nav-btn.active{background:linear-gradient(135deg,#6366f1,#8b5cf6)!important;color:#fff!important;box-shadow:0 4px 12px rgba(99,102,241,.4);}
+h1,.page-title{background:linear-gradient(90deg,#1e1b4b,#6d28d9);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.panel.health-card{background:linear-gradient(135deg,#fff,#f5f3ff);}
+
+.dd-divider{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:26px 2px 12px;padding-bottom:8px;border-bottom:2px solid #c7d2fe;}
+.dd-divider span{font:800 17px var(--font-display);color:#312e81;}
+.dd-divider small{color:var(--txt3);font-size:11.5px;}
+#op-deep td:not(:first-child){text-align:right;}#op-deep th:not(:first-child){text-align:right;}#op-deep td:first-child{text-align:left;}
+
+/* ===== TYPE & SPACING v7 ===== */
+html{-webkit-text-size-adjust:100%;}
+body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;font-feature-settings:"cv11","ss01","calt";font-optical-sizing:auto;}
+.page-title,.section>h1,.page-head h1,h1{font-size:28px;font-weight:800;letter-spacing:-.03em;line-height:1.15;}
+h1+p,.page-head p,.page-sub,.subtitle{font-size:13.5px;color:var(--txt2);margin-top:4px;}
+.panel{padding:22px 24px;margin-bottom:20px;border-radius:18px;}
+.panel h3{font-size:16px;font-weight:700;letter-spacing:-.015em;margin-bottom:6px;}
+.panel .hint,.hint{font-size:12.5px;line-height:1.5;color:var(--txt3);}
+.kpi-grid{gap:16px;margin-bottom:20px;}
+.kpi{padding:16px 18px 15px;border-radius:16px;}
+.kpi .lbl{font-size:12px;letter-spacing:.01em;margin-bottom:8px;}
+.kpi .val{font-size:30px;font-weight:800;letter-spacing:-.035em;line-height:1.1;font-feature-settings:"tnum","lnum","cv11";}
+.kpi .delta{font-size:12px;margin-top:8px;font-weight:600;}
+/* tables: calmer, more readable */
+table{font-size:13px;}
+th{font-size:11px!important;letter-spacing:.07em!important;text-transform:uppercase!important;font-weight:700!important;padding:11px 14px!important;white-space:nowrap;}
+td{padding:11px 14px!important;line-height:1.35;}
+td.num-cell,td.enh-bar,td[style*="text-align: right"],td[style*="text-align:right"],#op-deep td:not(:first-child){font-family:'Inter',sans-serif;font-size:13px;font-weight:550;letter-spacing:-.005em;font-feature-settings:"tnum","lnum","zero" 0;font-variant-numeric:tabular-nums lining-nums;}
+td:first-child{font-weight:600;color:var(--ink-main,#1e2347);}
+tbody tr:last-child td{border-bottom:0;}
+/* data bars only on the first numeric column — less visual noise */
+td.enh-bar{background-image:none!important;}
+td.enh-bar:nth-child(2){background-image:linear-gradient(90deg,#6366f1,#a78bfa var(--w,0%),rgba(99,102,241,.08) var(--w,0%))!important;background-size:100% 3px!important;}
+td.enh-bar.neg:nth-child(2){background-image:linear-gradient(90deg,#f43f5e,#fb923c var(--w,0%),rgba(244,63,94,.08) var(--w,0%))!important;}
+.enh-chip{font-weight:700;font-size:11.5px;padding:3px 9px;border-radius:999px;}
+.badge-olt{font-weight:700;font-size:11px;letter-spacing:.03em;padding:3px 9px;border-radius:7px;}
+.tbl-wrap{border-radius:14px;}
+.tbl-tools button{font-size:11.5px;padding:5px 11px;}
+.tl-hint{font-size:11.5px!important;}
+.dd-divider span{font-size:19px;letter-spacing:-.02em;}
+/* nav + filters */
+.topnav .nav-btn,.nav-btn{font-size:13.5px;font-weight:600;letter-spacing:-.005em;padding:8px 14px;border-radius:10px;}
+.subtab,#subTabs button{font-size:13.5px;font-weight:600;}
+select,.seg button,.olt-btn,button.chip{font-family:inherit;font-size:13px;font-weight:600;}
+/* readable notes/alerts */
+.note,.ov-alert-strip,.ov-alert-ok{font-size:13px;line-height:1.55;}
+@media(max-width:760px){
+  body{font-size:13.5px;}
+  h1{font-size:23px;}
+  .panel{padding:16px 16px;border-radius:16px;margin-bottom:14px;}
+  .kpi .val{font-size:24px;}
+  th{padding:9px 10px!important;} td{padding:9px 10px!important;}
+  .kpi-grid{gap:12px;}
+}
+#sec-overview .kpi-grid{grid-template-columns:repeat(auto-fill,minmax(158px,1fr))!important;}
+#sec-overview .kpi{padding:14px 16px;}
+#sec-overview .kpi .lbl{font-size:11.5px!important;}
+#sec-overview .kpi .val{font-size:22px!important;white-space:nowrap;}
+#sec-overview .kpi .delta{font-size:11.5px!important;}
+#action-required-table td:nth-child(2){min-width:150px;}
+@media(max-width:760px){#sec-overview .kpi-grid{grid-template-columns:repeat(2,1fr)!important;}#sec-overview .kpi .val{font-size:21px!important;}}
 </style>
 </head>
 <body>
@@ -872,7 +989,7 @@ h1,.page-title{background:linear-gradient(90deg,#1e1b4b,#4338ca);-webkit-backgro
       <details style="margin-top:16px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
         <summary style="cursor:pointer;font-weight:700;font-size:12.5px;color:var(--txt2);">&#128161; Glossary &mdash; what the abbreviations mean</summary>
         <div class="small-muted" style="margin-top:10px;line-height:1.7;font-size:12px;">
-          <b>MTD</b> = Month to Date. &nbsp; <b>OLT</b> = fiber node (SKGD01/VMAD01/RISH01). &nbsp; <b>ARPU</b> = Average Revenue Per User, (&Sigma;Amount&divide;&Sigma;Max Days)&times;days in month. &nbsp; <b>NS</b> = No-Show/unmatched. &nbsp; <b>ASD</b> = Average Solve Duration. &nbsp; <b>6G</b> = WiFi 6 upgrade tickets/sales. &nbsp; <b>Winback</b> = paid 30+ days after due date.
+          <b>MTD</b> = Month to Date. &nbsp; <b>OLT</b> = fiber node (SKGD01/VMAD01/RISH01). &nbsp; <b>ARPU</b> = Average Revenue Per User, Accrual Revenue &divide; Active Customers (monthly). &nbsp; <b>NS</b> = No-Show/unmatched. &nbsp; <b>ASD</b> = Average Solve Duration. &nbsp; <b>6G</b> = WiFi 6 upgrade tickets/sales. &nbsp; <b>Winback</b> = paid 30+ days after due date.
         </div>
       </details>
 
@@ -1138,6 +1255,7 @@ h1,.page-title{background:linear-gradient(90deg,#1e1b4b,#4338ca);-webkit-backgro
         <div class="chart-box"><canvas id="chart-op-ranking" role="img" aria-label="Op Ranking chart"></canvas></div>
         <div id="op-body-10"></div>
       </div>
+    <div id="op-deep"></div>
     </div>
 
     <!-- ===================== CUSTOMER BEHAVIOUR ===================== -->
@@ -1874,15 +1992,22 @@ function daysInBsMonth(month, fy){
   const d = Math.round((nextBoundDate-boundDate)/86400000);
   return (d>0 && d<40) ? d : 30;
 }
-// ARPU = (Sum of Amount / Sum of Max Days) * Total days in that specific month.
+// ARPU = monthly accrual revenue / active customers (per OLT or branch). The previous
+// (SUM Amount / SUM Max Days) x days formula divided by the row-level plan length of an already
+// aggregated revenue file, which inflated ARPU ~3.5x (Rs ~3,100 vs a real ~Rs 900). For "All Months"
+// it is the average of each month's ARPU (months with no active-customer snapshot are skipped).
 function arpuFor(month, fy, oltFilter){
-  const rows = (month===ALL_MONTHS_VALUE)
-    ? activeMonthsList().flatMap(m=>accrualRowsFor(m, fy, oltFilter))
-    : accrualRowsFor(month, fy, oltFilter);
-  const sumAmount = rows.reduce((s,r)=>s+toNum(r.Amount),0);
-  const sumMaxDays = rows.reduce((s,r)=>s+toNum(r["Max Days"]),0);
-  const days = (month===ALL_MONTHS_VALUE) ? 30 : daysInBsMonth(month, fy);
-  return sumMaxDays ? (sumAmount/sumMaxDays)*days : 0;
+  const months = (month===ALL_MONTHS_VALUE) ? activeMonthsList() : [month];
+  const olts = oltFilter==="ALL" ? OLTS : [oltFilter];
+  const vals = [];
+  months.forEach(m=>{
+    const rev = revenueFor(m, fy, oltFilter).total;
+    let act = 0; const sm = STATE.month, sf = STATE.fy;
+    try{ STATE.month = m; STATE.fy = fy; olts.forEach(o=>{ const gc = latestGrowthChurnRow(o); if(gc) act += toNum(gc["CL ACTIVE CUSTOMER"]); }); }
+    finally{ STATE.month = sm; STATE.fy = sf; }
+    if(rev>0 && act>0) vals.push(rev/act);
+  });
+  return vals.length ? vals.reduce((x,y)=>x+y,0)/vals.length : 0;
 }
 // Revenue for whatever is currently selected in the month dropdown — handles "All Months"
 // by summing every month that actually has data, instead of just STATE.month directly.
@@ -1943,7 +2068,7 @@ function targetSumFor(oltFilter, month, metric){
 
 // ---- Chart chrome: consistent fonts, soft grid, rounded arcs/bars, rich tooltip, gradients ----
 function themeChartConfig(cfg){
-  const FONT = "Inter, system-ui, sans-serif";
+  const FONT = "Inter, system-ui, sans-serif"; try{ Chart.defaults.font.family=FONT; Chart.defaults.font.size=12; Chart.defaults.color="#64748b"; }catch(_){}
   const o = cfg.options = cfg.options || {};
   o.animation = (o.animation === false) ? {duration:0} : {duration:650, easing:"easeOutQuart"};
   o.layout = Object.assign({padding:4}, o.layout||{});
@@ -2120,7 +2245,7 @@ function kpiTooltip(label){
   if(l.includes("unmatched")) return "Forecast-due customers with no matching payment record yet (need follow-up).";
   if(l.includes("technical")||l.includes("ticket")) return "Support tickets that took over 20 minutes to solve.";
   if(l.includes("growth")) return "Additional paying customers gained this scope.";
-  if(l.includes("arpu")) return "Average Revenue Per User: (\u03a3Amount \u00f7 \u03a3Max Days) \u00d7 days in this month.";
+  if(l.includes("arpu")) return "Average Revenue Per User: accrual revenue \u00f7 active customers for the month.";
   return "";
 }
 // drillKey (optional, last param): a key registered via registerDrill() \u2014 when present,
@@ -5366,7 +5491,7 @@ document.addEventListener("DOMContentLoaded", init);
 })();
 
 (function(){
-  const VIV=["#6366f1","#06b6d4","#f59e0b","#10b981","#f43f5e","#a855f7","#3b82f6","#f97316"];
+  const VIV=["#6366f1","#06b6d4","#f59e0b","#10b981","#ec4899","#8b5cf6","#3b82f6","#f97316"];
   const map={"#7cc4ff":"#3b82f6","#8ec5ff":"#3b82f6","#80c8ff":"#3b82f6","#a78bfa":"#8b5cf6","#9d8cff":"#8b5cf6","#6ee7b7":"#10b981","#7ee0c3":"#10b981","#fcd34d":"#f59e0b","#ffc857":"#f59e0b","#ff8fa3":"#f43f5e","#ff7b9c":"#f43f5e"};
   const bright=c=>{ if(typeof c!=="string") return c; const k=c.toLowerCase().trim(); return map[k]||c; };
   const _t=themeChartConfig;
@@ -5377,13 +5502,136 @@ document.addEventListener("DOMContentLoaded", init);
         if(t==="doughnut"||t==="pie"){ if(Array.isArray(ds.backgroundColor)) ds.backgroundColor=ds.backgroundColor.map(bright); else if(!ds.backgroundColor) ds.backgroundColor=VIV; }
         else if(t==="bar"){
           let base=Array.isArray(ds.backgroundColor)?ds.backgroundColor.map(bright):bright(ds.backgroundColor)||VIV[di%VIV.length];
-          if(typeof base==="string"&&/^#[0-9a-f]{6}$/i.test(base)){ const b0=base; ds.backgroundColor=function(c){ const a=c.chart.chartArea; if(!a) return b0; const h=c.chart.options.indexAxis==="y"; const g=c.chart.ctx.createLinearGradient(h?a.left:0,h?0:a.top,h?a.right:0,h?0:a.bottom); g.addColorStop(0,b0); g.addColorStop(1,b0+"99"); return g; }; }
+          if(typeof base==="string"&&/^#[0-9a-f]{6}$/i.test(base)){ const b0=base; ds.backgroundColor=function(c){ const a=c.chart.chartArea; if(!a) return b0; const h=c.chart.options.indexAxis==="y"; const g=c.chart.ctx.createLinearGradient(h?a.left:0,h?0:a.top,h?a.right:0,h?0:a.bottom); g.addColorStop(0,b0); g.addColorStop(1,b0+"88"); return g; }; }
           else ds.backgroundColor=base;
         }
         else if(t==="line"){ ds.borderColor=bright(ds.borderColor)||VIV[di%VIV.length]; ds.pointBorderColor=ds.borderColor; }
       });
     }catch(e){}
     return cfg; };
+})();
+
+/* ===== PERFORMANCE DEEP-DIVE TABLES (real imported data only) ===== */
+(function(){
+  const badge=o=>`<span class="badge-olt">${o}</span>`;
+  const months=()=>STATE.month===ALL_MONTHS_VALUE?activeMonthsList():[STATE.month];
+  const inScope=r=>months().includes(r.bsMonth)&&r.bsFY===STATE.fy;
+  const n0=v=>{ const x=toNum(v); return isNaN(x)?0:x; };
+  const oltOf=r=>r.OLT||r.Olt;
+  const emptyMsg='<div class="small-muted" style="padding:14px 4px;">No data imported for this month / scope.</div>';
+  function tbl(head,rows,note){
+    if(!rows.length) return emptyMsg;
+    return `<div class="tbl-wrap"><table><thead><tr>${head.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${note?`<p class="hint" style="margin-top:10px;">${note}</p>`:""}`;
+  }
+  function panel(no,title,hint,body){ return `<div class="panel"><h3>${no}. ${title}</h3>${hint?`<div class="hint">${hint}</div>`:""}${body}</div>`; }
+  // group rows by key -> {key:{olts:{OLT:count}, total, rows:[...]}}
+  function groupBy(rows,keyFn){
+    const m={};
+    rows.forEach(r=>{ const k=keyFn(r); if(k===null||k===undefined||k==="") return; const o=oltOf(r);
+      const g=m[k]||(m[k]={olts:{SKGD01:0,VMAD01:0,RISH01:0},total:0,rows:[]}); if(g.olts[o]!==undefined) g.olts[o]++; g.total++; g.rows.push(r); });
+    return Object.entries(m).sort((a,b)=>b[1].total-a[1].total);
+  }
+  const sumAmt=(rows,f)=>rows.reduce((a,r)=>a+n0(r[f]),0);
+
+  function secDaily(){
+    const rows=STORE.growthChurn.filter(r=>inScope(r)&&OLTS.includes(r.OLT));
+    const byDate={};
+    rows.forEach(r=>{ const d=String(r.SNAPSHOT_DATE).slice(0,10); (byDate[d]=byDate[d]||{})[r.OLT]=r; });
+    const dates=Object.keys(byDate).sort(); let prev=null;
+    const out=dates.map(d=>{ const x=byDate[d]; let act=0,gr=0,ch=0,ins=0;
+      OLTS.forEach(o=>{ const r=x[o]; if(r){ act+=n0(r["CL ACTIVE CUSTOMER"]); gr+=n0(r["GROWTH MTD"]); ch+=n0(r["CHURN MTD"]); ins+=n0(r["INSTALLATION MTD"]); } });
+      const delta=prev===null?"-":(act-prev>0?"+":"")+(act-prev); prev=act;
+      return [d,...OLTS.map(o=>x[o]?fmtNum(n0(x[o]["CL ACTIVE CUSTOMER"])):"-"),`<b>${fmtNum(act)}</b>`,delta,fmtNum(gr),fmtNum(ch),fmtNum(ins)]; });
+    return panel(11,"Daily Snapshot Trend","Closing active customers per OLT for every imported daily snapshot, with branch-level MTD growth, churn and installations.",
+      tbl(["Snapshot Date",...OLTS,"Branch Active","Change vs prior snapshot","Growth MTD","Churn MTD","Installs MTD"],out));
+  }
+  function secPlans(){
+    const rows=STORE.paidSales.filter(inScope); const g=groupBy(rows,r=>r.PLAN); const tot=rows.length||1;
+    const out=g.map(([k,v])=>[k,...OLTS.map(o=>fmtNum(v.olts[o])),`<b>${fmtNum(v.total)}</b>`,fmtPct(pct(v.total,tot)),fmtMoney(sumAmt(v.rows,"TOTAL AMT PAID")),fmtMoney(sumAmt(v.rows,"TOTAL AMT PAID")/v.total),(v.rows.reduce((a,r)=>a+n0(r.TENURE),0)/v.total).toFixed(1)+" mth"]);
+    return panel(12,"Plan-wise Paid Sales","Which packages are actually selling, split by OLT, with collected amount and average tenure.",
+      tbl(["Plan",...OLTS,"Total Sales","Share%","Amount Collected","Avg / Sale","Avg Tenure"],out));
+  }
+  function secCatTenure(){
+    const rows=STORE.paidSales.filter(inScope); const tot=rows.length||1;
+    const cat=groupBy(rows,r=>r.PLANCAT||"Unknown").map(([k,v])=>[k,...OLTS.map(o=>fmtNum(v.olts[o])),`<b>${fmtNum(v.total)}</b>`,fmtPct(pct(v.total,tot)),fmtMoney(sumAmt(v.rows,"TOTAL AMT PAID"))]);
+    const ten=groupBy(rows,r=>r.TENURE?(r.TENURE+" month"+(r.TENURE>1?"s":"")):null).sort((a,b)=>parseInt(a[0])-parseInt(b[0])).map(([k,v])=>[k,...OLTS.map(o=>fmtNum(v.olts[o])),`<b>${fmtNum(v.total)}</b>`,fmtPct(pct(v.total,tot)),fmtMoney(sumAmt(v.rows,"TOTAL AMT PAID"))]);
+    const typ=groupBy(rows,r=>r["OLT TYPE"]||"Unknown").map(([k,v])=>[k,...OLTS.map(o=>fmtNum(v.olts[o])),`<b>${fmtNum(v.total)}</b>`,fmtPct(pct(v.total,tot)),fmtMoney(sumAmt(v.rows,"TOTAL AMT PAID"))]);
+    const H=["",...OLTS,"Total","Share%","Amount"];
+    return panel(13,"Plan Category, Tenure &amp; OLT Type Mix","Paid sales split three ways: plan category (ATL/BTL etc.), prepaid tenure, and OLT type.",
+      `<div class="two-col"><div><div class="hint" style="font-weight:700;">By plan category</div>${tbl(["Category",...H.slice(1)],cat)}</div><div><div class="hint" style="font-weight:700;">By tenure</div>${tbl(["Tenure",...H.slice(1)],ten)}</div></div><div class="hint" style="font-weight:700;margin-top:12px;">By OLT type</div>${tbl(["OLT Type",...H.slice(1)],typ)}`);
+  }
+  function secFunnel(){
+    const ins=STORE.installations.filter(inScope), paid=STORE.paidSales.filter(inScope);
+    const out=OLTS.map(o=>{ const i=ins.filter(r=>r.OLT===o), p=paid.filter(r=>r.OLT===o); const np=i.filter(r=>/NOT/i.test(r["PAYMENT STATUS"]||"")).length; const pd=i.length-np;
+      return [badge(o),fmtNum(i.length),fmtNum(pd),fmtNum(np),fmtPct(pct(pd,i.length)),fmtNum(p.length),fmtMoney(sumAmt(p,"TOTAL AMT PAID"))]; });
+    const ti=ins.length, tnp=ins.filter(r=>/NOT/i.test(r["PAYMENT STATUS"]||"")).length;
+    out.push(["<b>Total</b>",`<b>${fmtNum(ti)}</b>`,fmtNum(ti-tnp),fmtNum(tnp),fmtPct(pct(ti-tnp,ti)),fmtNum(paid.length),fmtMoney(sumAmt(paid,"TOTAL AMT PAID"))]);
+    return panel(14,"Installation to Payment Funnel","How many new installations have paid vs are still unpaid, per OLT (payment status as recorded on the installation).",
+      tbl(["OLT","Installations","Paid","Not Paid","Paid Rate%","Paid Sales (Sales file)","Amount Collected"],out));
+  }
+  function secStaff(){
+    const ins=STORE.installations.filter(inScope), paid=STORE.paidSales.filter(inScope);
+    const names=[...new Set(ins.map(r=>r["MARKETED BY"]).concat(paid.map(r=>r["MARKETED BY"])).filter(Boolean))];
+    const out=names.map(nm=>{ const i=ins.filter(r=>r["MARKETED BY"]===nm), p=paid.filter(r=>r["MARKETED BY"]===nm);
+      const des=(i[0]&&i[0].DESIGNATION)||"-"; const np=i.filter(r=>/NOT/i.test(r["PAYMENT STATUS"]||"")).length;
+      return {nm,des,i,p,np}; }).sort((a,b)=>b.i.length-a.i.length).map(x=>[x.nm,x.des,...OLTS.map(o=>fmtNum(x.i.filter(r=>r.OLT===o).length)),`<b>${fmtNum(x.i.length)}</b>`,fmtNum(x.p.length),fmtNum(x.np),fmtPct(pct(x.i.length-x.np,x.i.length)),fmtMoney(sumAmt(x.p,"TOTAL AMT PAID"))]);
+    return panel(15,"Staff &times; OLT Installation Matrix","Each marketer's installations by OLT, paid sales and amount collected.",
+      tbl(["Staff","Designation",...OLTS,"Installs","Paid Sales","Not Paid","Paid Rate%","Amount Collected"],out));
+  }
+  function secSource(){
+    const ins=STORE.installations.filter(inScope), paid=STORE.paidSales.filter(inScope);
+    const names=[...new Set(ins.map(r=>r["ENTRY SOURCE"]).concat(paid.map(r=>r["ENTRY SOURCE"])).filter(Boolean))];
+    const tot=ins.length||1;
+    const out=names.map(nm=>{ const i=ins.filter(r=>r["ENTRY SOURCE"]===nm), p=paid.filter(r=>r["ENTRY SOURCE"]===nm); const np=i.filter(r=>/NOT/i.test(r["PAYMENT STATUS"]||"")).length; return {nm,i,p,np}; })
+      .sort((a,b)=>b.i.length-a.i.length).map(x=>[x.nm,...OLTS.map(o=>fmtNum(x.i.filter(r=>r.OLT===o).length)),`<b>${fmtNum(x.i.length)}</b>`,fmtPct(pct(x.i.length,tot)),fmtNum(x.p.length),fmtPct(pct(x.i.length-x.np,x.i.length)),fmtMoney(sumAmt(x.p,"TOTAL AMT PAID"))]);
+    return panel(16,"Entry Source &times; OLT","Where customers come from (field staff, referral, call centre, walk-in, digital) and how well each source converts to paid.",
+      tbl(["Entry Source",...OLTS,"Installs","Share%","Paid Sales","Paid Rate%","Amount Collected"],out));
+  }
+  function secRevenue(){
+    const rows=[]; months().forEach(m=>OLTS.forEach(o=>accrualRowsFor(m,STATE.fy,o).forEach(r=>rows.push(Object.assign({OLT:o},r)))));
+    if(!rows.length) return panel(17,"Revenue Composition by OLT","",emptyMsg);
+    const total=sumAmt(rows,"Amount")||1;
+    const byType={}; rows.forEach(r=>{ const k=(r["Renew New"]||"-")+" · "+(r.Rtype||"-"); const g=byType[k]=byType[k]||{a:{SKGD01:0,VMAD01:0,RISH01:0},n:0,t:0}; g.a[r.OLT]+=n0(r.Amount); g.n++; g.t+=n0(r.Amount); });
+    const out=Object.entries(byType).sort((a,b)=>b[1].t-a[1].t).map(([k,g])=>[k,...OLTS.map(o=>fmtMoney(g.a[o])),`<b>${fmtMoney(g.t)}</b>`,fmtPct(pct(g.t,total)),fmtNum(g.n),fmtMoney(g.t/g.n)]);
+    const byDays={}; rows.forEach(r=>{ const k=n0(r["Max Days"]); const g=byDays[k]=byDays[k]||{a:{SKGD01:0,VMAD01:0,RISH01:0},n:0,t:0}; g.a[r.OLT]+=n0(r.Amount); g.n++; g.t+=n0(r.Amount); });
+    const out2=Object.entries(byDays).sort((a,b)=>b[1].t-a[1].t).map(([k,g])=>[k?k+" days":"-",...OLTS.map(o=>fmtMoney(g.a[o])),`<b>${fmtMoney(g.t)}</b>`,fmtPct(pct(g.t,total)),fmtNum(g.n),fmtMoney(g.t/g.n)]);
+    const H=[...OLTS,"Total","Share%","Invoices","Avg / Invoice"];
+    return panel(17,"Revenue Composition by OLT","Accrual revenue split by transaction type and by plan validity (max days), per OLT.",
+      `<div class="hint" style="font-weight:700;">By transaction type</div>${tbl(["Type",...H],out)}<div class="hint" style="font-weight:700;margin-top:14px;">By validity (max days)</div>${tbl(["Validity",...H],out2)}`);
+  }
+  function secTimeliness(){
+    const rows=STORE.paymentBehaviour.filter(r=>inScope(r)&&OLTS.includes(r.OLT)); const tot=rows.length||1;
+    const bk=[["On time / early",l=>l<=0],["1–5 days late",l=>l>=1&&l<=5],["6–15 days late",l=>l>=6&&l<=15],["16–30 days late",l=>l>=16&&l<=30],["31–60 days late",l=>l>=31&&l<=60],["60+ days late",l=>l>60]];
+    const out=bk.map(([lb,f])=>{ const sel=rows.filter(r=>f(-n0(r["ACTUAL DIFF"]))); return [lb,...OLTS.map(o=>fmtNum(sel.filter(r=>r.OLT===o).length)),`<b>${fmtNum(sel.length)}</b>`,fmtPct(pct(sel.length,tot)),fmtMoney(sumAmt(sel,"AMOUNT"))]; });
+    const nw=rows.filter(r=>r["IS NEW CUSTOMER"]==="Y");
+    out.push(["<i>of which new customers</i>",...OLTS.map(o=>fmtNum(nw.filter(r=>r.OLT===o).length)),fmtNum(nw.length),fmtPct(pct(nw.length,tot)),fmtMoney(sumAmt(nw,"AMOUNT"))]);
+    return panel(18,"Renewal Timeliness","How late customers renewed versus their previous invoice expiry (days late = renew date − expiry date).",
+      tbl(["Renewal timing",...OLTS,"Total","Share%","Amount"],out));
+  }
+  function secTech(){
+    const rows=STORE.technicalData.filter(r=>inScope(r)&&OLTS.includes(r.OLT));
+    const prob=r=>r.PROBLEM||r["Problem Type Name"]; const hr=r=>{ const v=toNum(r.solveHours); return isNaN(v)?null:v; };
+    const avg=a=>{ const v=a.map(hr).filter(x=>x!==null); return v.length?(v.reduce((x,y)=>x+y,0)/v.length):null; };
+    const g=groupBy(rows,prob).map(([k,v])=>{ const a=avg(v.rows); const late=v.rows.filter(r=>hr(r)>ASD_TARGET_HRS).length;
+      return [k,...OLTS.map(o=>fmtNum(v.olts[o])),`<b>${fmtNum(v.total)}</b>`,a===null?"-":a.toFixed(1)+" hr",fmtNum(late),fmtPct(pct(late,v.total))]; });
+    const via=groupBy(rows,r=>r["Solve Via"]||r["SOLVED MEDIUM"]||"Unknown").map(([k,v])=>{ const a=avg(v.rows); return [k,...OLTS.map(o=>fmtNum(v.olts[o])),`<b>${fmtNum(v.total)}</b>`,a===null?"-":a.toFixed(1)+" hr"]; });
+    return panel(19,"Technical Tickets by Problem &amp; Resolution Channel",`Ticket volume per OLT, average solve time, and tickets slower than the ${ASD_TARGET_HRS} hr target.`,
+      tbl(["Problem Type",...OLTS,"Tickets","Avg Solve","Over "+ASD_TARGET_HRS+" hr","Over-target%"],g)+`<div class="hint" style="font-weight:700;margin-top:14px;">By resolution channel</div>`+tbl(["Solve Via",...OLTS,"Tickets","Avg Solve"],via));
+  }
+  function secSixG(){
+    const tr=[]; const out=OLTS.map(o=>{ const m=sixGMetricsFor(o,STATE.month,STATE.fy); tr.push(m); return [badge(o),fmtNum(m.total),fmtNum(m.leads),fmtNum(m.upgrades),fmtNum(m.denied),fmtNum(m.calls),fmtPct(m.conversionPct)]; });
+    const t=tr.reduce((a,m)=>({total:a.total+m.total,leads:a.leads+m.leads,up:a.up+m.upgrades,den:a.den+m.denied,calls:a.calls+m.calls}),{total:0,leads:0,up:0,den:0,calls:0});
+    out.push(["<b>Total</b>",fmtNum(t.total),fmtNum(t.leads),fmtNum(t.up),fmtNum(t.den),fmtNum(t.calls),fmtPct(pct(t.up,t.leads))]);
+    return panel(20,"6G Ticket Funnel by OLT","6G upgrade enquiries to upgrades, denials and phone-support contacts, per OLT.",
+      tbl(["OLT","Tickets","Leads","Upgraded","Denied","Phone Support","Lead → Upgrade%"],out));
+  }
+  window.opDeepDive=function(){
+    const fns=[secDaily,secPlans,secCatTenure,secFunnel,secStaff,secSource,secRevenue,secTimeliness,secTech,secSixG];
+    return `<div class="dd-divider"><span>Deep-Dive Data Tables</span><small>Built only from the files you have imported &mdash; scoped to ${STATE.month===ALL_MONTHS_VALUE?"all months":STATE.month} ${STATE.fy}</small></div>`+
+      fns.map(f=>{ try{ return f(); }catch(e){ return `<div class="panel"><div class="small-muted">A table could not be built: ${String(e.message||e)}</div></div>`; } }).join("");
+  };
+  const _r=renderOltPerf;
+  renderOltPerf=function(){ _r(); const el=document.getElementById("op-deep"); if(el) el.innerHTML=opDeepDive(); };
 })();
 </script>
 </body>
