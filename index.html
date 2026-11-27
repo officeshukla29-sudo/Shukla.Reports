@@ -1443,7 +1443,7 @@ select,.seg button,.olt-btn,button.chip{font-family:inherit;font-size:13px;font-
 
     <!-- ===================== DATA IMPORT ===================== -->
     <div class="section" id="sec-import">
-      <div class="note">Har mahina yehi bata naya Excel import garnus. Import garda BS month/FY select garnu parxa (jaha applicable huncha) &mdash; tyo tag lagayera dashboard le sabai mahina ko data accumulate garxa, year-round use ko lagi.</div>
+      <div class="note">Har mahina yehi bata naya Excel import garnus. Import garda BS month/FY select garnu parxa (jaha applicable huncha) &mdash; tyo tag lagayera dashboard le sabai mahina ko data accumulate garxa, year-round use ko lagi. <b>Naya:</b> "Auto (all months)" rakhyo bhane file ma bhayeko sabai mahina ko data ek choti import huncha (month/FY har row ko date bata), ra ek paltma dherai file pani select garna milcha. Forecast ko lagi pura file ko sabai bhanda dherai rows bhayeko mahina use huncha. Pheri import garda tyahi row duplicate hudaina.</div>
 
       <div class="import-grid" id="import-cards"></div>
 
@@ -1494,7 +1494,7 @@ select,.seg button,.olt-btn,button.chip{font-family:inherit;font-size:13px;font-
 
     <!-- ===================== TARGETS ===================== -->
     <div class="section" id="sec-targets">
-      <div class="note">Yo target table image bata transcribe gareko ho. Kunai number galat vaye ta seedha edit garnus, "Save Targets" click garnus &mdash; browser ma save huncha ra Target vs Achievement ma automatically use huncha.</div>
+      <div class="note"><b>Targets v2:</b> branch total (Installation, Revenue, Growth, Churn, 6G) naya target sheet bata; OLT-wise target tyo OLT ko purano weightage % anusar baadhiyeko. Retention/Winback jastai chha. Kunai number galat vaye ta seedha edit garnus, "Save Targets" click garnus &mdash; browser ma save huncha ra Target vs Achievement ma automatically use huncha.</div>
       <div class="panel">
         <div class="flex-between">
           <h3>Annual Targets (M1&ndash;M12) &mdash; <span id="tgt-olt-label">SKGD01</span></h3>
@@ -1624,10 +1624,58 @@ function loadStore(){
 }
 function saveStore(s){ safeLSSet(LS_KEY, JSON.stringify(s)); }
 
+// ---- Targets v2: new BRANCH totals (from the latest target sheet), split to each OLT by that OLT's
+// PREVIOUS weightage (its old target / old OLT-total for the same month and metric). Months where the old
+// split is unusable (a negative or zero old OLT value, or old total <= 0) fall back to that OLT's
+// weightage over the whole year. Integer split uses largest-remainder, so OLT targets always add up
+// exactly to the branch target. Retention / Winback targets are left exactly as they were.
+const TARGETS_VERSION = 2;
+const NEW_BRANCH_TARGETS_V2 = {
+  installation:[110,110,110,100,89,74,85,88,81,93,83,72],
+  revenue:[5401624,5411249,5527285,5723689,5888220,6204714,6140947,6293284,6252267,6343276,6351669,6204288],
+  growth:[77,79,98,13,49,62,66,72,60,85,83,74],
+  churn:[33,31,12,87,40,12,19,16,21,8,0,-2],
+  sixG:[35,40,40,40,40,40,40,40,40,40,40,40]
+};
+function splitByWeight(total, weights){
+  const raw = weights.map(w=>total*w), fl = raw.map(Math.floor);
+  let rem = total - fl.reduce((a,b)=>a+b,0);
+  raw.map((v,i)=>[v-fl[i],i]).sort((a,b)=>b[0]-a[0]).forEach(([_,i])=>{ if(rem>0){ fl[i]++; rem--; } });
+  return fl;
+}
+function migrateTargets(T){
+  if(!T || !T.OLTS) T = JSON.parse(JSON.stringify(DEFAULT_TARGETS));
+  if((T.version||1) >= TARGETS_VERSION) return T;
+  const old = JSON.parse(JSON.stringify(T)), N = JSON.parse(JSON.stringify(T)), olts = Object.keys(old.OLTS);
+  ["installation","revenue","growth","churn"].forEach(metric=>{
+    for(let i=0;i<12;i++){
+      const vals = olts.map(o=>+old.OLTS[o][metric][i]||0), sum = vals.reduce((a,b)=>a+b,0);
+      let w;
+      if(sum>0 && vals.every(v=>v>=0)) w = vals.map(v=>v/sum);
+      else {
+        const ann = olts.map(o=>old.OLTS[o][metric].reduce((a,b)=>a+(+b||0),0)), as = ann.reduce((a,b)=>a+b,0);
+        w = (as>0 && ann.every(v=>v>=0)) ? ann.map(v=>v/as) : olts.map(()=>1/olts.length);
+      }
+      const parts = splitByWeight(NEW_BRANCH_TARGETS_V2[metric][i], w);
+      olts.forEach((o,k)=>{ N.OLTS[o][metric][i] = parts[k]; });
+    }
+  });
+  // Active-customer target follows the rule in the existing data: active[i] = active[i-1] + growth[i-1]
+  // (plus any manual adjustment already in the data, e.g. RISH01). Re-run it on the NEW growth targets, keeping each step's adjustment.
+  const resid = o=>{ const a=old.OLTS[o].active, g=old.OLTS[o].growth; return a.map((v,i)=> i===0 ? 0 : v-(a[i-1]+g[i-1])); };
+  olts.forEach(o=>{ const r=resid(o); let cur=old.OLTS[o].active[0];
+    N.OLTS[o].active = old.OLTS[o].active.map((_,i)=>{ if(i>0) cur += N.OLTS[o].growth[i-1] + r[i]; return cur; }); });
+  N.sixGMonthly = NEW_BRANCH_TARGETS_V2.sixG.slice();
+  N.version = TARGETS_VERSION;
+  return N;
+}
 function loadTargets(){
-  let raw = safeLSGet(LS_TARGETS);
-  if(raw){ try{ return JSON.parse(raw); }catch(e){} }
-  return JSON.parse(JSON.stringify(DEFAULT_TARGETS));
+  let raw = safeLSGet(LS_TARGETS), T = null;
+  if(raw){ try{ T = JSON.parse(raw); }catch(e){} }
+  if(!T || !T.OLTS) T = JSON.parse(JSON.stringify(DEFAULT_TARGETS));
+  const M = migrateTargets(T);
+  if(M!==T) saveTargets(M);
+  return M;
 }
 function saveTargets(t){ safeLSSet(LS_TARGETS, JSON.stringify(t)); }
 
@@ -4328,10 +4376,10 @@ function renderImportCards(){
       <h4>${t.title}</h4>
       <p>${t.desc}</p>
       ${t.needsMonth ? `<div class="chip-row">
-        <select class="imp-month"><option value="">${t.needsMonth==="optional" ? "BS Month (optional, fallback only)..." : "BS Month..."}</option>${BS_MONTHS.map(m=>`<option value="${m}" ${m===STATE.month?'selected':''}>${m}</option>`).join("")}</select>
+        <select class="imp-month">${t.needsMonth===true ? '<option value="__AUTO__" selected title="Month and FY are read from each row\'s date, so one file can contain many months">Auto (all months)</option>' : '<option value="">BS Month (optional, fallback only)...</option>'}${BS_MONTHS.map(m=>`<option value="${m}" ${(t.needsMonth!==true && m===STATE.month)?'selected':''}>${m}</option>`).join("")}</select>
         <select class="imp-fy"><option value="2083/84" ${STATE.fy==="2083/84"?'selected':''}>2083/84</option><option value="2082/83" ${STATE.fy==="2082/83"?'selected':''}>2082/83</option></select>
       </div>` : ''}
-      <input type="file" class="imp-file" accept=".xlsx,.xls,.csv">
+      <input type="file" class="imp-file" accept=".xlsx,.xls,.csv" multiple>
       <div class="detect-preview" style="display:none;"></div>
       <div class="chip-row">
         <button class="btn small imp-go">Import</button>
@@ -4353,41 +4401,30 @@ function renderImportCards(){
     function updatePreview(){
       if(!fileInput.files.length){ preview.style.display="none"; return; }
       if(typeof XLSX === "undefined"){ preview.style.display="block"; preview.innerHTML = '<span class="small-muted">Excel reader still loading, cannot preview yet \u2014 try Import in a moment.</span>'; return; }
-      const file = fileInput.files[0];
-      const reader = new FileReader();
-      reader.onload = function(ev){
-        try{
-          const wb = XLSX.read(ev.target.result, {type:"array", cellDates:true});
-          const ws = wb.Sheets[wb.SheetNames[0]];
-          const raw = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
-          const headerIdx = findHeaderRow(raw, cfg.signature);
-          if(headerIdx===-1){ preview.style.display="block"; preview.innerHTML = '<span style="color:var(--red);">Could not detect expected columns in this file for '+cfg.title+'.</span>'; return; }
-          const rows = rowsFromRaw(raw, headerIdx);
-          preview.style.display = "block";
-          if(cfg.id==="accrualRevenue"){
-            const combos = {};
-            rows.forEach(r=>{ const k = (r["Accrued month"]||"?") + " " + normFY(r["Accrued Fy Year"]); combos[k]=(combos[k]||0)+1; });
-            const parts = Object.entries(combos).map(([k,n])=>`<b>${k}</b> (${n} rows)`).join(", ");
-            preview.innerHTML = "\u2713 Detected in file: " + parts + ". Month/FY is read directly from the file \u2014 no need to select it manually.";
-          } else if(cfg.id==="technicalData"){
-            const combos = {};
-            rows.forEach(r=>{
-              const norm = normalizeRowKeys(r);
-              const fm = fyMonthCodeToBsMonth(norm["FY Month"]), fyv = normalizeFYYearStr(norm["FY Year"]);
-              const k = (fm && fyv) ? (fm+" "+fyv) : "(no FY Month in file \u2014 will use fallback)";
-              combos[k]=(combos[k]||0)+1;
-            });
-            const parts = Object.entries(combos).map(([k,n])=>`<b>${k}</b> (${n} rows)`).join(", ");
-            preview.innerHTML = "\u2713 " + rows.length + " rows found. Detected: " + parts + ".";
-          } else {
-            preview.innerHTML = "\u2713 " + rows.length + " rows found in file. Will be imported as <b>" + (monthSel.value||"(select a month)") + " " + (fySel?fySel.value:"") + "</b>.";
-          }
-        }catch(err){
-          preview.style.display="block";
-          preview.innerHTML = '<span style="color:var(--red);">Could not read this file.</span>';
+      readImportFiles(cfg, fileInput.files).then(res=>{
+        preview.style.display = "block";
+        const errNote = res.errors.length ? ' <span style="color:var(--red);">Skipped: '+res.errors.join("; ")+'.</span>' : "";
+        if(!res.rows.length){ preview.innerHTML = '<span style="color:var(--red);">Could not detect expected columns for '+cfg.title+' ('+(res.errors.join("; ")||"no rows")+').</span>'; return; }
+        const rows = res.rows, pre = (res.files>1 ? res.files+" files, " : "");
+        if(cfg.id==="accrualRevenue"){
+          const combos = {};
+          rows.forEach(r=>{ const k = (r["Accrued month"]||"?") + " " + normFY(r["Accrued Fy Year"]); combos[k]=(combos[k]||0)+1; });
+          preview.innerHTML = "\u2713 " + pre + "Detected in file: " + Object.entries(combos).map(([k,n])=>`<b>${k}</b> (${n} rows)`).join(", ") + ". Month/FY is read directly from the file \u2014 no need to select it manually." + errNote;
+        } else if(cfg.id==="technicalData"){
+          const combos = {};
+          rows.forEach(r=>{ const norm = normalizeRowKeys(r); const fm = fyMonthCodeToBsMonth(norm["FY Month"]), fyv = normalizeFYYearStr(norm["FY Year"]);
+            const k = (fm && fyv) ? (fm+" "+fyv) : "(no FY Month in file \u2014 will use fallback)"; combos[k]=(combos[k]||0)+1; });
+          preview.innerHTML = "\u2713 " + pre + rows.length + " rows found. Detected: " + Object.entries(combos).map(([k,n])=>`<b>${k}</b> (${n} rows)`).join(", ") + "." + errNote;
+        } else if(cfg.id==="sixG"){
+          preview.innerHTML = "\u2713 " + pre + rows.length + " rows found. BS month is auto-detected per ticket." + errNote;
+        } else if(monthSel && monthSel.value==="__AUTO__" && AUTO_DATE_COL[cfg.id]){
+          const g = groupRowsByMonth(cfg, rows);
+          const parts = Object.entries(g.groups).map(([k,v])=>`<b>${k.replace("|"," ")}</b> (${v.length} rows)`).join(", ");
+          preview.innerHTML = "\u2713 " + pre + rows.length + " rows found. Auto-detected from <b>"+AUTO_DATE_COL[cfg.id]+"</b>: " + (parts||"no readable dates") + "." + (g.skipped?` <span style="color:var(--red);">${g.skipped} row(s) have no readable date and will be skipped.</span>`:"") + errNote;
+        } else {
+          preview.innerHTML = "\u2713 " + pre + rows.length + " rows found in file. Will be imported as <b>" + (monthSel&&monthSel.value||"(select a month)") + " " + (fySel?fySel.value:"") + "</b>." + errNote;
         }
-      };
-      reader.readAsArrayBuffer(file);
+      });
     }
 
     fileInput.addEventListener("change", updatePreview);
@@ -4404,22 +4441,13 @@ function renderImportCards(){
 
     card.querySelector(".imp-go").addEventListener("click", ()=>{
       if(!fileInput.files.length){ showAlertModal("Select a file first."); return; }
-      if(cfg.needsMonth===true && (!monthSel.value)){ showAlertModal("Select which BS month this file belongs to."); return; }
+      if(cfg.needsMonth===true && (!monthSel.value)){ showAlertModal("Select which BS month this file belongs to (or use Auto-detect)."); return; }
       if(typeof XLSX === "undefined"){ showAlertModal("The Excel reader library hasn't finished loading yet (or is blocked by your network/ad-blocker). Please wait a few seconds and try again, or check your internet connection."); return; }
-      const file = fileInput.files[0];
-      const reader = new FileReader();
-      reader.onload = function(ev){
-        try{
-          const wb = XLSX.read(ev.target.result, {type:"array", cellDates:true});
-          const ws = wb.Sheets[wb.SheetNames[0]];
-          const raw = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
-          doImport(cfg, raw, monthSel?monthSel.value:null, fySel?fySel.value:"2083/84");
-        }catch(err){
-          console.error(err);
-          showAlertModal("Could not read this file. Make sure it's a valid Excel/CSV export.");
-        }
-      };
-      reader.readAsArrayBuffer(file);
+      readImportFiles(cfg, fileInput.files).then(res=>{
+        if(res.errors.length && !res.rows.length){ showAlertModal("Could not import: " + res.errors.join("; ") + ". Make sure these are the right Excel/CSV exports."); return; }
+        if(res.errors.length) showAlertModal("Skipped file(s): " + res.errors.join("; ") + ". The rest will be imported.");
+        doImport(cfg, null, monthSel?monthSel.value:null, fySel?fySel.value:"2083/84", res.rows);
+      });
     });
   });
 }
@@ -4512,12 +4540,94 @@ function dedupeExactRows(rows){
   return {rows: out, dropped};
 }
 
-function doImport(cfg, raw, month, fy){
-  const headerIdx = findHeaderRow(raw, cfg.signature);
-  if(headerIdx===-1){ showAlertModal("Couldn't detect the expected columns in this file for '"+cfg.title+"'. Please check the file is the right export."); return; }
-  let rows = rowsFromRaw(raw, headerIdx);
+
+// ---- Multi-file / multi-month import helpers ----
+const AUTO_DATE_COL = {installation:"CREATE DATE", paidSales:"PAID DATE", billing:"RECENT INVOICE RENEW DATE", forecast:"Expiry Date", growthChurn:"SNAPSHOT_DATE"};
+function readImportFiles(cfg, files){
+  return Promise.all([...files].map(f=>new Promise(res=>{
+    const rd = new FileReader();
+    rd.onload = ev=>{
+      try{
+        const wb = XLSX.read(ev.target.result, {type:"array", cellDates:true});
+        const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:true, defval:null});
+        const hi = findHeaderRow(raw, cfg.signature);
+        if(hi===-1){ res({name:f.name, error:"expected columns not found", rows:[]}); return; }
+        let rows = rowsFromRaw(raw, hi);
+        if(cfg.id==="forecast"){
+          // A renewal-forecast file belongs to ONE month, but a few rows (already-expired, not yet renewed customers)
+          // carry expiry dates from the month before. So tag the whole file with the month most of its rows fall in.
+          const tally = {}; rows.forEach(r=>{ const bm = adDateToBsMonth(r["Expiry Date"]); if(bm){ const k = bm.month+"|"+bm.fy; tally[k]=(tally[k]||0)+1; } });
+          const top = Object.entries(tally).sort((a,b)=>b[1]-a[1])[0];
+          if(top){ const [m,fy] = top[0].split("|"); rows = rows.map(r=>Object.assign({}, r, {bsMonth:m, bsFY:fy})); }
+        }
+        res({name:f.name, rows});
+      }catch(e){ res({name:f.name, error:"could not be read", rows:[]}); }
+    };
+    rd.onerror = ()=>res({name:f.name, error:"could not be read", rows:[]});
+    rd.readAsArrayBuffer(f);
+  }))).then(list=>({rows:list.flatMap(x=>x.rows), errors:list.filter(x=>x.error).map(x=>x.name+" ("+x.error+")"), files:list.length}));
+}
+function groupRowsByMonth(cfg, rows){
+  const col = AUTO_DATE_COL[cfg.id], groups = {}; let skipped = 0;
+  rows.forEach(r=>{ const bm = (cfg.id==='forecast' && r.bsMonth && r.bsFY) ? {month:r.bsMonth, fy:r.bsFY} : adDateToBsMonth(r[col]); if(!bm){ skipped++; return; }
+    const k = bm.month+"|"+bm.fy; (groups[k] = groups[k] || []).push(Object.assign({}, r, {bsMonth:bm.month, bsFY:bm.fy})); });
+  return {groups, skipped};
+}
+function autoRowKey(cfg, r){
+  const dk = v=>{ const d = parseFlexDate(v); return d ? d.toISOString().slice(0,10) : String(v==null?"":v); };
+  const u = String(r.USERNAME==null?"":r.USERNAME).trim();
+  if(cfg.id==="installation") return u+"|"+dk(r["CREATE DATE"]);
+  if(cfg.id==="paidSales") return u+"|"+dk(r["PAID DATE"]);
+  if(cfg.id==="billing") return u+"|"+dk(r["RECENT INVOICE RENEW DATE"]);
+  if(cfg.id==="growthChurn") return dk(r.SNAPSHOT_DATE)+"|"+String(r.OLT).trim();
+  return JSON.stringify(r);
+}
+function doImportAuto(cfg, rows, dedupeDropped){
+  let gcNotice = "";
+  if(cfg.id==="growthChurn"){
+    const before = rows.length; rows = rows.filter(r=> r.OLT && String(r.OLT).trim()!=="");
+    if(before-rows.length) gcNotice = " " + (before-rows.length) + " branch-total row(s) (no OLT) skipped.";
+    if(!rows.length){ showAlertModal("This Growth & Churn file has no rows with an OLT filled in, so nothing could be imported."); return; }
+  }
+  const {groups, skipped} = groupRowsByMonth(cfg, rows);
+  const keys = Object.keys(groups);
+  if(!keys.length){ showAlertModal("Could not read any dates from the '"+AUTO_DATE_COL[cfg.id]+"' column, so the months could not be detected. Pick a BS month manually instead."); return; }
+  keys.forEach(k=>{
+    const [m,fy] = k.split("|"), batch = groups[k];
+    if(cfg.id==="forecast"){
+      STORE.forecast[forecastKey(m,fy)] = batch;
+      if(!STORE.forecastMeta) STORE.forecastMeta = {};
+      STORE.forecastMeta[forecastKey(m,fy)] = Date.now();
+    } else {
+      // merge: new rows replace existing rows with the same key; every other existing row stays
+      const newKeys = new Set(batch.map(r=>autoRowKey(cfg,r)));
+      STORE[cfg.store] = STORE[cfg.store].filter(r=> !(r.bsMonth===m && r.bsFY===fy && newKeys.has(autoRowKey(cfg,r)))).concat(batch);
+    }
+  });
+  const label = keys.map(k=>{ const [m,fy]=k.split("|"); return m+" "+fy+" ("+groups[k].length+")"; }).join(", ");
+  STORE.importLog.push({type:cfg.title, month:"auto", fy:keys.map(k=>k.split("|")[1]).join(","), rows: rows.length-skipped, at: new Date().toISOString()});
+  saveStore(STORE); populateMonthSelect(); renderImportCards(); renderAll();
+  showImportToast(cfg.title+" imported successfully", label + " · " + (rows.length-skipped) + " rows" + (skipped?(" ("+skipped+" row(s) with no readable date skipped)"):"") + (dedupeDropped?(" ("+dedupeDropped+" exact duplicate(s) skipped)"):"") + "." + gcNotice);
+  let push;
+  if(cfg.id==="forecast") push = fbSaveMeta("forecast", {data: STORE.forecast, meta: STORE.forecastMeta});
+  else push = Promise.all(keys.map(k=>{ const [m,fy]=k.split("|"); return fbSaveBatch(cfg.id, m, fy, STORE[cfg.store].filter(r=>r.bsMonth===m && r.bsFY===fy)); })).then(a=>a.every(Boolean));
+  push.then(ok=>{
+    if(ok){ setSyncStatus("ok", cfg.title+" synced"); updateImportToast(true, cfg.title+" is backed up to the cloud."); }
+    else { const reason = fbAvailable() ? "sync failed — check Firestore rules" : "not connected yet, will retry automatically"; setSyncStatus("off", cfg.title+" "+reason); updateImportToast(false, "Saved locally, but cloud backup "+(fbAvailable()?"failed ("+reason+").":"is waiting for connection.")); }
+  });
+}
+
+function doImport(cfg, raw, month, fy, rowsOverride){
+  let rows;
+  if(rowsOverride){ rows = rowsOverride; }
+  else {
+    const headerIdx = findHeaderRow(raw, cfg.signature);
+    if(headerIdx===-1){ showAlertModal("Couldn't detect the expected columns in this file for '"+cfg.title+"'. Please check the file is the right export."); return; }
+    rows = rowsFromRaw(raw, headerIdx);
+  }
   const dedupeResult = dedupeExactRows(rows);
   rows = dedupeResult.rows;
+  if(month==="__AUTO__" && AUTO_DATE_COL[cfg.id]){ doImportAuto(cfg, rows, dedupeResult.dropped); return; }
   let detectedLabel = month ? (month+" "+fy) : "";
 
   if(cfg.id==="forecast"){
@@ -4890,7 +5000,7 @@ function restoreBackup(file){
     try{
       const data = JSON.parse(e.target.result);
       if(data.store) STORE = data.store;
-      if(data.targets) TARGETS = data.targets;
+      if(data.targets) TARGETS = migrateTargets(data.targets);
       saveStore(STORE); saveTargets(TARGETS);
       populateMonthSelect(); renderImportCards(); renderTargetsTable(); renderAll();
       showAlertModal("Backup restored.");
@@ -5094,7 +5204,7 @@ async function fbReconcile(silent){
 
   // targets: cloud wins only if local hasn't been changed since last successful sync in this session;
   // simplest safe rule — if cloud has targets and local still equals the shipped defaults, take cloud.
-  if(cloud.targets){
+  if(cloud.targets && (cloud.targets.version||1) >= (TARGETS.version||1)){
     TARGETS = cloud.targets;
   } else {
     const ok = await fbSaveMeta("targets", {data: TARGETS}); ok?pushed++:failed++;
@@ -5138,6 +5248,7 @@ async function fbPullNow(){
 
 let TGT_OLT = "SKGD01";
 function renderTargetsTable(){
+  { const sel = document.getElementById("tgt-olt-select"); if(sel && sel.value!==TGT_OLT) sel.value = TGT_OLT; }
   document.getElementById("tgt-olt-label").textContent = TGT_OLT==="ALL" ? "All OLT (branch total)" : TGT_OLT;
   const metrics = [["installation","Installation"],["growth","Growth"],["churn","Churn"],["active","Active Customer"],["revenue","A Revenue"],["retention","Retention %"],["winback","Winback %"]];
   const isAll = TGT_OLT==="ALL";
@@ -5514,7 +5625,8 @@ document.addEventListener("DOMContentLoaded", init);
 /* ===== PERFORMANCE DEEP-DIVE TABLES (real imported data only) ===== */
 (function(){
   const badge=o=>`<span class="badge-olt">${o}</span>`;
-  const months=()=>STATE.month===ALL_MONTHS_VALUE?activeMonthsList():[STATE.month];
+  let _ms=null;
+  const months=()=>_ms||(_ms=(STATE.month===ALL_MONTHS_VALUE?activeMonthsList():[STATE.month]));
   const inScope=r=>months().includes(r.bsMonth)&&r.bsFY===STATE.fy;
   const n0=v=>{ const x=toNum(v); return isNaN(x)?0:x; };
   const oltOf=r=>r.OLT||r.Olt;
@@ -5626,12 +5738,24 @@ document.addEventListener("DOMContentLoaded", init);
       tbl(["OLT","Tickets","Leads","Upgraded","Denied","Phone Support","Lead → Upgrade%"],out));
   }
   window.opDeepDive=function(){
+    _ms=null; months();
     const fns=[secDaily,secPlans,secCatTenure,secFunnel,secStaff,secSource,secRevenue,secTimeliness,secTech,secSixG];
     return `<div class="dd-divider"><span>Deep-Dive Data Tables</span><small>Built only from the files you have imported &mdash; scoped to ${STATE.month===ALL_MONTHS_VALUE?"all months":STATE.month} ${STATE.fy}</small></div>`+
       fns.map(f=>{ try{ return f(); }catch(e){ return `<div class="panel"><div class="small-muted">A table could not be built: ${String(e.message||e)}</div></div>`; } }).join("");
   };
   const _r=renderOltPerf;
   renderOltPerf=function(){ _r(); const el=document.getElementById("op-deep"); if(el) el.innerHTML=opDeepDive(); };
+})();
+
+/* ===== PERF: memoise allDataMonths (was scanned thousands of times per render) ===== */
+(function(){
+  const _adm=allDataMonths; let key="", val=null;
+  const fp=()=>{ const S=STORE, f=S.forecast||{}; const a=S.accrualRevenue||[];
+    return STATE.fy+"|"+[S.installations,S.paidSales,S.growthChurn,S.paymentBehaviour,a].map(x=>x.length).join(",")+"|"+
+      (a.length?String(a[0]["Accrued month"])+String(a[a.length-1]["Accrued month"]):"")+"|"+Object.keys(f).map(k=>k+":"+((f[k]&&f[k].length)||0)).join(","); };
+  allDataMonths=function(){ const k=fp(); if(k!==key||!val){ val=_adm(); key=k; } return val.slice(); };
+  window.bustMonthsCache=function(){ key=""; val=null; };
+  const _ss=saveStore; saveStore=function(s){ window.bustMonthsCache(); return _ss(s); };
 })();
 </script>
 </body>
